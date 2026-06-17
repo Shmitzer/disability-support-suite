@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
+import { BottomNav } from "@/components/BottomNav";
 import { listWorkers, getCurrentWorker } from "@/lib/session";
 
 const geistSans = Geist({
@@ -31,7 +32,7 @@ export default async function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col pb-[calc(env(safe-area-inset-bottom)+4.5rem)]">
         {/* Dev-only role switch — replaced by real PIN login later. */}
         <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2">
           <span className="rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
@@ -42,6 +43,7 @@ export default async function RootLayout({
           )}
         </div>
         {children}
+        <BottomNav />
       </body>
     </html>
   );

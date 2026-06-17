@@ -1,13 +1,39 @@
 @import "tailwindcss";
 
+/* Calm & clinical design system (Option A). */
+/*
+  Design system — "Option A: Calm & clinical"
+  ------------------------------------------------------------------
+  Generous white space, soft blue accents, clean and professional,
+  mobile-first. These are the shared tokens; pages use Tailwind
+  utility classes (blue-* / zinc-*) that align with this palette.
+*/
+
 :root {
-  --background: #f4f4f5;
-  --foreground: #171717;
+  /* Surfaces */
+  --background: #f4f6f8;   /* calm off-white the whole app sits on */
+  --surface: #ffffff;      /* cards / raised panels */
+  --foreground: #18222e;   /* primary text — soft near-black, not pure #000 */
+
+  /* Brand — soft clinical blue */
+  --brand: #2563eb;        /* = blue-600, the accent already used across pages */
+  --brand-strong: #1d4ed8; /* = blue-700, hover/pressed */
+
+  /* Hairlines */
+  --border: #e4e7ec;
+
+  /* Shape & depth — soft, never harsh */
+  --radius: 1rem;          /* matches the rounded-2xl cards */
+  --shadow-soft: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -15,5 +41,19 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Use the Geist font loaded in layout.tsx (was previously overridden to Arial). */
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+  Accessible, visible focus ring for keyboard / switch-access users.
+  Important in a disability-support app: never leave focus invisible.
+*/
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
