@@ -200,12 +200,11 @@ function CardHeading({
 }
 
 // The shift's details — defined once so every card shows them identically.
-// A participant portrait sits to the left of the name, contact-card style.
+// The participant portrait sits to the right of the text.
 function ShiftDetails({ shift }: { shift: ShiftRow }) {
   return (
-    <div className="flex items-start gap-3">
-      <ParticipantAvatar name={shift.participant.name} />
-      <div className="flex flex-col gap-1.5">
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 flex-col gap-1.5">
         <span className="text-base font-semibold text-zinc-900">{shift.participant.name}</span>
         <DetailLine icon={<IconCalendar />}>{formatDay(shift.scheduledStart)}</DetailLine>
         <DetailLine icon={<IconClock />}>
@@ -213,6 +212,7 @@ function ShiftDetails({ shift }: { shift: ShiftRow }) {
         </DetailLine>
         {shift.location && <DetailLine icon={<IconPin />}>{shift.location}</DetailLine>}
       </div>
+      <ParticipantAvatar name={shift.participant.name} />
     </div>
   );
 }
