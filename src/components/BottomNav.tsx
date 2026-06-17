@@ -72,7 +72,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 shadow-[0_-1px_3px_rgb(16_24_40_/_0.06)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white shadow-[0_-1px_3px_rgb(16_24_40_/_0.06)]"
       // Lift the bar above the phone's home-indicator / gesture area.
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >

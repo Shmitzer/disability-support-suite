@@ -45,19 +45,11 @@ export default async function Home() {
     const rosterData = await getRosterData();
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-10">
-        <header className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-blue-600">Rostering</p>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
-              Hi {worker.name.split(" ")[0]}
-            </h1>
-          </div>
-          <Link
-            href="/notes"
-            className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-blue-600 shadow-sm hover:bg-zinc-50"
-          >
-            Notes →
-          </Link>
+        <header className="flex flex-col gap-1">
+          <p className="text-sm font-medium text-blue-600">Rostering</p>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
+            Hi {worker.name.split(" ")[0]}
+          </h1>
         </header>
 
         <RosterView
@@ -79,26 +71,18 @@ export default async function Home() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-10">
-      <header className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium text-blue-600">Your shifts</p>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
-            Hi {worker.name.split(" ")[0]}
-          </h1>
-        </div>
-        <Link
-          href="/notes"
-          className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-blue-600 shadow-sm hover:bg-zinc-50"
-        >
-          Notes →
-        </Link>
+      <header className="flex flex-col gap-1">
+        <p className="text-sm font-medium text-blue-600">Your shifts</p>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
+          Hi {worker.name.split(" ")[0]}
+        </h1>
       </header>
 
       {/* Three status cards. The middle one carries the clock on/off controls. */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <ShiftCard label="Last completed" shift={lastShift} tone="neutral" />
+        <ShiftCard label="Last completed" shift={lastShift} />
         <CurrentShiftCard shift={currentShift} now={now} />
-        <ShiftCard label="Next allocated" shift={nextShift} tone="neutral" />
+        <ShiftCard label="Next allocated" shift={nextShift} />
       </section>
 
       {/* Auctioned shifts the worker can accept */}
@@ -154,55 +138,25 @@ export default async function Home() {
   );
 }
 
-// One status card. Shows a placeholder when there's no shift to show.
-function ShiftCard({
-  label,
-  shift,
-  tone,
-}: {
-  label: string;
-  shift: ShiftRow | null;
-  tone: "primary" | "neutral";
-}) {
-  const ring =
-    tone === "primary"
-      ? "border-blue-200 bg-blue-50/50"
-      : "border-zinc-200 bg-white";
-
+// One status card (Last completed / Next allocated). Placeholder when empty.
+function ShiftCard({ label, shift }: { label: string; shift: ShiftRow | null }) {
   return (
-    <div className={`flex flex-col gap-2 rounded-2xl border ${ring} p-4 shadow-sm`}>
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">{label}</p>
-      {shift ? (
-        <div className="flex flex-col gap-1">
-          <span className="font-semibold text-zinc-900">{shift.participant.name}</span>
-          <span className="text-sm text-zinc-600">{formatDay(shift.scheduledStart)}</span>
-          <span className="text-sm text-zinc-600">
-            {formatTime(shift.scheduledStart)} – {formatTime(shift.scheduledEnd)}
-          </span>
-          {shift.location && <span className="text-sm text-zinc-500">{shift.location}</span>}
-        </div>
-      ) : (
-        <p className="text-sm text-zinc-400">Nothing here yet.</p>
-      )}
+    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <CardHeading label={label} status={shift?.status} />
+      {shift ? <ShiftDetails shift={shift} /> : <EmptyState />}
     </div>
   );
 }
 
-// The "Current / upcoming" card, with the clock on/off controls attached.
+// The "Current / upcoming" card — visually primary (soft blue) because it
+// carries the action (clock on/off + the link into the shift).
 function CurrentShiftCard({ shift, now }: { shift: ShiftRow | null; now: Date }) {
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50/50 p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">Current / upcoming</p>
+    <div className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50/40 p-5 shadow-sm ring-1 ring-inset ring-blue-100">
+      <CardHeading label="Current / upcoming" status={shift?.status} primary />
       {shift ? (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold text-zinc-900">{shift.participant.name}</span>
-            <span className="text-sm text-zinc-600">{formatDay(shift.scheduledStart)}</span>
-            <span className="text-sm text-zinc-600">
-              {formatTime(shift.scheduledStart)} – {formatTime(shift.scheduledEnd)}
-            </span>
-            {shift.location && <span className="text-sm text-zinc-500">{shift.location}</span>}
-          </div>
+        <div className="flex flex-col gap-3">
+          <ShiftDetails shift={shift} />
           <ClockControls shift={shift} now={now} />
           {/* Into the shift details + live tracker (task 1f). */}
           <Link
@@ -213,9 +167,110 @@ function CurrentShiftCard({ shift, now }: { shift: ShiftRow | null; now: Date })
           </Link>
         </div>
       ) : (
-        <p className="text-sm text-zinc-400">Nothing here yet.</p>
+        <EmptyState />
       )}
     </div>
+  );
+}
+
+// The card's top row: a small label on the left, a status pill on the right.
+function CardHeading({
+  label,
+  status,
+  primary,
+}: {
+  label: string;
+  status?: string;
+  primary?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <p
+        className={`text-xs font-semibold uppercase tracking-wide ${
+          primary ? "text-blue-700/70" : "text-zinc-400"
+        }`}
+      >
+        {label}
+      </p>
+      {status && <StatusPill status={status} />}
+    </div>
+  );
+}
+
+// The shift's details — defined once so every card shows them identically.
+function ShiftDetails({ shift }: { shift: ShiftRow }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-base font-semibold text-zinc-900">{shift.participant.name}</span>
+      <DetailLine icon={<IconCalendar />}>{formatDay(shift.scheduledStart)}</DetailLine>
+      <DetailLine icon={<IconClock />}>
+        {formatTime(shift.scheduledStart)} – {formatTime(shift.scheduledEnd)}
+      </DetailLine>
+      {shift.location && <DetailLine icon={<IconPin />}>{shift.location}</DetailLine>}
+    </div>
+  );
+}
+
+// One line of detail: a small grey icon + its text.
+function DetailLine({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <span className="flex items-center gap-1.5 text-sm text-zinc-600">
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+function EmptyState() {
+  return <p className="text-sm text-zinc-400">Nothing here yet.</p>;
+}
+
+// A small colour-coded badge for the shift's status, so state reads at a glance.
+function StatusPill({ status }: { status: string }) {
+  const styles: Record<string, { label: string; cls: string }> = {
+    COMPLETED: { label: "Completed", cls: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" },
+    IN_PROGRESS: { label: "On shift now", cls: "bg-blue-50 text-blue-700 ring-blue-600/20" },
+    ALLOCATED: { label: "Scheduled", cls: "bg-zinc-100 text-zinc-600 ring-zinc-500/20" },
+    OFFERED: { label: "Available", cls: "bg-amber-50 text-amber-700 ring-amber-600/20" },
+    CANCELLED: { label: "Cancelled", cls: "bg-rose-50 text-rose-700 ring-rose-600/20" },
+  };
+  const s = styles[status] ?? { label: status, cls: "bg-zinc-100 text-zinc-600 ring-zinc-500/20" };
+  return (
+    <span
+      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${s.cls}`}
+    >
+      {s.label}
+    </span>
+  );
+}
+
+// --- Small inline icons (no icon library) ----------------------------------
+// Shared style: thin grey strokes, sized to sit beside a line of text.
+
+function IconCalendar() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4.5" width="18" height="16" rx="2" />
+      <path d="M3 9h18M8 3v3M16 3v3" />
+    </svg>
+  );
+}
+
+function IconClock() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 1.8" />
+    </svg>
+  );
+}
+
+function IconPin() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
   );
 }
 
