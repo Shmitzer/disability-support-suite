@@ -100,23 +100,34 @@ export default async function Home() {
             {offered.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-5 shadow-sm"
               >
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-semibold text-zinc-900">{s.participant.name}</span>
-                  <span className="text-sm text-zinc-600">{formatWhen(s.scheduledStart, s.scheduledEnd)}</span>
-                  {s.location && <span className="text-sm text-zinc-500">{s.location}</span>}
+                {/* Same detail layout as the status cards: text left, portrait right. */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-base font-semibold text-zinc-900">{s.participant.name}</span>
+                      <StatusPill status="OFFERED" />
+                    </div>
+                    <DetailLine icon={<IconCalendar />}>{formatDay(s.scheduledStart)}</DetailLine>
+                    <DetailLine icon={<IconClock />}>
+                      {formatTime(s.scheduledStart)} – {formatTime(s.scheduledEnd)}
+                    </DetailLine>
+                    {s.location && <DetailLine icon={<IconPin />}>{s.location}</DetailLine>}
+                  </div>
+                  <ParticipantAvatar name={s.participant.name} />
                 </div>
+                {/* Full-width buttons so they're easy to tap one-handed. */}
                 <div className="flex gap-2">
-                  <form action={acceptShift}>
+                  <form action={acceptShift} className="flex-1">
                     <input type="hidden" name="shiftId" value={s.id} />
-                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+                    <button className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
                       Accept
                     </button>
                   </form>
-                  <form action={declineShift}>
+                  <form action={declineShift} className="flex-1">
                     <input type="hidden" name="shiftId" value={s.id} />
-                    <button className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100">
+                    <button className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100">
                       Decline
                     </button>
                   </form>
@@ -359,8 +370,4 @@ function formatDay(d: Date): string {
     day: "numeric",
     month: "short",
   });
-}
-
-function formatWhen(start: Date, end: Date): string {
-  return `${formatDay(start)} · ${formatTime(start)} – ${formatTime(end)}`;
 }
