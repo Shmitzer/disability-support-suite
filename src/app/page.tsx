@@ -78,8 +78,10 @@ export default async function Home() {
         </h1>
       </header>
 
-      {/* Three status cards. The middle one carries the clock on/off controls. */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Three status cards. The middle one carries the clock on/off controls.
+          Stacked on phones/tablets; three-up only on wide screens, so the
+          portrait + details always have room (avoids cramped wrapping). */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <ShiftCard label="Last completed" shift={lastShift} />
         <CurrentShiftCard shift={currentShift} now={now} />
         <ShiftCard label="Next allocated" shift={nextShift} />
@@ -198,17 +200,42 @@ function CardHeading({
 }
 
 // The shift's details — defined once so every card shows them identically.
+// A participant portrait sits to the left of the name, contact-card style.
 function ShiftDetails({ shift }: { shift: ShiftRow }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-base font-semibold text-zinc-900">{shift.participant.name}</span>
-      <DetailLine icon={<IconCalendar />}>{formatDay(shift.scheduledStart)}</DetailLine>
-      <DetailLine icon={<IconClock />}>
-        {formatTime(shift.scheduledStart)} – {formatTime(shift.scheduledEnd)}
-      </DetailLine>
-      {shift.location && <DetailLine icon={<IconPin />}>{shift.location}</DetailLine>}
+    <div className="flex items-start gap-3">
+      <ParticipantAvatar name={shift.participant.name} />
+      <div className="flex flex-col gap-1.5">
+        <span className="text-base font-semibold text-zinc-900">{shift.participant.name}</span>
+        <DetailLine icon={<IconCalendar />}>{formatDay(shift.scheduledStart)}</DetailLine>
+        <DetailLine icon={<IconClock />}>
+          {formatTime(shift.scheduledStart)} – {formatTime(shift.scheduledEnd)}
+        </DetailLine>
+        {shift.location && <DetailLine icon={<IconPin />}>{shift.location}</DetailLine>}
+      </div>
     </div>
   );
+}
+
+// A round participant portrait.
+// For now it shows the person's initials in a soft circle (no photos in the
+// data model yet). When participants get profile photos later, render an
+// <img> here instead of the initials — the size/shape is already in place.
+function ParticipantAvatar({ name }: { name: string }) {
+  return (
+    <span
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-100"
+      aria-hidden="true"
+    >
+      {getInitials(name)}
+    </span>
+  );
+}
+
+// "Priya Sharma" -> "PS"; "Jordan" -> "J". First letters of the first two words.
+function getInitials(name: string): string {
+  const words = name.trim().split(/\s+/);
+  return ((words[0]?.[0] ?? "") + (words[1]?.[0] ?? "")).toUpperCase();
 }
 
 // One line of detail: a small grey icon + its text.
