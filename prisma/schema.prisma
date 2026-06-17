@@ -1,0 +1,162 @@
+// Prisma schema — defines the shape of the local SQLite database.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// A person in the app: either a support worker or rostering/manager staff.
+// Role decides what they're allowed to do. (No passwords yet — dev role-switch.)
+model Worker {
+  id        String   @id @default(cuid())
+  name      String
+  role      String   @default("WORKER") // WORKER | ROSTERING
+  createdAt DateTime @default(now())
+
+  // Which participants this worker is linked to (controls auction visibility).
+  participantLinks WorkerParticipant[]
+
+  // Shift relationships (a worker plays several roles around a shift):
+  createdShifts   Shift[] @relation("ShiftCreatedBy")   // shifts they rostered
+  allocatedShifts Shift[] @relation("ShiftAllocatedTo") // shifts assigned to them
+  eventsActed     ShiftEvent[] @relation("EventActor")  // audit-log actions they took
+
+  // Clock-time amendment requests:
+  amendmentsRequested ClockAmendmentRequest[] @relation("AmendRequestedBy")
+  amendmentsDecided   ClockAmendmentRequest[] @relation("AmendDecidedBy")
+}
+
+// A person receiving disability support (NDIS participant).
+// Sample/dummy data only during development — never real participant data.
+model Participant {
+  id          String              @id @default(cuid())
+  name        String
+  ndisNumber  String?             @unique
+  createdAt   DateTime            @default(now())
+  notes       ProgressNote[]
+  shifts      Shift[]
+  workerLinks WorkerParticipant[] // workers a manager has linked to this person
+}
+
+// A manager-controlled link between a worker and a participant.
+// An auctioned shift is only visible to workers linked to that participant.
+model WorkerParticipant {
+  id            String      @id @default(cuid())
+  worker        Worker      @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  workerId      String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participantId String
+  createdAt     DateTime    @default(now())
+
+  @@unique([workerId, participantId]) // one link per worker/participant pair
+}
+
+// A progress note: the worker's rough notes + the AI-generated clean version.
+model ProgressNote {
+  id            String      @id @default(cuid())
+  participant   Participant @relation(fields: [participantId], references: [id])
+  participantId String
+  rawNotes      String // what the support worker typed
+  generatedNote String // the cleaned-up NDIS-style note from the AI
+  createdAt     DateTime    @default(now())
+}
+
+// A work shift, created by rostering staff and worked by a support worker.
+// Lifecycle: DRAFT -> OFFERED (auction) or ALLOCATED -> IN_PROGRESS -> COMPLETED.
+// (CANCELLED can happen from most states; it's logged for reports.)
+model Shift {
+  id     String @id @default(cuid())
+  status String @default("DRAFT") // DRAFT | OFFERED | ALLOCATED | IN_PROGRESS | COMPLETED | CANCELLED
+
+  participant   Participant @relation(fields: [participantId], references: [id])
+  participantId String
+  location      String? // where the shift takes place
+
+  // Who rostered it, and who it's for:
+  createdBy     Worker  @relation("ShiftCreatedBy", fields: [createdById], references: [id])
+  createdById   String
+  allocatedTo   Worker? @relation("ShiftAllocatedTo", fields: [allocatedToId], references: [id])
+  allocatedToId String? // null until allocated/accepted
+
+  // Planned time (set by roster) vs actual time (set by clock on/off):
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  clockOnAt      DateTime? // null until the worker clocks on
+  clockOffAt     DateTime? // null until the worker clocks off
+
+  // Key lifecycle timestamps for reporting:
+  allocatedAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  entries    LogEntry[]              // quick-capture notes during the shift
+  events     ShiftEvent[]            // append-only audit log (the compliance trail)
+  amendments ClockAmendmentRequest[] // requests to fix clock times
+  reports    ShiftReport[]           // AI-generated progress reports for this shift
+
+  createdAt DateTime @default(now())
+}
+
+// Append-only audit log: one row per thing that happened to a shift.
+// This is the backbone of NDIS compliance + easy report generation.
+model ShiftEvent {
+  id      String @id @default(cuid())
+  shift   Shift  @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId String
+  // CREATED | OFFERED | ALLOCATED | ACCEPTED | DECLINED | CLOCK_ON | CLOCK_OFF
+  // | CANCELLED | AMEND_REQUESTED | AMEND_APPROVED | AMEND_REJECTED
+  type    String
+  actor   Worker? @relation("EventActor", fields: [actorId], references: [id])
+  actorId String? // who did it (null for system-generated events)
+  detail  String? // optional human-readable / JSON extra context
+  createdAt DateTime @default(now()) // when the event happened
+}
+
+// A single log entry during a shift (food, toileting, activity, etc).
+model LogEntry {
+  id        String   @id @default(cuid())
+  shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId   String
+  category  String   // Meal | Fluids | Activity | Toileting | Hygiene | Meds | Incident
+  notes     String   // what the worker typed or dictated
+  timestamp DateTime // when the event happened (not when it was logged)
+  createdAt DateTime @default(now())
+}
+
+// An AI-generated progress report for one completed shift (task 1g).
+// We keep BOTH the warm summary the AI wrote AND the exact source log we fed it
+// ("hidden" — not shown by default). That source log is the reusable record other
+// parts of the app can later use to generate different reports or fill fields.
+// A shift can have several reports over time (e.g. regenerated); the newest wins.
+model ShiftReport {
+  id        String   @id @default(cuid())
+  shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId   String
+  summary   String   // the AI-written, person-centred summary of the shift
+  sourceLog String   // the exact compiled log fed to the AI (hidden source of truth)
+  model     String?  // which AI model produced it (e.g. gemini-2.5-flash)
+  createdAt DateTime @default(now())
+}
+
+// A worker's request to fix a missing/wrong clock on/off time.
+// Must be approved by a manager — workers can't edit clock times themselves.
+model ClockAmendmentRequest {
+  id            String   @id @default(cuid())
+  shift         Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId       String
+  requestedBy   Worker   @relation("AmendRequestedBy", fields: [requestedById], references: [id])
+  requestedById String
+  field         String   // "clockOnAt" | "clockOffAt"
+  proposedValue DateTime // the time the worker says it should be
+  reason        String?
+  status        String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  decidedBy     Worker?  @relation("AmendDecidedBy", fields: [decidedById], references: [id])
+  decidedById   String?
+  decidedAt     DateTime?
+  createdAt     DateTime @default(now())
+}
