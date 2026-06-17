@@ -11,6 +11,7 @@
 // element (also no JS).
 
 import { requestAmendment } from "@/lib/clock-actions";
+import { ParticipantAvatar } from "@/components/ParticipantAvatar";
 
 type Amendment = {
   field: string; // "clockOnAt" | "clockOffAt"
@@ -49,7 +50,10 @@ export function Timesheet({ shifts }: { shifts: TimesheetShift[] }) {
             className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
           >
             <div className="flex items-center justify-between gap-3">
-              <span className="font-semibold text-zinc-900">{s.participant.name}</span>
+              <div className="flex items-center gap-2.5">
+                <ParticipantAvatar name={s.participant.name} size="sm" />
+                <span className="font-semibold text-zinc-900">{s.participant.name}</span>
+              </div>
               <span className="text-sm text-zinc-500">{formatDay(s.scheduledStart)}</span>
             </div>
 

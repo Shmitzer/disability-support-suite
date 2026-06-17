@@ -1,4 +1,4 @@
-// The home page = the worker's shift dashboard.
+// The home page = the worker's shift dashboard (role-aware).
 // Runs on the server: it reads who's "logged in" (dev role-switch) and shows
 // either the worker homepage (3 status cards + auctions + calendar) or, for
 // rostering staff, a short placeholder until the roster side is built (1d).
@@ -12,6 +12,7 @@ import { clockOn, clockOff } from "@/lib/clock-actions";
 import { WorkerCalendar } from "@/components/WorkerCalendar";
 import { RosterView } from "@/components/RosterView";
 import { Timesheet } from "@/components/Timesheet";
+import { ParticipantAvatar } from "@/components/ParticipantAvatar";
 
 // Always read fresh data from the database on each request.
 export const dynamic = "force-dynamic";
@@ -226,27 +227,6 @@ function ShiftDetails({ shift }: { shift: ShiftRow }) {
       <ParticipantAvatar name={shift.participant.name} />
     </div>
   );
-}
-
-// A round participant portrait.
-// For now it shows the person's initials in a soft circle (no photos in the
-// data model yet). When participants get profile photos later, render an
-// <img> here instead of the initials — the size/shape is already in place.
-function ParticipantAvatar({ name }: { name: string }) {
-  return (
-    <span
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-100"
-      aria-hidden="true"
-    >
-      {getInitials(name)}
-    </span>
-  );
-}
-
-// "Priya Sharma" -> "PS"; "Jordan" -> "J". First letters of the first two words.
-function getInitials(name: string): string {
-  const words = name.trim().split(/\s+/);
-  return ((words[0]?.[0] ?? "") + (words[1]?.[0] ?? "")).toUpperCase();
 }
 
 // One line of detail: a small grey icon + its text.
