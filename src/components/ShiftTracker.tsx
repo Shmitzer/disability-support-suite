@@ -139,7 +139,8 @@ export function ShiftTracker({
           <textarea
             name="notes"
             rows={2}
-            autoFocus
+            // No autoFocus: tap into the box to type. This keeps the phone
+            // keyboard from popping up the moment you open a category to log.
             // Required either always (e.g. free-text Note) or conditionally (e.g.
             // medication PRN/Refused). The browser blocks an empty submit and the
             // server re-checks the same rule.
