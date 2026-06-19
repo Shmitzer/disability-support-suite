@@ -4,6 +4,7 @@
 // rostering staff, a short placeholder until the roster side is built (1d).
 
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
 import { getWorkerHome } from "@/lib/shifts";
 import { getRosterData } from "@/lib/roster";
@@ -12,6 +13,7 @@ import { clockOn, clockOff } from "@/lib/clock-actions";
 import { WorkerCalendar } from "@/components/WorkerCalendar";
 import { RosterView } from "@/components/RosterView";
 import { Timesheet } from "@/components/Timesheet";
+import { QuickShiftStarter } from "@/components/QuickShiftStarter";
 import { ParticipantAvatar } from "@/components/ParticipantAvatar";
 
 // Always read fresh data from the database on each request.
@@ -70,6 +72,12 @@ export default async function Home() {
   const { lastShift, currentShift, nextShift, offered, calendarShifts, timesheet, now } =
     await getWorkerHome(worker.id);
 
+  // The sample people for the quick-shift dropdown (sorted by name).
+  const participants = await prisma.participant.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-10">
       <header className="flex flex-col gap-1">
@@ -78,6 +86,9 @@ export default async function Home() {
           Hi {worker.name.split(" ")[0]}
         </h1>
       </header>
+
+      {/* Start logging straight away, without a rostered shift (standalone use). */}
+      <QuickShiftStarter participants={participants} />
 
       {/* Three status cards. The middle one carries the clock on/off controls.
           Stacked on phones/tablets; three-up only on wide screens, so the

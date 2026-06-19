@@ -18,6 +18,9 @@ import { clockOff } from "@/lib/clock-actions";
 import { ShiftTracker } from "@/components/ShiftTracker";
 import { ShiftTimeline } from "@/components/ShiftTimeline";
 import { ReportPanel } from "@/components/ReportPanel";
+import { buildShiftSourceLog } from "@/lib/report";
+import { getApprovedOptions } from "@/lib/learned-options";
+import { LOG_CATEGORIES } from "@/lib/log-categories";
 
 // Always read fresh data — the timeline changes as entries are added.
 export const dynamic = "force-dynamic";
@@ -32,6 +35,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
     where: { id },
     include: {
       participant: true,
+      allocatedTo: true, // the worker — included so the copied log names them
       entries: { orderBy: { timestamp: "asc" } },
       // The newest report only — regenerating just adds a fresh row on top.
       reports: { orderBy: { createdAt: "desc" }, take: 1 },
@@ -49,6 +53,18 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   // The report step is for your own, finished shift.
   const canReport = isOwner && shift.status === "COMPLETED";
   const latestReport = shift.reports[0] ?? null;
+  // The whole shift as plain text, for the copy-to-clipboard buttons.
+  const logText = buildShiftSourceLog(shift);
+
+  // Approved options for every self-learning group (drink, activity, …), keyed by
+  // group key. Grows as workers log new ones; falls back to the seed list in config
+  // if the DB has none yet.
+  const learnedGroups = LOG_CATEGORIES.flatMap((c) => c.groups ?? []).filter((g) => g.learn);
+  const learnedOptions: Record<string, string[]> = {};
+  for (const g of learnedGroups) {
+    const approved = await getApprovedOptions(g.key);
+    learnedOptions[g.key] = approved.length > 0 ? approved : g.options;
+  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-6 py-8">
@@ -73,7 +89,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
 
       {/* Capture chips — only while the shift is in progress and it's yours. */}
       {canLog ? (
-        <ShiftTracker shiftId={shift.id} />
+        <ShiftTracker shiftId={shift.id} learnedOptions={learnedOptions} />
       ) : (
         <p className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-500">
           {shift.status === "ALLOCATED"
@@ -90,6 +106,8 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
         clockOffAt={shift.clockOffAt}
         entries={shift.entries}
         editable={canLog}
+        logText={logText}
+        learnedOptions={learnedOptions}
       />
 
       {/* Finish the shift right here — clocking off completes it and unlocks the
@@ -103,12 +121,19 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
         </form>
       )}
 
-      {/* End-of-shift AI report (task 1g) — once the shift is finished. */}
+      {/* End-of-shift AI report (1g) + approval flow (1i) — once finished. */}
       {canReport && (
         <ReportPanel
           shiftId={shift.id}
           summary={latestReport?.summary ?? null}
+          status={latestReport?.status ?? "DRAFT"}
+          questions={parseJsonArray<string>(latestReport?.questions ?? null)}
+          clarifications={parseJsonArray<{ q: string; a: string }>(
+            latestReport?.clarifications ?? null,
+          )}
+          approvedAt={latestReport?.approvedAt ?? null}
           generatedAt={latestReport?.createdAt ?? null}
+          logText={logText}
         />
       )}
 
@@ -117,6 +142,17 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
       </footer>
     </main>
   );
+}
+
+// Safely parse a JSON-array column (questions / clarifications) into an array.
+function parseJsonArray<T>(json: string | null): T[] {
+  if (!json) return [];
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 // A small coloured label for the shift's current status.

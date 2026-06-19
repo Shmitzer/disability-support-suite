@@ -13,13 +13,47 @@
 
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { LOG_CATEGORIES } from "@/lib/log-categories";
+import { LOG_CATEGORIES, categoryRequiresNote, findCategory } from "@/lib/log-categories";
+import { catColor } from "@/lib/category-colors";
 import { addLogEntry } from "@/lib/log-actions";
+import { DetailFields } from "@/components/DetailFields";
+import { PhotoInput } from "@/components/PhotoInput";
 
-export function ShiftTracker({ shiftId }: { shiftId: string }) {
+export function ShiftTracker({
+  shiftId,
+  learnedOptions,
+}: {
+  shiftId: string;
+  // Approved options for each self-learning group, keyed by the group key
+  // (e.g. { drink: [...], activity: [...] }). From the DB; falls back to config.
+  learnedOptions: Record<string, string[]>;
+}) {
   // Which chip is currently open for a note (null = none open yet).
   const [selected, setSelected] = useState<string | null>(null);
+  // Whether the worker is overriding the entry time (default = now).
+  const [adjusting, setAdjusting] = useState(false);
+  // Current value of each option group, so the note can react (e.g. PRN → required).
+  const [groupValues, setGroupValues] = useState<Record<string, string[]>>({});
+  // Photos attached to the entry being logged (data URLs).
+  const [photos, setPhotos] = useState<string[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
+  // The chosen category (for its renamed label + emoji in the compact header).
+  const selectedCat = selected ? findCategory(selected) : null;
+
+  // Whether the note is required: always (e.g. free-text Note) or conditionally
+  // (e.g. medication PRN/Refused needs a reason).
+  const rnw = selectedCat?.requireNoteWhen;
+  const noteRequired =
+    (selected ? categoryRequiresNote(selected) : false) ||
+    (!!rnw && (groupValues[rnw.group] ?? []).some((v) => rnw.in.includes(v)));
+
+  // Open a category fresh: clear any leftover time override + group picks.
+  function openCategory(key: string | null) {
+    setSelected(key);
+    setAdjusting(false);
+    setGroupValues({});
+    setPhotos([]);
+  }
 
   // Runs when the note form is submitted. We call the server action, then reset
   // the strip so it's clear and ready for the next entry. Passing an async
@@ -28,88 +62,166 @@ export function ShiftTracker({ shiftId }: { shiftId: string }) {
     await addLogEntry(formData);
     formRef.current?.reset();
     setSelected(null);
+    setAdjusting(false);
+    setGroupValues({});
+    setPhotos([]);
   }
 
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <h2 className="text-lg font-semibold text-zinc-900">Log something</h2>
+      <div className="flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-zinc-900">Log something</h2>
+        {/* Photo button (icon only) — enlarged and centred between the title and the
+            "On shift" cue, while adding a log. */}
+        {selected && (
+          <div className="flex flex-1 justify-center">
+            <PhotoInput photos={photos} onChange={setPhotos} iconOnly />
+          </div>
+        )}
+        {/* A clear "you're live" cue while the shift is running. */}
+        <span className="ml-auto flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+          On shift
+        </span>
+      </div>
 
-      {/* The chip grid. Tapping a chip selects it (or closes it if tapped again). */}
-      <div className="flex flex-wrap gap-2">
-        {LOG_CATEGORIES.map((c) => {
-          const active = selected === c.key;
-          const incident = c.key === "Incident";
-          return (
+      {selected === null ? (
+        // The full chip grid — fills the width so every target is big and easy to
+        // tap on a phone (2 across on mobile, 4 on wider screens).
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          {LOG_CATEGORIES.map((c) => (
             <button
               key={c.key}
               type="button"
-              onClick={() => setSelected(active ? null : c.key)}
-              className={chipClasses(active, incident)}
+              onClick={() => openCategory(c.key)}
+              className={`${CHIP_BASE} ${catColor(c.key).chipIdle}`}
             >
               <span aria-hidden>{c.emoji}</span>
               {c.label}
             </button>
-          );
-        })}
-      </div>
-
-      {/* The note box for the chosen chip. Only shown once a chip is selected. */}
-      {selected && (
-        <form ref={formRef} action={handleSubmit} className="flex flex-col gap-2 border-t border-zinc-100 pt-3">
+          ))}
+        </div>
+      ) : (
+        // A category is chosen: hide the others, show a compact header with an
+        // obvious Back button to reselect, then just this category's note box.
+        <form ref={formRef} action={handleSubmit} className="flex flex-col gap-3">
           <input type="hidden" name="shiftId" value={shiftId} />
           <input type="hidden" name="category" value={selected} />
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => openCategory(null)}
+              className="flex items-center gap-1 rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100"
+            >
+              <span aria-hidden>←</span> Back
+            </button>
+            <span
+              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${catColor(selected).chipActive}`}
+            >
+              <span aria-hidden>{selectedCat?.emoji}</span>
+              {selectedCat?.label ?? selected}
+            </span>
+          </div>
+
+          {/* Quick-pick detail chips / pickers for this category. */}
+          <DetailFields
+            key={selected}
+            category={selected}
+            learnedOptions={learnedOptions}
+            values={groupValues}
+            onGroupChange={(k, v) => setGroupValues((s) => ({ ...s, [k]: v }))}
+          />
+
           <label className="text-sm font-medium text-zinc-700">
-            {selected} — add a note (optional)
+            Add a note{noteRequired ? " (required)" : " (optional)"}
           </label>
           <textarea
             name="notes"
             rows={2}
             autoFocus
-            placeholder="e.g. ate most of lunch, good appetite"
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400 focus:outline-none"
+            // Required either always (e.g. free-text Note) or conditionally (e.g.
+            // medication PRN/Refused). The browser blocks an empty submit and the
+            // server re-checks the same rule.
+            required={noteRequired}
+            placeholder={
+              categoryRequiresNote(selected)
+                ? "Type your note…"
+                : (selectedCat?.notePlaceholder ?? "e.g. add any detail worth noting")
+            }
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400 focus:outline-none"
           />
-          <div className="flex gap-2">
-            <SubmitButton category={selected} />
-            <button
-              type="button"
-              onClick={() => setSelected(null)}
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100"
-            >
-              Cancel
-            </button>
+
+          {/* Photos are chosen via the 📷 button in the header above; they ride
+              along in this hidden field. */}
+          <input type="hidden" name="photos" value={JSON.stringify(photos)} />
+
+          {/* When it happened. Default is the server's "now"; tap Adjust to set an
+              earlier time (e.g. logging something from 20 min ago). Only when
+              adjusting do we send a time — otherwise the server stamps now, keeping
+              the server clock the source of truth. */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-medium text-zinc-700">Time</span>
+            {adjusting ? (
+              <>
+                <input
+                  type="time"
+                  name="loggedTime"
+                  defaultValue={nowHHMM()}
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-base text-zinc-900 focus:border-blue-400 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setAdjusting(false)}
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Use now
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-zinc-500">Now</span>
+                <button
+                  type="button"
+                  onClick={() => setAdjusting(true)}
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Adjust
+                </button>
+              </>
+            )}
           </div>
+
+          <SubmitButton label={selectedCat?.label ?? selected} />
         </form>
       )}
     </section>
   );
 }
 
+// Current time as "HH:MM" (24h), used as the starting value when the worker taps
+// "Adjust". They can change it from there; an unchanged "Now" sends no time at all.
+function nowHHMM(): string {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 // The save button. It lives inside the form so useFormStatus() can tell us when
 // the entry is mid-save — we disable it then so a double-tap can't log twice.
-function SubmitButton({ category }: { category: string }) {
+function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+      className="w-full rounded-lg bg-blue-600 px-5 py-3 text-base font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
     >
-      {pending ? "Saving…" : `Log ${category}`}
+      {pending ? "Saving…" : `Log ${label}`}
     </button>
   );
 }
 
-// Tailwind needs the full class strings written out (it can't see ones we build
-// by gluing pieces together), so we pick from complete strings here.
-function chipClasses(active: boolean, incident: boolean): string {
-  const base =
-    "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors";
-  if (incident) {
-    return active
-      ? `${base} border-amber-400 bg-amber-100 text-amber-800`
-      : `${base} border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100`;
-  }
-  return active
-    ? `${base} border-blue-400 bg-blue-100 text-blue-800`
-    : `${base} border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100`;
-}
+// Tailwind needs the full class strings written out, so the per-category colours
+// live in `category-colors.ts` (shared with the timeline) and we glue on the base.
+const CHIP_BASE =
+  "flex w-full items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-base font-medium transition-colors";

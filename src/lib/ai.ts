@@ -102,15 +102,81 @@ Strict rules:
   state it exactly; if the log does NOT provide it, do not invent a status. Never editorialise it.
 - Output ONLY the summary text. No headings, no preamble.`;
 
+// A clarifying question + the worker's confirmed answer (task 1i).
+export type Clarification = { q: string; a: string };
+
 // Turn a compiled shift log (the "source log") into the warm progress summary.
-export async function generateShiftReport(sourceLog: string): Promise<string> {
-  const userPrompt = `Here is the log for one completed shift. Write the Summary now.\n\n${sourceLog}`;
+// `clarifications` are extra details the worker has CONFIRMED during approval —
+// we hand them to the AI as observed facts it may now include.
+export async function generateShiftReport(
+  sourceLog: string,
+  clarifications: Clarification[] = [],
+): Promise<string> {
+  let userPrompt = `Here is the log for one completed shift. Write the Summary now.\n\n${sourceLog}`;
+  if (clarifications.length > 0) {
+    const extra = clarifications
+      .map((c) => `Q: ${c.q}\nWorker's confirmed answer: ${c.a}`)
+      .join("\n\n");
+    userPrompt +=
+      `\n\nThe worker has CONFIRMED these additional details during review. Treat them as observed ` +
+      `facts you may now include (the same rules still apply — do not embellish beyond them):\n${extra}`;
+  }
   return callGemini(SHIFT_REPORT_SYSTEM_PROMPT, userPrompt);
 }
 
-// The one function that actually calls Gemini. Both note features share it so the
+// The system prompt for the clarifying-questions step (task 1i). The AI surfaces
+// gaps; the WORKER supplies the observed facts — so feelings end up confirmed, not
+// assumed. It must never invite guessing.
+const CLARIFY_SYSTEM_PROMPT = `You help a Disability Support Worker improve a shift progress note before they approve it.
+You are given the shift log and the current draft summary.
+
+Suggest a SHORT list (at most 4) of clarifying questions whose answers — which the worker can confirm
+from what they actually observed — would make the note more complete or accurate.
+
+Good questions ask about observable, factual gaps, for example:
+- the outcome of an activity, or how the participant responded to it;
+- whether support was given independently or with prompting/assistance;
+- whether the participant expressed how they felt about something (only how they EXPRESSED it, not how
+  they "really" felt);
+- a follow-up or action that may be needed.
+
+Rules:
+- NEVER ask the worker to speculate, guess, or interpret anyone's feelings or thoughts. Only ask about
+  things the worker could directly observe or that the participant actually said.
+- Do not ask about things already clearly covered in the log or summary.
+- If the note is already complete and nothing useful is missing, return an empty list.
+- Return ONLY a JSON array of question strings, e.g. ["...", "..."]. No other text.`;
+
+// Ask the AI for clarifying questions. Returns at most 4 plain-string questions
+// (empty if the note already looks complete).
+export async function generateClarifyingQuestions(
+  sourceLog: string,
+  summary: string,
+): Promise<string[]> {
+  const userPrompt =
+    `Shift log:\n${sourceLog}\n\nDraft summary:\n${summary}\n\nSuggest the clarifying questions now.`;
+  const raw = await callGemini(CLARIFY_SYSTEM_PROMPT, userPrompt, {
+    responseMimeType: "application/json",
+  });
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((q): q is string => typeof q === "string" && q.trim().length > 0).slice(0, 4);
+    }
+  } catch {
+    // If the model didn't return clean JSON, treat it as "no questions".
+  }
+  return [];
+}
+
+// The one function that actually calls Gemini. All note features share it so the
 // request shape, error handling, and model choice live in a single place.
-async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
+// `extraConfig` lets a caller add generationConfig options (e.g. JSON output).
+async function callGemini(
+  systemPrompt: string,
+  userPrompt: string,
+  extraConfig: Record<string, unknown> = {},
+): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 
@@ -120,25 +186,37 @@ async function callGemini(systemPrompt: string, userPrompt: string): Promise<str
     );
   }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
+  // Free-tier Gemini often returns 503 (busy) or 429 (rate limit) for a moment.
+  // Those are temporary, so we retry a few times with a growing pause before
+  // giving up. Other errors (e.g. a bad request) fail straight away.
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+    generationConfig: { temperature: 0.4, ...extraConfig },
+  });
+
+  const MAX_ATTEMPTS = 4;
+  let response: Response | undefined;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-        generationConfig: { temperature: 0.4 },
-      }),
-    },
-  );
+      body,
+    });
+    if (response.ok) break;
 
-  if (!response.ok) {
+    const retryable = response.status === 503 || response.status === 429;
+    if (retryable && attempt < MAX_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, attempt * 1500)); // 1.5s, 3s, 4.5s
+      continue;
+    }
+
     const detail = await response.text();
     throw new Error(`AI request failed (${response.status}): ${detail}`);
   }
 
-  const data = await response.json();
+  const data = await response!.json();
   const text: string =
     data?.candidates?.[0]?.content?.parts
       ?.map((p: { text?: string }) => p.text ?? "")

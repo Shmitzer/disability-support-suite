@@ -14,7 +14,13 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
-import { isLogCategory } from "@/lib/log-categories";
+import {
+  isLogCategory,
+  categoryRequiresNote,
+  findCategory,
+  validDetailsFor,
+} from "@/lib/log-categories";
+import { getApprovedOptions, recordCustomOption } from "@/lib/learned-options";
 import { revalidatePath } from "next/cache";
 
 // Add one entry to a shift's log. Allowed only on the caller's own shift while
@@ -29,6 +35,21 @@ export async function addLogEntry(formData: FormData) {
   // Only categories we actually offer (guards against a tampered form).
   if (!isLogCategory(category)) return;
 
+  // Some categories (e.g. a free-text "Note") are meaningless without text.
+  if (categoryRequiresNote(category) && !notes) return;
+
+  // Conditional note requirement (e.g. medication PRN/Refused needs a reason).
+  const rnw = findCategory(category)?.requireNoteWhen;
+  if (rnw && !notes) {
+    const picked = formData.getAll(rnw.group).map((v) => String(v));
+    if (picked.some((v) => rnw.in.includes(v))) return;
+  }
+
+  // Structured detail: the picked options + amount + free-text fields, rebuilt on
+  // the server (never trust the browser's text). Self-learning groups spell-match
+  // and learn typed "Other" values.
+  const detail = await buildDetail(category, formData);
+
   const shift = await prisma.shift.findUnique({ where: { id: shiftId } });
   // Must be this worker's own shift, and currently being worked.
   if (!shift || shift.allocatedToId !== worker.id || shift.status !== "IN_PROGRESS") return;
@@ -37,14 +58,116 @@ export async function addLogEntry(formData: FormData) {
     data: {
       shiftId,
       category,
+      detail: detail || null, // null, not "", when nothing structured was picked
+      photos: parsePhotos(formData.get("photos")),
       notes,
-      // `timestamp` = when it happened. For live capture that's now; the server
-      // clock is the source of truth (same as clock on/off).
-      timestamp: new Date(),
+      // `timestamp` = when it happened. Default is the server's "now"; if the
+      // worker adjusted the time we use that (today's date + their HH:MM).
+      timestamp: entryTimestamp(formData.get("loggedTime")),
     },
   });
 
   revalidatePath(`/shift/${shiftId}`);
+}
+
+// Validate the submitted photos (a JSON array of small image data URLs). We never
+// trust the browser: keep only data:image/ strings, cap each size and the count.
+// Returns a JSON string to store, or null. DEV/DUMMY photos only until Phase 5.
+function parsePhotos(raw: FormDataEntryValue | null): string | null {
+  const value = String(raw ?? "").trim();
+  if (!value) return null;
+  try {
+    const arr = JSON.parse(value);
+    if (!Array.isArray(arr)) return null;
+    const valid = arr
+      .filter((x): x is string => typeof x === "string" && x.startsWith("data:image/"))
+      .filter((x) => x.length < 2_000_000) // ~2 MB guard per image
+      .slice(0, 5);
+    return valid.length ? JSON.stringify(valid) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Decide an entry's timestamp. With no override we use `base` (the server's "now"
+// when adding; the entry's existing time when editing). A valid "HH:MM" override
+// sets that time on `base`'s DATE — so editing the time keeps the original day. We
+// re-validate the format here rather than trusting the browser's value.
+function entryTimestamp(raw: FormDataEntryValue | null, base: Date = new Date()): Date {
+  const value = String(raw ?? "").trim();
+  const match = /^(\d{2}):(\d{2})$/.exec(value);
+  if (match) {
+    const h = Number(match[1]);
+    const m = Number(match[2]);
+    if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+      const t = new Date(base);
+      t.setHours(h, m, 0, 0);
+      return t;
+    }
+  }
+  return base;
+}
+
+// Build the entry's structured `detail` string from the submitted form. Returns
+// "" when there's nothing structured to record. Revamped categories use `groups`:
+//   • a self-learning group (`learn`) — a typed "Other" is spell-matched + counted
+//     (recordCustomOption); otherwise the pick is validated against the approved list.
+//   • a fixed group — picks validated against its options; a free-text "Other" (if
+//     allowed, e.g. duration "45 min") is taken as typed.
+// Categories not yet revamped fall back to the flat `details` list.
+async function buildDetail(category: string, formData: FormData): Promise<string> {
+  const cat = findCategory(category);
+  const parts: string[] = [];
+
+  if (cat?.groups) {
+    // Track each group's chosen values so a `showWhen` group is only honoured when
+    // its trigger group qualifies (config lists the trigger before the dependent).
+    const chosen: Record<string, string[]> = {};
+    for (const g of cat.groups) {
+      if (g.showWhen) {
+        const dep = chosen[g.showWhen.group] ?? [];
+        if (!dep.some((v) => g.showWhen!.in.includes(v))) continue;
+      }
+
+      const custom = g.allowOther ? String(formData.get(`${g.key}__other`) ?? "").trim() : "";
+      let vals: string[];
+      if (g.learn) {
+        // Self-learning list (kind = the group key).
+        if (custom) {
+          const name = await recordCustomOption(g.key, custom);
+          vals = name ? [name] : [];
+        } else {
+          const approved = await getApprovedOptions(g.key);
+          vals = formData.getAll(g.key).map((v) => String(v)).filter((v) => approved.includes(v));
+        }
+      } else {
+        vals = formData.getAll(g.key).map((v) => String(v)).filter((v) => g.options.includes(v));
+        // A free-text "Other" on a non-learning group (e.g. an exact duration).
+        if (custom) vals.push(custom.replace(/\s+/g, " "));
+      }
+
+      if (g.mode === "single") vals = vals.slice(0, 1);
+      chosen[g.key] = vals;
+      parts.push(...vals);
+    }
+  } else {
+    parts.push(...validDetailsFor(category, formData.getAll("details").map((d) => String(d))));
+  }
+
+  // Optional amount (e.g. fluids in mL) — for any category that defines one.
+  const rawAmount = formData.get("amount");
+  const amount = rawAmount != null && String(rawAmount).trim() !== "" ? Number(rawAmount) : null;
+  if (cat?.amount && typeof amount === "number" && Number.isFinite(amount) && amount > 0) {
+    parts.push(`${amount} ${cat.amount.unit}`);
+  }
+
+  // Free-text fields (e.g. a medication dose), appended as typed.
+  for (const tf of cat?.textFields ?? []) {
+    const value = String(formData.get(tf.key) ?? "").trim().replace(/\s+/g, " ");
+    if (value) parts.push(value);
+  }
+
+  return parts.join(" · ");
 }
 
 // Remove a log entry the worker added by mistake. Still only their own shift,
@@ -63,6 +186,44 @@ export async function deleteLogEntry(formData: FormData) {
   if (entry.shift.allocatedToId !== worker.id || entry.shift.status !== "IN_PROGRESS") return;
 
   await prisma.logEntry.delete({ where: { id: entryId } });
+
+  revalidatePath(`/shift/${entry.shiftId}`);
+}
+
+// Edit an existing entry's note and time (the structured detail is set at capture;
+// to change that, remove and re-add). Same guard as delete: your own running shift.
+export async function updateLogEntry(formData: FormData) {
+  const worker = await getCurrentWorker();
+  const entryId = String(formData.get("entryId") ?? "");
+  const notes = String(formData.get("notes") ?? "").trim();
+  if (!worker || !entryId) return;
+
+  const entry = await prisma.logEntry.findUnique({
+    where: { id: entryId },
+    include: { shift: true },
+  });
+  if (!entry) return;
+  if (entry.shift.allocatedToId !== worker.id || entry.shift.status !== "IN_PROGRESS") return;
+
+  // A note that was required at capture (e.g. the free-text "Note") stays required.
+  if (categoryRequiresNote(entry.category) && !notes) return;
+
+  // If the worker re-picked the detail ("Change"), rebuild it; otherwise keep the
+  // existing detail (editing just the note/time must not wipe it).
+  const rebuilt = await buildDetail(entry.category, formData);
+  const detail = rebuilt !== "" ? rebuilt : entry.detail;
+
+  await prisma.logEntry.update({
+    where: { id: entryId },
+    // Keep the entry's original date; the override only changes the time-of-day.
+    // The edit form always submits the full photo set, so we set it from the form.
+    data: {
+      detail,
+      notes,
+      photos: parsePhotos(formData.get("photos")),
+      timestamp: entryTimestamp(formData.get("loggedTime"), entry.timestamp),
+    },
+  });
 
   revalidatePath(`/shift/${entry.shiftId}`);
 }

@@ -122,8 +122,10 @@ model LogEntry {
   id        String   @id @default(cuid())
   shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
   shiftId   String
-  category  String   // Meal | Fluids | Activity | Toileting | Hygiene | Meds | Incident
+  category  String   // Meal | Fluids | Activity | Toileting | Hygiene | Meds | Note | Incident
+  detail    String?  // structured quick-pick facts + amount, e.g. "Water · 250 mL" (null if none)
   notes     String   // what the worker typed or dictated
+  photos    String?  // JSON array of small image data URLs (DEV/DUMMY photos only until Phase 5)
   timestamp DateTime // when the event happened (not when it was logged)
   createdAt DateTime @default(now())
 }
@@ -137,10 +139,37 @@ model ShiftReport {
   id        String   @id @default(cuid())
   shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
   shiftId   String
-  summary   String   // the AI-written, person-centred summary of the shift
+  summary   String   // the AI-written, person-centred summary (may be hand-edited by staff)
   sourceLog String   // the exact compiled log fed to the AI (hidden source of truth)
   model     String?  // which AI model produced it (e.g. gemini-2.5-flash)
+
+  // Approval flow (task 1i):
+  status         String    @default("DRAFT") // DRAFT | APPROVED
+  questions      String?   // JSON array of the AI's current clarifying questions (or null)
+  clarifications String?   // JSON array of {q, a} the worker confirmed and folded in
+  approvedAt     DateTime?
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// A self-learning picklist option (drinks, activities, …). `kind` namespaces the
+// list. Base options are seeded (APPROVED). When a worker types one that isn't
+// listed, we spell-match it to the closest known option if we can; otherwise we
+// record it as SUGGESTED and count its uses. Once used a few times it auto-promotes
+// to APPROVED and joins everyone's picker. An admin can adjust the list later.
+model LearnedOption {
+  id         String   @id @default(cuid())
+  kind       String   // "drink" | "activity" | …
+  name       String   // canonical display name, e.g. "Coffee"
+  status     String   @default("SUGGESTED") // SUGGESTED | APPROVED
+  source     String   @default("custom") // seed | custom
+  useCount   Int      @default(0) // how many times it's been logged
+  sortOrder  Int      @default(100) // seeds keep their curated order first
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  @@unique([kind, name])
 }
 
 // A worker's request to fix a missing/wrong clock on/off time.

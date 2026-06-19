@@ -5,6 +5,8 @@
 // and every logged event are facts we already hold, so we lay them out exactly.
 // The AI's job is only to summarise this — it never invents the facts.
 
+import { findCategory } from "@/lib/log-categories";
+
 // The minimum shape this needs from a shift (kept loose so the caller can pass a
 // Prisma shift with its participant, allocated worker, and entries included).
 type ShiftForLog = {
@@ -15,7 +17,7 @@ type ShiftForLog = {
   scheduledEnd: Date;
   clockOnAt: Date | null;
   clockOffAt: Date | null;
-  entries: { category: string; notes: string; timestamp: Date }[];
+  entries: { category: string; detail: string | null; notes: string; timestamp: Date }[];
 };
 
 export function buildShiftSourceLog(shift: ShiftForLog): string {
@@ -30,7 +32,7 @@ export function buildShiftSourceLog(shift: ShiftForLog): string {
   if (shift.clockOffAt) lines.push(`Clocked off: ${formatTime(shift.clockOffAt)}`);
 
   lines.push("");
-  lines.push("Log entries (recorded time — category — worker's note):");
+  lines.push("Log entries (recorded time — category — details — worker's note):");
 
   if (shift.entries.length === 0) {
     lines.push("(No entries were logged during this shift.)");
@@ -40,8 +42,11 @@ export function buildShiftSourceLog(shift: ShiftForLog): string {
       (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
     );
     for (const e of ordered) {
+      // category (its display label), then the structured detail, then the note.
+      const label = findCategory(e.category)?.label ?? e.category;
+      const cat = e.detail ? `${label} (${e.detail})` : label;
       const note = e.notes.trim() || "(no note)";
-      lines.push(`${formatTime(e.timestamp)} — ${e.category} — ${note}`);
+      lines.push(`${formatTime(e.timestamp)} — ${cat} — ${note}`);
     }
   }
 
