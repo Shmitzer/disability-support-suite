@@ -79,10 +79,12 @@ export function PhotoInput({
         >
           <span aria-hidden>📷</span>
           {!iconOnly && (busy ? "Adding…" : photos.length ? "Add another photo" : "Add photo")}
+          {/* No `capture` attribute: on mobile the browser then prompts to
+              either take a photo with the camera OR pick an existing file
+              from the library, rather than forcing the camera open. */}
           <input
             type="file"
             accept="image/*"
-            capture="environment"
             multiple
             onChange={onPick}
             className="sr-only"
