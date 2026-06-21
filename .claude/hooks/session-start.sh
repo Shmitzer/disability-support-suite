@@ -37,7 +37,9 @@ if [ ! -f .env ]; then
 fi
 
 echo "session-start: installing dependencies…"
-npm install
+# --no-package-lock: install without rewriting package-lock.json, so a fresh
+# session doesn't leave the lockfile dirty from npm's normalisation churn.
+npm install --no-package-lock
 
 echo "session-start: generating Prisma client…"
 npx prisma generate
