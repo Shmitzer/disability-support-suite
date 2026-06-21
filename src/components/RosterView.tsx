@@ -10,6 +10,7 @@ import {
   cancelShift,
 } from "@/lib/roster-actions";
 import { approveAmendment, rejectAmendment } from "@/lib/clock-actions";
+import { sectorLabels } from "@/lib/sector-config";
 
 // How each status looks (Option A: calm, soft colours).
 const STATUS_BADGE: Record<string, string> = {
@@ -62,12 +63,15 @@ export function RosterView({
   shifts,
   linkedWorkers,
   amendments,
+  sector,
 }: {
   participants: Participant[];
   shifts: ShiftRow[];
   linkedWorkers: Record<string, { id: string; name: string }[]>;
   amendments: AmendmentRow[];
+  sector?: string | null;
 }) {
+  const labels = sectorLabels(sector);
   return (
     <div className="flex flex-col gap-8">
       {/* ---- Clock-time amendment requests (action these first) ---- */}
@@ -91,12 +95,12 @@ export function RosterView({
       <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold text-zinc-900">Create a shift</h2>
         {participants.length === 0 ? (
-          <p className="text-sm text-zinc-500">No participants yet — run the seed script.</p>
+          <p className="text-sm text-zinc-500">No {labels.participantPlural} yet — run the seed script.</p>
         ) : (
           <form action={createShift} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="participantId" className="text-sm font-medium text-zinc-700">
-                Participant
+                {labels.participantTitle}
               </label>
               <select
                 id="participantId"
@@ -129,7 +133,7 @@ export function RosterView({
                 type="text"
                 id="location"
                 name="location"
-                placeholder="e.g. Participant's home — Newcastle"
+                placeholder={`e.g. ${labels.participantTitle}'s home — Newcastle`}
                 className={inputClass}
               />
             </Field>

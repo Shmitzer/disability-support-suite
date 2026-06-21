@@ -5,11 +5,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { sectorLabels } from "@/lib/sector-config";
 
 type Participant = { id: string; name: string };
 
-export function NoteGenerator({ participants }: { participants: Participant[] }) {
+export function NoteGenerator({
+  participants,
+  sector,
+}: {
+  participants: Participant[];
+  sector?: string | null;
+}) {
   const router = useRouter();
+  const labels = sectorLabels(sector);
 
   const [participantId, setParticipantId] = useState(participants[0]?.id ?? "");
   const [rawNotes, setRawNotes] = useState("");
@@ -24,7 +32,7 @@ export function NoteGenerator({ participants }: { participants: Participant[] })
     setCopied(false);
 
     if (!participantId) {
-      setError("Please choose a participant.");
+      setError(`Please choose a ${labels.participant}.`);
       return;
     }
     if (!rawNotes.trim()) {
@@ -62,7 +70,7 @@ export function NoteGenerator({ participants }: { participants: Participant[] })
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="participant" className="text-sm font-medium text-zinc-700">
-          Participant
+          {labels.participantTitle}
         </label>
         <select
           id="participant"

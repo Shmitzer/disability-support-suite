@@ -4,11 +4,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { NoteGenerator } from "@/components/NoteGenerator";
+import { getCurrentSector } from "@/lib/session";
+import { sectorLabels } from "@/lib/sector-config";
 
 // Always read fresh data from the database on each request.
 export const dynamic = "force-dynamic";
 
 export default async function NotesPage() {
+  const sector = await getCurrentSector();
+  const labels = sectorLabels(sector);
+
   const participants = await prisma.participant.findMany({
     orderBy: { name: "asc" },
     select: { id: true, name: true },
@@ -30,17 +35,17 @@ export default async function NotesPage() {
           Progress Note Generator
         </h1>
         <p className="text-zinc-600">
-          Type rough shift notes and get a clean, NDIS-style progress note. Always review
+          Type rough shift notes and get a clean, {labels.noteStyle} progress note. Always review
           and edit before saving to your official records.
         </p>
       </header>
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         {participants.length > 0 ? (
-          <NoteGenerator participants={participants} />
+          <NoteGenerator participants={participants} sector={sector} />
         ) : (
           <p className="text-zinc-600">
-            No participants yet. Run the seed script to add sample data.
+            No {labels.participantPlural} yet. Run the seed script to add sample data.
           </p>
         )}
       </section>
@@ -72,7 +77,7 @@ export default async function NotesPage() {
       )}
 
       <footer className="mt-auto pt-4 text-center text-xs text-zinc-400">
-        Development build · sample data only · do not enter real participant information
+        Development build · sample data only · do not enter real {labels.participant} information
       </footer>
     </main>
   );
