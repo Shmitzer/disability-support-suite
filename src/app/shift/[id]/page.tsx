@@ -12,7 +12,9 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCurrentWorker } from "@/lib/session";
+import { getCurrentUser, getCurrentSector } from "@/lib/session";
+import { isRosteringRole } from "@/lib/enums";
+import { sectorLabels } from "@/lib/sector-config";
 import { prisma } from "@/lib/prisma";
 import { clockOff } from "@/lib/clock-actions";
 import { ShiftTracker } from "@/components/ShiftTracker";
@@ -28,8 +30,9 @@ export const dynamic = "force-dynamic";
 export default async function ShiftPage({ params }: { params: Promise<{ id: string }> }) {
   // In this version of Next, params is a promise — we await it to get the id.
   const { id } = await params;
-  const worker = await getCurrentWorker();
+  const worker = await getCurrentUser();
   if (!worker) notFound();
+  const labels = sectorLabels(await getCurrentSector());
 
   const shift = await prisma.shift.findUnique({
     where: { id },
@@ -46,7 +49,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   // You can view a shift if it's yours, or you're rostering staff. Otherwise it's
   // not your business to see.
   const isOwner = shift.allocatedToId === worker.id;
-  if (!isOwner && worker.role !== "ROSTERING") notFound();
+  if (!isOwner && !isRosteringRole(worker.role)) notFound();
 
   // Logging is allowed only on your own shift, and only while it's running.
   const canLog = isOwner && shift.status === "IN_PROGRESS";
@@ -138,7 +141,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
       )}
 
       <footer className="mt-auto pt-4 text-center text-xs text-zinc-400">
-        Development build · sample data only · do not enter real participant information
+        Development build · sample data only · do not enter real {labels.participant} information
       </footer>
     </main>
   );

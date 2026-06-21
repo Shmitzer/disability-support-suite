@@ -9,10 +9,18 @@
 // with no client-side JavaScript (same pattern as the roster forms).
 
 import { startQuickShift } from "@/lib/quick-shift-actions";
+import { sectorLabels } from "@/lib/sector-config";
 
 type Participant = { id: string; name: string };
 
-export function QuickShiftStarter({ participants }: { participants: Participant[] }) {
+export function QuickShiftStarter({
+  participants,
+  sector,
+}: {
+  participants: Participant[];
+  sector?: string | null;
+}) {
+  const labels = sectorLabels(sector);
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50/40 p-5 shadow-sm ring-1 ring-inset ring-blue-100">
       <div className="flex flex-col gap-0.5">
@@ -43,7 +51,7 @@ export function QuickShiftStarter({ participants }: { participants: Participant[
           <input
             type="text"
             name="participantName"
-            placeholder="e.g. Test Participant"
+            placeholder={`e.g. Test ${labels.participantTitle}`}
             className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
           <span className="text-xs text-zinc-400">

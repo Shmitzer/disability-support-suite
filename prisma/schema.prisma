@@ -1,5 +1,14 @@
 // Prisma schema — defines the shape of the local SQLite database.
 // Docs: https://pris.ly/d/prisma-schema
+//
+// Phase A (schema hardening): every data table carries the multi-tenant columns
+// `organisationId` (Rule 5) and a forward-looking `userId`, plus `updatedAt`.
+// All new columns are NULLABLE so existing dummy rows migrate cleanly on SQLite.
+// JSON-shaped columns are stored as `String` here (matching the existing
+// questions/clarifications/photos convention); they convert to native Json/Jsonb
+// at the PostgreSQL migration (Phase D). `role`/`status`/`sectorMode` stay strings
+// for now and become native Prisma enums at Phase D — keep all role/sector logic
+// flowing through src/lib/enums.ts.
 
 generator client {
   provider = "prisma-client"
@@ -10,60 +19,95 @@ datasource db {
   provider = "sqlite"
 }
 
-// A person in the app: either a support worker or rostering/manager staff.
-// Role decides what they're allowed to do. (No passwords yet — dev role-switch.)
+// The tenant. Nullable organisationId on every other table points here by id
+// (kept as a scalar for now; wired as a relation when RLS lands in Phase E).
+model Organisation {
+  id                 String   @id @default(cuid())
+  name               String
+  sectorMode         String   @default("NDIS") // NDIS | AGED_CARE | MENTAL_HEALTH | COMMUNITY_SERVICES | EARLY_CHILDHOOD
+  stripeCustomerId   String?
+  subscriptionStatus String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+}
+
+// A person in the app: support worker, rostering/manager staff, etc. This model is
+// also the spec's "User" (account + billing fields live here). Role decides what
+// they're allowed to do. (No passwords yet — dev role-switch; real auth in Phase E.)
 model Worker {
-  id        String   @id @default(cuid())
-  name      String
-  role      String   @default("WORKER") // WORKER | ROSTERING
-  createdAt DateTime @default(now())
+  id   String @id @default(cuid())
+  name String
+  role String @default("WORKER") // SOLO_WORKER | WORKER | SUPERVISOR | ADMIN | PARTICIPANT | SUPERADMIN
+
+  // Account / billing fields (Worker extended into the spec's User). All nullable
+  // until real auth (Phase E) and payments (Phase F) are wired.
+  supabaseUserId     String?   @unique // set when Supabase Auth is connected
+  organisationId     String?           // tenant; null = solo worker (Rule 5)
+  referralCode       String?
+  referredBy         String?
+  stripeCustomerId   String?
+  subscriptionStatus String?
+  trialEndsAt        DateTime?
+  lastSeenVersion    String?
 
   // Which participants this worker is linked to (controls auction visibility).
   participantLinks WorkerParticipant[]
 
   // Shift relationships (a worker plays several roles around a shift):
-  createdShifts   Shift[] @relation("ShiftCreatedBy")   // shifts they rostered
-  allocatedShifts Shift[] @relation("ShiftAllocatedTo") // shifts assigned to them
-  eventsActed     ShiftEvent[] @relation("EventActor")  // audit-log actions they took
+  createdShifts   Shift[]      @relation("ShiftCreatedBy")   // shifts they rostered
+  allocatedShifts Shift[]      @relation("ShiftAllocatedTo") // shifts assigned to them
+  eventsActed     ShiftEvent[] @relation("EventActor")       // audit-log actions they took
 
   // Clock-time amendment requests:
   amendmentsRequested ClockAmendmentRequest[] @relation("AmendRequestedBy")
   amendmentsDecided   ClockAmendmentRequest[] @relation("AmendDecidedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 // A person receiving disability support (NDIS participant).
 // Sample/dummy data only during development — never real participant data.
 model Participant {
-  id          String              @id @default(cuid())
-  name        String
-  ndisNumber  String?             @unique
-  createdAt   DateTime            @default(now())
-  notes       ProgressNote[]
-  shifts      Shift[]
-  workerLinks WorkerParticipant[] // workers a manager has linked to this person
+  id             String              @id @default(cuid())
+  name           String
+  ndisNumber     String?             @unique
+  userId         String? // owning user (e.g. solo worker), for future RLS
+  organisationId String?
+  notes          ProgressNote[]
+  shifts         Shift[]
+  workerLinks    WorkerParticipant[] // workers a manager has linked to this person
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @default(now()) @updatedAt
 }
 
 // A manager-controlled link between a worker and a participant.
 // An auctioned shift is only visible to workers linked to that participant.
 model WorkerParticipant {
-  id            String      @id @default(cuid())
-  worker        Worker      @relation(fields: [workerId], references: [id], onDelete: Cascade)
-  workerId      String
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  participantId String
-  createdAt     DateTime    @default(now())
+  id             String      @id @default(cuid())
+  worker         Worker      @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  workerId       String
+  participant    Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participantId  String
+  userId         String?
+  organisationId String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @default(now()) @updatedAt
 
   @@unique([workerId, participantId]) // one link per worker/participant pair
 }
 
 // A progress note: the worker's rough notes + the AI-generated clean version.
 model ProgressNote {
-  id            String      @id @default(cuid())
-  participant   Participant @relation(fields: [participantId], references: [id])
-  participantId String
-  rawNotes      String // what the support worker typed
-  generatedNote String // the cleaned-up NDIS-style note from the AI
-  createdAt     DateTime    @default(now())
+  id             String      @id @default(cuid())
+  participant    Participant @relation(fields: [participantId], references: [id])
+  participantId  String
+  rawNotes       String // what the support worker typed
+  generatedNote  String // the cleaned-up NDIS-style note from the AI
+  userId         String?
+  organisationId String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @default(now()) @updatedAt
 }
 
 // A work shift, created by rostering staff and worked by a support worker.
@@ -99,7 +143,10 @@ model Shift {
   amendments ClockAmendmentRequest[] // requests to fix clock times
   reports    ShiftReport[]           // AI-generated progress reports for this shift
 
-  createdAt DateTime @default(now())
+  userId         String?
+  organisationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
 }
 
 // Append-only audit log: one row per thing that happened to a shift.
@@ -110,24 +157,30 @@ model ShiftEvent {
   shiftId String
   // CREATED | OFFERED | ALLOCATED | ACCEPTED | DECLINED | CLOCK_ON | CLOCK_OFF
   // | CANCELLED | AMEND_REQUESTED | AMEND_APPROVED | AMEND_REJECTED
-  type    String
-  actor   Worker? @relation("EventActor", fields: [actorId], references: [id])
-  actorId String? // who did it (null for system-generated events)
-  detail  String? // optional human-readable / JSON extra context
-  createdAt DateTime @default(now()) // when the event happened
+  type           String
+  actor          Worker?  @relation("EventActor", fields: [actorId], references: [id])
+  actorId        String? // who did it (null for system-generated events)
+  detail         String? // optional human-readable / JSON extra context
+  userId         String?
+  organisationId String?
+  createdAt      DateTime @default(now()) // when the event happened
+  updatedAt      DateTime @default(now()) @updatedAt
 }
 
 // A single log entry during a shift (food, toileting, activity, etc).
 model LogEntry {
-  id        String   @id @default(cuid())
-  shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  shiftId   String
-  category  String   // Meal | Fluids | Activity | Toileting | Hygiene | Meds | Note | Incident
-  detail    String?  // structured quick-pick facts + amount, e.g. "Water · 250 mL" (null if none)
-  notes     String   // what the worker typed or dictated
-  photos    String?  // JSON array of small image data URLs (DEV/DUMMY photos only until Phase 5)
-  timestamp DateTime // when the event happened (not when it was logged)
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  shift          Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId        String
+  category       String // Meal | Fluids | Activity | Toileting | Hygiene | Meds | Note | Incident
+  detail         String? // structured quick-pick facts + amount, e.g. "Water · 250 mL" (null if none)
+  notes          String // what the worker typed or dictated
+  photos         String? // JSON array of small image data URLs (DEV/DUMMY photos only until Phase 5)
+  timestamp      DateTime // when the event happened (not when it was logged)
+  userId         String?
+  organisationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
 }
 
 // An AI-generated progress report for one completed shift (task 1g).
@@ -136,21 +189,32 @@ model LogEntry {
 // parts of the app can later use to generate different reports or fill fields.
 // A shift can have several reports over time (e.g. regenerated); the newest wins.
 model ShiftReport {
-  id        String   @id @default(cuid())
-  shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  id        String @id @default(cuid())
+  shift     Shift  @relation(fields: [shiftId], references: [id], onDelete: Cascade)
   shiftId   String
-  summary   String   // the AI-written, person-centred summary (may be hand-edited by staff)
-  sourceLog String   // the exact compiled log fed to the AI (hidden source of truth)
-  model     String?  // which AI model produced it (e.g. gemini-2.5-flash)
+  summary   String // the AI-written, person-centred summary (may be hand-edited by staff)
+  sourceLog String // the exact compiled log fed to the AI (hidden source of truth)
+  model     String? // which AI model produced it (e.g. gemini-2.5-flash)
+
+  // Structured/compliance fields (String-encoded JSON on SQLite → Json at Phase D):
+  activitiesLog   String? // structured array of activities (not free text)
+  incidentFlag    Boolean @default(false)
+  incidentFields  String? // NDIS mandatory incident fields (JSON)
+  idempotencyKey  String? @unique // prevents duplicate notes on mobile (Rule 12); wired in Phase C
+  generatedByModel String?
 
   // Approval flow (task 1i):
   status         String    @default("DRAFT") // DRAFT | APPROVED
-  questions      String?   // JSON array of the AI's current clarifying questions (or null)
-  clarifications String?   // JSON array of {q, a} the worker confirmed and folded in
+  questions      String? // JSON array of the AI's current clarifying questions (or null)
+  clarifications String? // JSON array of {q, a} the worker confirmed and folded in
   approvedAt     DateTime?
+  approvedBy     String?
+  approvalNotes  String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  userId         String?
+  organisationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
 }
 
 // A self-learning picklist option (drinks, activities, …). `kind` namespaces the
@@ -159,15 +223,18 @@ model ShiftReport {
 // record it as SUGGESTED and count its uses. Once used a few times it auto-promotes
 // to APPROVED and joins everyone's picker. An admin can adjust the list later.
 model LearnedOption {
-  id         String   @id @default(cuid())
-  kind       String   // "drink" | "activity" | …
-  name       String   // canonical display name, e.g. "Coffee"
-  status     String   @default("SUGGESTED") // SUGGESTED | APPROVED
-  source     String   @default("custom") // seed | custom
-  useCount   Int      @default(0) // how many times it's been logged
-  sortOrder  Int      @default(100) // seeds keep their curated order first
-  createdAt  DateTime @default(now())
-  lastUsedAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  kind           String // "drink" | "activity" | …
+  name           String // canonical display name, e.g. "Coffee"
+  status         String   @default("SUGGESTED") // SUGGESTED | APPROVED
+  source         String   @default("custom") // seed | custom
+  useCount       Int      @default(0) // how many times it's been logged
+  sortOrder      Int      @default(100) // seeds keep their curated order first
+  userId         String?
+  organisationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  lastUsedAt     DateTime @default(now())
 
   @@unique([kind, name])
 }
@@ -175,17 +242,33 @@ model LearnedOption {
 // A worker's request to fix a missing/wrong clock on/off time.
 // Must be approved by a manager — workers can't edit clock times themselves.
 model ClockAmendmentRequest {
-  id            String   @id @default(cuid())
-  shift         Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  shiftId       String
-  requestedBy   Worker   @relation("AmendRequestedBy", fields: [requestedById], references: [id])
-  requestedById String
-  field         String   // "clockOnAt" | "clockOffAt"
-  proposedValue DateTime // the time the worker says it should be
-  reason        String?
-  status        String   @default("PENDING") // PENDING | APPROVED | REJECTED
-  decidedBy     Worker?  @relation("AmendDecidedBy", fields: [decidedById], references: [id])
-  decidedById   String?
-  decidedAt     DateTime?
-  createdAt     DateTime @default(now())
+  id             String    @id @default(cuid())
+  shift          Shift     @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId        String
+  requestedBy    Worker    @relation("AmendRequestedBy", fields: [requestedById], references: [id])
+  requestedById  String
+  field          String // "clockOnAt" | "clockOffAt"
+  proposedValue  DateTime // the time the worker says it should be
+  reason         String?
+  status         String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  decidedBy      Worker?   @relation("AmendDecidedBy", fields: [decidedById], references: [id])
+  decidedById    String?
+  decidedAt      DateTime?
+  userId         String?
+  organisationId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+}
+
+// Cross-app audit trail for sensitive actions (Rule 9). ShiftEvent remains the
+// per-shift compliance log; this captures broader account/billing/admin actions.
+model AuditLog {
+  id             String   @id @default(cuid())
+  action         String // e.g. ROLE_CHANGED | SUBSCRIPTION_UPDATED | REPORT_APPROVED
+  actorId        String? // the Worker/User who did it (null = system)
+  organisationId String?
+  targetType     String // e.g. "Shift" | "Worker" | "ShiftReport"
+  targetId       String
+  detail         String? // JSON extra context (→ Json at Phase D)
+  createdAt      DateTime @default(now())
 }

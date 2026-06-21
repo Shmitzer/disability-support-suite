@@ -18,11 +18,16 @@ const sampleParticipants = [
   { name: "Liam O'Brien", ndisNumber: "430000003" },
 ];
 
+// One demo tenant so the multi-tenant columns are populated from day one.
+const DEMO_ORG_ID = "org_demo";
+
 // Fixed worker ids so the dev role-switch can refer to them reliably.
+// Roles use the 6-value set (see src/lib/enums.ts); the old "ROSTERING" role is
+// now ADMIN.
 const sampleWorkers = [
   { id: "wkr_edward", name: "Edward Neppl", role: "WORKER" },
   { id: "wkr_sam", name: "Sam Taylor", role: "WORKER" },
-  { id: "wkr_roster", name: "Alex Rivera", role: "ROSTERING" },
+  { id: "wkr_roster", name: "Alex Rivera", role: "ADMIN" },
 ];
 
 // --- Date helpers ----------------------------------------------------------
@@ -50,19 +55,28 @@ async function main() {
   await prisma.shift.deleteMany();
   await prisma.workerParticipant.deleteMany();
   await prisma.worker.deleteMany();
+  await prisma.organisation.deleteMany();
+
+  // The demo tenant. Every worker/participant below is attached to it so the
+  // organisationId columns are exercised even before real multi-tenancy lands.
+  await prisma.organisation.upsert({
+    where: { id: DEMO_ORG_ID },
+    update: { name: "Demo Care", sectorMode: "NDIS" },
+    create: { id: DEMO_ORG_ID, name: "Demo Care", sectorMode: "NDIS" },
+  });
 
   // Participants (keep any that already exist).
   for (const p of sampleParticipants) {
     await prisma.participant.upsert({
       where: { ndisNumber: p.ndisNumber },
-      update: { name: p.name },
-      create: p,
+      update: { name: p.name, organisationId: DEMO_ORG_ID },
+      create: { ...p, organisationId: DEMO_ORG_ID },
     });
   }
 
   // Workers.
   for (const w of sampleWorkers) {
-    await prisma.worker.create({ data: w });
+    await prisma.worker.create({ data: { ...w, organisationId: DEMO_ORG_ID } });
   }
 
   // Look up participant ids by their NDIS number.

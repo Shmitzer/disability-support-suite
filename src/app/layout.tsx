@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { BottomNav } from "@/components/BottomNav";
-import { listWorkers, getCurrentWorker } from "@/lib/session";
+import { listWorkers, getCurrentUser } from "@/lib/session";
+import { sectorLabels } from "@/lib/sector-config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +16,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// App-level metadata is static; it uses the default (NDIS) sector tagline. A
+// per-tenant title can move to generateMetadata() once auth lands (Phase E).
 export const metadata: Metadata = {
   title: "Disability Support Suite",
-  description: "NDIS support-worker tools — development build",
+  description: `${sectorLabels().tagline} — development build`,
 };
 
 export default async function RootLayout({
@@ -25,7 +28,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [workers, current] = await Promise.all([listWorkers(), getCurrentWorker()]);
+  const [workers, current] = await Promise.all([listWorkers(), getCurrentUser()]);
 
   return (
     <html

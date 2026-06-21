@@ -5,7 +5,9 @@
 
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getCurrentWorker } from "@/lib/session";
+import { getCurrentUser, getCurrentSector } from "@/lib/session";
+import { isRosteringRole } from "@/lib/enums";
+import { sectorLabels } from "@/lib/sector-config";
 import { getWorkerHome } from "@/lib/shifts";
 import { getRosterData } from "@/lib/roster";
 import { acceptShift, declineShift } from "@/lib/shift-actions";
@@ -32,7 +34,7 @@ type ShiftRow = {
 };
 
 export default async function Home() {
-  const worker = await getCurrentWorker();
+  const worker = await getCurrentUser();
 
   if (!worker) {
     return (
@@ -42,9 +44,13 @@ export default async function Home() {
     );
   }
 
+  // Sector terminology for this user's organisation (Rule 4).
+  const sector = await getCurrentSector();
+  const labels = sectorLabels(sector);
+
   // Rostering staff get the roster dashboard: create / allocate / auction /
   // cancel shifts, every step audit-logged.
-  if (worker.role === "ROSTERING") {
+  if (isRosteringRole(worker.role)) {
     const rosterData = await getRosterData();
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-10">
@@ -60,10 +66,11 @@ export default async function Home() {
           shifts={rosterData.shifts}
           linkedWorkers={rosterData.linkedWorkers}
           amendments={rosterData.amendments}
+          sector={sector}
         />
 
         <footer className="mt-auto pt-4 text-center text-xs text-zinc-400">
-          Development build · sample data only · do not enter real participant information
+          Development build · sample data only · do not enter real {labels.participant} information
         </footer>
       </main>
     );
@@ -88,7 +95,7 @@ export default async function Home() {
       </header>
 
       {/* Start logging straight away, without a rostered shift (standalone use). */}
-      <QuickShiftStarter participants={participants} />
+      <QuickShiftStarter participants={participants} sector={sector} />
 
       {/* Three status cards. The middle one carries the clock on/off controls.
           Stacked on phones/tablets; three-up only on wide screens, so the
@@ -157,7 +164,7 @@ export default async function Home() {
       <WorkerCalendar shifts={calendarShifts} />
 
       <footer className="mt-auto pt-4 text-center text-xs text-zinc-400">
-        Development build · sample data only · do not enter real participant information
+        Development build · sample data only · do not enter real {labels.participant} information
       </footer>
     </main>
   );

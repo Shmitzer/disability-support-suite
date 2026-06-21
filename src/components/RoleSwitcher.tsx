@@ -4,6 +4,7 @@
 "use client";
 
 import { setCurrentWorker } from "@/lib/session-actions";
+import { roleLabel } from "@/lib/enums";
 
 type WorkerLite = { id: string; name: string; role: string };
 
@@ -28,7 +29,7 @@ export function RoleSwitcher({
       >
         {workers.map((w) => (
           <option key={w.id} value={w.id}>
-            {w.name} · {w.role === "ROSTERING" ? "Rostering" : "Worker"}
+            {w.name} · {roleLabel(w.role)}
           </option>
         ))}
       </select>

@@ -4,6 +4,7 @@
 // participant (so a shift can only be allocated/offered to the right people).
 
 import { prisma } from "@/lib/prisma";
+import { isWorkerRole } from "@/lib/enums";
 
 // Shifts that still need or allow manager action come first; finished ones last.
 const STATUS_ORDER: Record<string, number> = {
@@ -44,7 +45,7 @@ export async function getRosterData() {
   // participantId -> the support workers a manager has linked to them.
   const linkedWorkers: Record<string, { id: string; name: string }[]> = {};
   for (const l of links) {
-    if (l.worker.role !== "WORKER") continue; // only front-line workers do shifts
+    if (!isWorkerRole(l.worker.role)) continue; // only front-line workers do shifts
     (linkedWorkers[l.participantId] ??= []).push({
       id: l.worker.id,
       name: l.worker.name,
