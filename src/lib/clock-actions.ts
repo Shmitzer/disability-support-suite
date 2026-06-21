@@ -18,6 +18,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { isRosteringRole } from "@/lib/enums";
 import { revalidatePath } from "next/cache";
 
 // How early a worker may clock on, in minutes before the scheduled start.
@@ -129,7 +130,7 @@ export async function requestAmendment(formData: FormData) {
 // request APPROVED, and log AMEND_APPROVED.
 export async function approveAmendment(formData: FormData) {
   const manager = await getCurrentWorker();
-  if (manager?.role !== "ROSTERING") return; // managers only
+  if (!manager || !isRosteringRole(manager.role)) return; // managers only
   const amendmentId = String(formData.get("amendmentId") ?? "");
   if (!amendmentId) return;
 
@@ -165,7 +166,7 @@ export async function approveAmendment(formData: FormData) {
 // Reject a pending request: leave the shift untouched, mark REJECTED, log it.
 export async function rejectAmendment(formData: FormData) {
   const manager = await getCurrentWorker();
-  if (manager?.role !== "ROSTERING") return;
+  if (!manager || !isRosteringRole(manager.role)) return;
   const amendmentId = String(formData.get("amendmentId") ?? "");
   if (!amendmentId) return;
 

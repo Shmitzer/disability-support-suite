@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { isRosteringRole } from "@/lib/enums";
 import { getWorkerHome } from "@/lib/shifts";
 import { getRosterData } from "@/lib/roster";
 import { acceptShift, declineShift } from "@/lib/shift-actions";
@@ -44,7 +45,7 @@ export default async function Home() {
 
   // Rostering staff get the roster dashboard: create / allocate / auction /
   // cancel shifts, every step audit-logged.
-  if (worker.role === "ROSTERING") {
+  if (isRosteringRole(worker.role)) {
     const rosterData = await getRosterData();
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-10">

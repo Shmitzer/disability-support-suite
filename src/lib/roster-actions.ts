@@ -7,12 +7,13 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { isRosteringRole } from "@/lib/enums";
 import { revalidatePath } from "next/cache";
 
 // Confirm the person doing this is rostering staff. Returns the worker, or null.
 async function requireRostering() {
   const worker = await getCurrentWorker();
-  return worker?.role === "ROSTERING" ? worker : null;
+  return isRosteringRole(worker?.role) ? worker : null;
 }
 
 // Create a new shift as a DRAFT (not yet allocated or offered).

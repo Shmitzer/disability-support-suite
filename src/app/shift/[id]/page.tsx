@@ -13,6 +13,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentWorker } from "@/lib/session";
+import { isRosteringRole } from "@/lib/enums";
 import { prisma } from "@/lib/prisma";
 import { clockOff } from "@/lib/clock-actions";
 import { ShiftTracker } from "@/components/ShiftTracker";
@@ -46,7 +47,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   // You can view a shift if it's yours, or you're rostering staff. Otherwise it's
   // not your business to see.
   const isOwner = shift.allocatedToId === worker.id;
-  if (!isOwner && worker.role !== "ROSTERING") notFound();
+  if (!isOwner && !isRosteringRole(worker.role)) notFound();
 
   // Logging is allowed only on your own shift, and only while it's running.
   const canLog = isOwner && shift.status === "IN_PROGRESS";
