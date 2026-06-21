@@ -48,6 +48,17 @@ async function loadOwnCompletedShift(shiftId: string) {
   return shift;
 }
 
+// The people whose names appear in this shift's log — handed to the AI layer so
+// they can be scrubbed before any text is sent to the model (Rule 2).
+function peopleIn(shift: {
+  participant: { name: string };
+  allocatedTo: { name: string } | null;
+}): string[] {
+  return [shift.participant.name, shift.allocatedTo?.name].filter(
+    (n): n is string => !!n,
+  );
+}
+
 function parseClarifications(json: string | null): Clarification[] {
   if (!json) return [];
   try {
@@ -82,7 +93,7 @@ export async function generateReport(
 
   let summary: string;
   try {
-    summary = await generateShiftReport(sourceLog);
+    summary = await generateShiftReport(sourceLog, [], peopleIn(shift));
   } catch (err) {
     console.error("generateReport failed:", err);
     return { error: "The AI couldn't write the report just now. Please try again." };
@@ -123,7 +134,7 @@ export async function requestClarifications(
 
   let questions: string[];
   try {
-    questions = await generateClarifyingQuestions(report.sourceLog, report.summary);
+    questions = await generateClarifyingQuestions(report.sourceLog, report.summary, peopleIn(shift));
   } catch (err) {
     console.error("requestClarifications failed:", err);
     return { error: "Couldn't fetch questions just now. Please try again." };
@@ -168,7 +179,7 @@ export async function applyAnswers(
 
   let summary: string;
   try {
-    summary = await generateShiftReport(report.sourceLog, merged);
+    summary = await generateShiftReport(report.sourceLog, merged, peopleIn(shift));
   } catch (err) {
     console.error("applyAnswers failed:", err);
     return { error: "The AI couldn't update the report just now. Please try again." };

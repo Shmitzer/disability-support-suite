@@ -6,6 +6,7 @@
  */
 
 import { DETAIL_LEVEL, GLOSSARY } from "@/lib/note-config";
+import { scrubPII } from "@/lib/pii";
 
 // Instructions that tell the AI HOW to write the note. This is the "system prompt".
 const SYSTEM_PROMPT = `You are an assistant for Disability Support Workers (DSWs) in New South Wales, Australia.
@@ -30,12 +31,15 @@ export async function generateProgressNote(params: {
   participantName: string;
   rawNotes: string;
 }): Promise<string> {
-  const userPrompt =
+  // Scrub PII before the prompt leaves the app (Rule 2); restore names after.
+  const { text: userPrompt, restore } = scrubPII(
     `Participant: ${params.participantName}\n\n` +
-    `Rough shift notes from the support worker:\n"""\n${params.rawNotes}\n"""\n\n` +
-    `Write the progress note now.`;
+      `Rough shift notes from the support worker:\n"""\n${params.rawNotes}\n"""\n\n` +
+      `Write the progress note now.`,
+    [params.participantName],
+  );
 
-  return callGemini(SYSTEM_PROMPT, userPrompt);
+  return restore(await callGemini(SYSTEM_PROMPT, userPrompt));
 }
 
 // The system prompt for the SHIFT report (task 1g). It's a template: the two
@@ -111,6 +115,7 @@ export type Clarification = { q: string; a: string };
 export async function generateShiftReport(
   sourceLog: string,
   clarifications: Clarification[] = [],
+  people: string[] = [],
 ): Promise<string> {
   let userPrompt = `Here is the log for one completed shift. Write the Summary now.\n\n${sourceLog}`;
   if (clarifications.length > 0) {
@@ -121,7 +126,9 @@ export async function generateShiftReport(
       `\n\nThe worker has CONFIRMED these additional details during review. Treat them as observed ` +
       `facts you may now include (the same rules still apply — do not embellish beyond them):\n${extra}`;
   }
-  return callGemini(SHIFT_REPORT_SYSTEM_PROMPT, userPrompt);
+  // Scrub PII before sending (Rule 2); restore names in the returned summary.
+  const { text, restore } = scrubPII(userPrompt, people);
+  return restore(await callGemini(SHIFT_REPORT_SYSTEM_PROMPT, text));
 }
 
 // The system prompt for the clarifying-questions step (task 1i). The AI surfaces
@@ -152,16 +159,23 @@ Rules:
 export async function generateClarifyingQuestions(
   sourceLog: string,
   summary: string,
+  people: string[] = [],
 ): Promise<string[]> {
-  const userPrompt =
-    `Shift log:\n${sourceLog}\n\nDraft summary:\n${summary}\n\nSuggest the clarifying questions now.`;
-  const raw = await callGemini(CLARIFY_SYSTEM_PROMPT, userPrompt, {
+  // Scrub PII before sending (Rule 2); restore names in each returned question.
+  const { text, restore } = scrubPII(
+    `Shift log:\n${sourceLog}\n\nDraft summary:\n${summary}\n\nSuggest the clarifying questions now.`,
+    people,
+  );
+  const raw = await callGemini(CLARIFY_SYSTEM_PROMPT, text, {
     responseMimeType: "application/json",
   });
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed.filter((q): q is string => typeof q === "string" && q.trim().length > 0).slice(0, 4);
+      return parsed
+        .filter((q): q is string => typeof q === "string" && q.trim().length > 0)
+        .map((q) => restore(q))
+        .slice(0, 4);
     }
   } catch {
     // If the model didn't return clean JSON, treat it as "no questions".
