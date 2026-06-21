@@ -143,6 +143,7 @@ model Shift {
   amendments ClockAmendmentRequest[] // requests to fix clock times
   reports    ShiftReport[]           // AI-generated progress reports for this shift
 
+  idempotencyKey String? @unique // client-generated; prevents duplicate shifts on mobile (Rule 12)
   userId         String?
   organisationId String?
   createdAt      DateTime @default(now())
@@ -177,6 +178,7 @@ model LogEntry {
   notes          String // what the worker typed or dictated
   photos         String? // JSON array of small image data URLs (DEV/DUMMY photos only until Phase 5)
   timestamp      DateTime // when the event happened (not when it was logged)
+  idempotencyKey String? @unique // client-generated; prevents duplicate entries on mobile (Rule 12)
   userId         String?
   organisationId String?
   createdAt      DateTime @default(now())

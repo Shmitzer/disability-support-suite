@@ -61,29 +61,56 @@ export async function startQuickShift(formData: FormData) {
 
   if (!participantId) return; // nothing typed and nothing chosen — do nothing
 
+  // Idempotency (Rule 12): a double-submit (double tap / back-forward) carries the
+  // same client key, so it lands on the SAME shift instead of creating duplicates.
+  const idempotencyKey = String(formData.get("idempotencyKey") ?? "") || null;
+  if (idempotencyKey) {
+    const existing = await prisma.shift.findUnique({ where: { idempotencyKey } });
+    if (existing) redirect(`/shift/${existing.id}`); // same submit again — same shift
+  }
+
   const now = new Date();
   const scheduledEnd = new Date(now.getTime() + QUICK_SHIFT_HOURS * 60 * 60_000);
 
   // Create the shift already running and already clocked on, owned by + created
   // by this worker. Two audit lines: it was created, and it was clocked on.
-  const shift = await prisma.shift.create({
-    data: {
-      status: "IN_PROGRESS",
-      participantId,
-      createdById: worker.id,
-      allocatedToId: worker.id,
-      scheduledStart: now,
-      scheduledEnd,
-      clockOnAt: now,
-      events: {
-        create: [
-          { type: "CREATED", actorId: worker.id, detail: "Quick shift" },
-          { type: "CLOCK_ON", actorId: worker.id },
-        ],
+  let newId: string;
+  try {
+    const shift = await prisma.shift.create({
+      data: {
+        status: "IN_PROGRESS",
+        participantId,
+        createdById: worker.id,
+        allocatedToId: worker.id,
+        scheduledStart: now,
+        scheduledEnd,
+        clockOnAt: now,
+        idempotencyKey,
+        events: {
+          create: [
+            { type: "CREATED", actorId: worker.id, detail: "Quick shift" },
+            { type: "CLOCK_ON", actorId: worker.id },
+          ],
+        },
       },
-    },
-  });
+    });
+    newId = shift.id;
+  } catch (err) {
+    // Lost the unique race to a concurrent identical submit — use the winner.
+    if (isUniqueViolation(err) && idempotencyKey) {
+      const existing = await prisma.shift.findUnique({ where: { idempotencyKey } });
+      if (existing) redirect(`/shift/${existing.id}`);
+    }
+    throw err;
+  }
 
   revalidatePath("/");
-  redirect(`/shift/${shift.id}`); // straight to the tracker — nothing runs after this
+  redirect(`/shift/${newId}`); // straight to the tracker — nothing runs after this
+}
+
+// Prisma raises error code P2002 when a @unique constraint (idempotencyKey) is hit.
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" && err !== null && (err as { code?: string }).code === "P2002"
+  );
 }

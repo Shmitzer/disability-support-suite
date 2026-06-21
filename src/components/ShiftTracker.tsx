@@ -36,7 +36,14 @@ export function ShiftTracker({
   const [groupValues, setGroupValues] = useState<Record<string, string[]>>({});
   // Photos attached to the entry being logged (data URLs).
   const [photos, setPhotos] = useState<string[]>([]);
+  // The note text, kept in state so it can be backed up locally (Rule 8).
+  const [note, setNote] = useState("");
+  // Client-generated idempotency key for the entry being composed (Rule 12).
+  const [entryKey, setEntryKey] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Where this shift+category's in-progress note is backed up (Rule 8).
+  const noteBackupKey = (cat: string) => `dsw:note:${shiftId}:${cat}`;
   // The chosen category (for its renamed label + emoji in the compact header).
   const selectedCat = selected ? findCategory(selected) : null;
 
@@ -47,19 +54,31 @@ export function ShiftTracker({
     (selected ? categoryRequiresNote(selected) : false) ||
     (!!rnw && (groupValues[rnw.group] ?? []).some((v) => rnw.in.includes(v)));
 
-  // Open a category fresh: clear any leftover time override + group picks.
+  // Open a category fresh: clear any leftover time override + group picks. Mint a
+  // new idempotency key for this entry, and restore any note we backed up earlier
+  // (so a refresh or a dropped submit doesn't lose the worker's typing — Rule 8).
   function openCategory(key: string | null) {
     setSelected(key);
     setAdjusting(false);
     setGroupValues({});
     setPhotos([]);
+    if (key) {
+      setEntryKey(crypto.randomUUID());
+      setNote(lsGet(noteBackupKey(key)));
+    } else {
+      setNote("");
+    }
   }
 
   // Runs when the note form is submitted. We call the server action, then reset
   // the strip so it's clear and ready for the next entry. Passing an async
   // function to <form action> is allowed in a client component.
   async function handleSubmit(formData: FormData) {
+    const cat = selected;
     await addLogEntry(formData);
+    // Success only reaches here (a thrown action leaves the backup intact, Rule 8).
+    if (cat) lsRemove(noteBackupKey(cat));
+    setNote("");
     formRef.current?.reset();
     setSelected(null);
     setAdjusting(false);
@@ -107,6 +126,7 @@ export function ShiftTracker({
         <form ref={formRef} action={handleSubmit} className="flex flex-col gap-3">
           <input type="hidden" name="shiftId" value={shiftId} />
           <input type="hidden" name="category" value={selected} />
+          <input type="hidden" name="idempotencyKey" value={entryKey} />
 
           <div className="flex items-center gap-2">
             <button
@@ -141,6 +161,12 @@ export function ShiftTracker({
             rows={2}
             // No autoFocus: tap into the box to type. This keeps the phone
             // keyboard from popping up the moment you open a category to log.
+            // Controlled so each keystroke is backed up locally (Rule 8).
+            value={note}
+            onChange={(e) => {
+              setNote(e.target.value);
+              if (selected) lsSet(noteBackupKey(selected), e.target.value);
+            }}
             // Required either always (e.g. free-text Note) or conditionally (e.g.
             // medication PRN/Refused). The browser blocks an empty submit and the
             // server re-checks the same rule.
@@ -220,6 +246,30 @@ function SubmitButton({ label }: { label: string }) {
       {pending ? "Saving…" : `Log ${label}`}
     </button>
   );
+}
+
+// Small localStorage helpers for the Rule 8 note backup. Guarded so private mode
+// (or any storage error) never breaks logging.
+function lsGet(key: string): string {
+  try {
+    return localStorage.getItem(key) ?? "";
+  } catch {
+    return "";
+  }
+}
+function lsSet(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* ignore storage failures */
+  }
+}
+function lsRemove(key: string) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    /* ignore storage failures */
+  }
 }
 
 // Tailwind needs the full class strings written out, so the per-category colours

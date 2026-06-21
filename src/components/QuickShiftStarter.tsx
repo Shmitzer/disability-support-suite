@@ -21,6 +21,10 @@ export function QuickShiftStarter({
   sector?: string | null;
 }) {
   const labels = sectorLabels(sector);
+  // A key minted at render time (this page is force-dynamic, so it's fresh each
+  // load). A double-submit of this same form reuses it, so the server dedupes to
+  // one shift (Rule 12).
+  const idempotencyKey = crypto.randomUUID();
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50/40 p-5 shadow-sm ring-1 ring-inset ring-blue-100">
       <div className="flex flex-col gap-0.5">
@@ -29,6 +33,7 @@ export function QuickShiftStarter({
       </div>
 
       <form action={startQuickShift} className="flex flex-col gap-3">
+        <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
         {participants.length > 0 && (
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-700">Pick someone</span>

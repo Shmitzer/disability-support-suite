@@ -54,20 +54,45 @@ export async function addLogEntry(formData: FormData) {
   // Must be this worker's own shift, and currently being worked.
   if (!shift || shift.allocatedToId !== worker.id || shift.status !== "IN_PROGRESS") return;
 
-  await prisma.logEntry.create({
-    data: {
-      shiftId,
-      category,
-      detail: detail || null, // null, not "", when nothing structured was picked
-      photos: parsePhotos(formData.get("photos")),
-      notes,
-      // `timestamp` = when it happened. Default is the server's "now"; if the
-      // worker adjusted the time we use that (today's date + their HH:MM).
-      timestamp: entryTimestamp(formData.get("loggedTime")),
-    },
-  });
+  // Idempotency (Rule 12): a client-generated key dedupes double-taps / retries
+  // on a flaky mobile connection so the same entry can't be logged twice.
+  const idempotencyKey = String(formData.get("idempotencyKey") ?? "") || null;
+  if (idempotencyKey) {
+    const existing = await prisma.logEntry.findUnique({ where: { idempotencyKey } });
+    if (existing) {
+      revalidatePath(`/shift/${shiftId}`);
+      return; // already logged — do not create a duplicate
+    }
+  }
+
+  try {
+    await prisma.logEntry.create({
+      data: {
+        shiftId,
+        category,
+        detail: detail || null, // null, not "", when nothing structured was picked
+        photos: parsePhotos(formData.get("photos")),
+        notes,
+        // `timestamp` = when it happened. Default is the server's "now"; if the
+        // worker adjusted the time we use that (today's date + their HH:MM).
+        timestamp: entryTimestamp(formData.get("loggedTime")),
+        idempotencyKey,
+      },
+    });
+  } catch (err) {
+    // A concurrent identical submit won the unique race — treat as already done.
+    if (!isUniqueViolation(err)) throw err;
+  }
 
   revalidatePath(`/shift/${shiftId}`);
+}
+
+// Prisma raises error code P2002 when a @unique constraint (here idempotencyKey)
+// is violated — i.e. a duplicate we can safely ignore.
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" && err !== null && (err as { code?: string }).code === "P2002"
+  );
 }
 
 // Validate the submitted photos (a JSON array of small image data URLs). We never
