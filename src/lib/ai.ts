@@ -27,6 +27,35 @@ Rules:
     Concerns and follow-up
 - Output ONLY the finished progress note. No preamble, no explanation.`;
 
+// Safe template fallbacks shown when the AI can't produce a usable note (Rule 11).
+const PROGRESS_NOTE_FALLBACK =
+  "An automated note could not be generated. Please write the progress note from your rough notes before saving.";
+const SHIFT_REPORT_FALLBACK =
+  "An automated summary could not be generated for this shift. Please review the recorded activity log and write the summary before approving.";
+
+// A produced note is usable if it has real content and no leftover scrub tokens
+// (a PERSON_n that survived means the model mangled it — fail rather than leak it).
+function isUsableNote(out: string): boolean {
+  return out.trim().length >= 20 && !/PERSON_\d+/.test(out);
+}
+
+// Generate, validate, retry once, then fall back to a template (Rule 11). Hard API
+// errors (missing key, network) still propagate to the caller.
+async function generateValidated(
+  system: string,
+  userPrompt: string,
+  restore: (s: string) => string,
+  fallback: string,
+  extraConfig: Record<string, unknown> = {},
+): Promise<string> {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const out = restore(await callGemini(system, userPrompt, extraConfig));
+    if (isUsableNote(out)) return out;
+    console.warn(`AI output failed validation (attempt ${attempt}/2).`);
+  }
+  return fallback;
+}
+
 export async function generateProgressNote(params: {
   participantName: string;
   rawNotes: string;
@@ -39,7 +68,7 @@ export async function generateProgressNote(params: {
     [params.participantName],
   );
 
-  return restore(await callGemini(SYSTEM_PROMPT, userPrompt));
+  return generateValidated(SYSTEM_PROMPT, userPrompt, restore, PROGRESS_NOTE_FALLBACK);
 }
 
 // The system prompt for the SHIFT report (task 1g). It's a template: the two
@@ -126,9 +155,9 @@ export async function generateShiftReport(
       `\n\nThe worker has CONFIRMED these additional details during review. Treat them as observed ` +
       `facts you may now include (the same rules still apply — do not embellish beyond them):\n${extra}`;
   }
-  // Scrub PII before sending (Rule 2); restore names in the returned summary.
+  // Scrub PII before sending (Rule 2); validate + retry + restore (Rule 11).
   const { text, restore } = scrubPII(userPrompt, people);
-  return restore(await callGemini(SHIFT_REPORT_SYSTEM_PROMPT, text));
+  return generateValidated(SHIFT_REPORT_SYSTEM_PROMPT, text, restore, SHIFT_REPORT_FALLBACK);
 }
 
 // The system prompt for the clarifying-questions step (task 1i). The AI surfaces
