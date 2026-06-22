@@ -2,16 +2,14 @@
 # SessionStart hook — bootstraps the app for Claude Code on the web so the dev
 # server, linter and Prisma all work in a fresh session.
 #
-# What it does (idempotent, non-interactive):
-#   1. Ensures DATABASE_URL is set (local SQLite path — NOT a secret).
-#   2. Installs npm dependencies.
-#   3. Regenerates the Prisma client.
-#   4. Applies migrations to the local SQLite database.
-#   5. Seeds sample (dummy) data + learned-option picklists.
+# On Postgres/Supabase this stops at deps + Prisma client generation: migrations
+# and seeding are run DELIBERATELY against the configured database (see
+# docs/PRODUCTION_CUTOVER.md), never automatically — auto-migrating or seeding a
+# remote DB on every session start is unsafe.
 #
-# Secrets are NEVER baked in here. GEMINI_API_KEY (for AI note generation) must be
-# provided via the environment's configured variables — see .env.example. Without
-# it the app still runs; only AI generation is disabled.
+# Secrets are NEVER baked in here. DATABASE_URL / DIRECT_URL / GEMINI_API_KEY are
+# provided via the environment's configured variables or a local .env (see
+# .env.example). Without GEMINI_API_KEY the app still runs; only AI is disabled.
 set -euo pipefail
 
 # Only run in the remote (Claude Code on the web) environment. Locally you run the
@@ -23,19 +21,6 @@ fi
 
 cd "${CLAUDE_PROJECT_DIR:-.}"
 
-# 1. DATABASE_URL — default to the local SQLite file (safe to commit/automate).
-DB_URL="${DATABASE_URL:-file:./dev.db}"
-export DATABASE_URL="$DB_URL"
-# Persist it for the rest of the session's commands.
-if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
-  echo "export DATABASE_URL=\"$DB_URL\"" >> "$CLAUDE_ENV_FILE"
-fi
-# Prisma CLI reads .env (via dotenv); create one only if absent so we never
-# clobber a local .env that may hold real secrets.
-if [ ! -f .env ]; then
-  echo "DATABASE_URL=\"$DB_URL\"" > .env
-fi
-
 echo "session-start: installing dependencies…"
 # --no-package-lock: install without rewriting package-lock.json, so a fresh
 # session doesn't leave the lockfile dirty from npm's normalisation churn.
@@ -44,11 +29,5 @@ npm install --no-package-lock
 echo "session-start: generating Prisma client…"
 npx prisma generate
 
-echo "session-start: applying database migrations…"
-npx prisma migrate deploy
-
-echo "session-start: seeding sample data…"
-npx tsx prisma/seed.ts
-npx tsx scripts/seed-learned-options.ts
-
-echo "session-start: bootstrap complete."
+echo "session-start: bootstrap complete (deps + Prisma client)."
+echo "session-start: with DATABASE_URL set, apply schema via 'npx prisma migrate deploy'."

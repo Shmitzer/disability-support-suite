@@ -6,8 +6,13 @@ Auth + Row-Level Security (Phase E). Run these from a machine that has the Supab
 project credentials. Each step says whether it's a **code edit** (safe to prepare
 ahead) or a **live action** (needs the database/credentials).
 
-The sandbox stays on SQLite the whole time — none of the edits below are committed
-to the working branch until you're ready to cut over, so Phase 1 keeps running.
+The SQLite working branches (`main`, `claude/hopeful-mccarthy-g4nvef`) stay intact
+so Phase 1 keeps running. The **code edits for Phase D (steps D1–D2 below) are
+already applied on branch `claude/phase0-supabase-migration`** — schema provider,
+native enums, `Json` columns, the pg driver adapter, and the seed/CLI wiring. What
+remains on that branch is the **live** work: point it at Supabase and run the
+migration. Verified headless there (schema valid, client generates, `tsc` passes);
+the first run against real Postgres is the true test.
 
 ---
 

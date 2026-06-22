@@ -2,12 +2,10 @@
 // Run with:  npx tsx prisma/seed.ts
 // Never put real participant data here.
 
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient, Role } from "../src/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 // --- People ----------------------------------------------------------------
@@ -25,9 +23,9 @@ const DEMO_ORG_ID = "org_demo";
 // Roles use the 6-value set (see src/lib/enums.ts); the old "ROSTERING" role is
 // now ADMIN.
 const sampleWorkers = [
-  { id: "wkr_edward", name: "Edward Neppl", role: "WORKER" },
-  { id: "wkr_sam", name: "Sam Taylor", role: "WORKER" },
-  { id: "wkr_roster", name: "Alex Rivera", role: "ADMIN" },
+  { id: "wkr_edward", name: "Edward Neppl", role: Role.WORKER },
+  { id: "wkr_sam", name: "Sam Taylor", role: Role.WORKER },
+  { id: "wkr_roster", name: "Alex Rivera", role: Role.ADMIN },
 ];
 
 // --- Date helpers ----------------------------------------------------------
