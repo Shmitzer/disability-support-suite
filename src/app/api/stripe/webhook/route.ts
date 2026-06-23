@@ -7,9 +7,11 @@
 
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
+import * as Sentry from "@sentry/nextjs";
 import { getStripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { recordAudit } from "@/lib/audit";
+import { captureServerEvent } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,7 +37,9 @@ export async function POST(request: Request) {
   try {
     await handleEvent(event);
   } catch (err) {
+    // Report to Sentry (inert without a DSN) and 500 so Stripe retries the event.
     console.error("stripe webhook handling failed:", err);
+    Sentry.captureException(err, { tags: { stripeEvent: event.type } });
     return NextResponse.json({ error: "handler error" }, { status: 500 });
   }
   return NextResponse.json({ received: true });
@@ -63,6 +67,9 @@ async function handleEvent(event: Stripe.Event): Promise<void> {
         organisationId: orgId,
         detail: { event: event.type, status: "active" },
       });
+      await captureServerEvent(orgId, "subscription_activated", {
+        source: event.type,
+      });
       break;
     }
     case "customer.subscription.updated":
@@ -86,6 +93,10 @@ async function handleEvent(event: Stripe.Event): Promise<void> {
         targetId: org.id,
         organisationId: org.id,
         detail: { event: event.type, status },
+      });
+      await captureServerEvent(org.id, "subscription_status_changed", {
+        source: event.type,
+        status,
       });
       break;
     }

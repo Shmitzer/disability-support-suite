@@ -11,6 +11,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { captureServerEvent } from "@/lib/analytics";
 import {
   getStripe,
   stripeConfigured,
@@ -40,6 +41,13 @@ export async function startCheckout() {
     allow_promotion_codes: true,
     success_url: `${APP_URL}/billing?status=success`,
     cancel_url: `${APP_URL}/billing?status=cancelled`,
+  });
+
+  // Analytics is best-effort and must not block the redirect (captureServerEvent
+  // swallows its own errors). distinctId is the org — billing is an org-level event.
+  await captureServerEvent(org.id, "billing_checkout_started", {
+    priceId: STRIPE_PRICE_ID,
+    actorId: user.id,
   });
 
   if (session.url) redirect(session.url);
