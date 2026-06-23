@@ -14,6 +14,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { tenantOwner } from "@/lib/tenant";
 import {
   isLogCategory,
   categoryRequiresNote,
@@ -77,6 +78,7 @@ export async function addLogEntry(formData: FormData) {
         // worker adjusted the time we use that (today's date + their HH:MM).
         timestamp: entryTimestamp(formData.get("loggedTime")),
         idempotencyKey,
+        ...tenantOwner(worker),
       },
     });
   } catch (err) {

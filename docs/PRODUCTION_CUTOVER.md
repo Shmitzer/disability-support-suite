@@ -101,14 +101,19 @@ This enables RLS on every `public` table (incl. `_prisma_migrations`, locked dow
 so the Table Editor shows no UNRESTRICTED tags. The **Prisma app is unaffected** —
 it connects via `DATABASE_URL` (privileged role) which bypasses RLS (Option A).
 
-**Tenant reads via the Data API need the tenant columns populated.** Today the app
-sets neither `userId` nor `organisationId` on rows, so with RLS on, the Data API
-returns nothing to clients (safe deny-by-default). To enable org/owner-scoped Data
-API reads — and before flipping `userId` to `NOT NULL`:
-  1. Set `userId = auth.uid()` (and `organisationId`) on every write path.
-  2. Backfill existing rows.
-  3. Only then `ALTER TABLE … ALTER COLUMN "userId" SET NOT NULL;` per table.
-Flipping `NOT NULL` before (1)+(2) would break Prisma inserts.
+**Tenant columns are now populated on write.** The app stamps `userId` (= the
+owner's `auth.uid()`) and `organisationId` on every insert via `tenantOwner()`
+(`src/lib/tenant.ts`), and `userId` is `NOT NULL` in the schema on the owned tables
+(`LearnedOption` stays nullable — it's a shared global picklist). A fresh cutover
+needs nothing extra: `prisma migrate` creates the columns `NOT NULL` and the seed
+populates them.
+
+If you already have a Postgres DB with NULL `userId` rows, run the backfill first:
+```bash
+psql "$DIRECT_URL" -f prisma/sql/backfill_tenant.sql   # before the NOT NULL migrate
+```
+(Org-owned tables with no owner column — Participant, ProgressNote — need an owner
+chosen explicitly; see the file's commented lines.)
 
 ### E3. Auth code (code edit)
 - Add `@supabase/ssr` + `@supabase/supabase-js`; create `src/lib/supabase.ts`

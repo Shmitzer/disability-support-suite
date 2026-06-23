@@ -4,10 +4,17 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentWorker } from "@/lib/session";
+import { tenantOwner } from "@/lib/tenant";
 import { generateProgressNote } from "@/lib/ai";
 
 export async function POST(request: Request) {
   try {
+    const worker = await getCurrentWorker();
+    if (!worker) {
+      return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+    }
+
     const { participantId, rawNotes } = await request.json();
 
     if (!participantId || typeof rawNotes !== "string" || !rawNotes.trim()) {
@@ -30,7 +37,7 @@ export async function POST(request: Request) {
     });
 
     const saved = await prisma.progressNote.create({
-      data: { participantId, rawNotes, generatedNote },
+      data: { participantId, rawNotes, generatedNote, ...tenantOwner(worker) },
     });
 
     return NextResponse.json({ id: saved.id, generatedNote });

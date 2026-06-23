@@ -2,8 +2,10 @@
 // Docs: https://pris.ly/d/prisma-schema
 //
 // Multi-tenant: every data table carries organisationId (Rule 5) and a userId.
-// userId stays nullable until Supabase Auth populates it from auth.uid() (Phase E);
-// it flips to NOT NULL then. role/sectorMode are native enums; JSON columns use
+// userId holds the owner's Supabase auth uid (auth.uid()) and is NOT NULL on the
+// owned tables — the app stamps it via tenantOwner() on every write (Phase E step 2).
+// LearnedOption stays nullable (shared global picklist). role/sectorMode are native
+// enums; JSON columns use
 // Json. Full-text search (ShiftReport.searchVector) and RLS live as checked-in SQL
 // (prisma/sql/) applied after `prisma migrate deploy` — see docs/PRODUCTION_CUTOVER.md.
 
@@ -86,7 +88,7 @@ model Participant {
   id             String              @id @default(cuid())
   name           String
   ndisNumber     String?             @unique
-  userId         String? // owning user (e.g. solo worker), for future RLS
+  userId         String // owning user (e.g. solo worker), for future RLS
   organisationId String?
   notes          ProgressNote[]
   shifts         Shift[]
@@ -103,7 +105,7 @@ model WorkerParticipant {
   workerId       String
   participant    Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
   participantId  String
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @default(now()) @updatedAt
@@ -118,7 +120,7 @@ model ProgressNote {
   participantId  String
   rawNotes       String // what the support worker typed
   generatedNote  String // the cleaned-up NDIS-style note from the AI
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @default(now()) @updatedAt
@@ -158,7 +160,7 @@ model Shift {
   reports    ShiftReport[]           // AI-generated progress reports for this shift
 
   idempotencyKey String? @unique // client-generated; prevents duplicate shifts on mobile (Rule 12)
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
@@ -176,7 +178,7 @@ model ShiftEvent {
   actor          Worker?  @relation("EventActor", fields: [actorId], references: [id])
   actorId        String? // who did it (null for system-generated events)
   detail         String? // optional human-readable / JSON extra context
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime @default(now()) // when the event happened
   updatedAt      DateTime @default(now()) @updatedAt
@@ -193,7 +195,7 @@ model LogEntry {
   photos         String? // JSON array of small image data URLs (DEV/DUMMY photos only until Phase 5)
   timestamp      DateTime // when the event happened (not when it was logged)
   idempotencyKey String? @unique // client-generated; prevents duplicate entries on mobile (Rule 12)
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
@@ -227,7 +229,7 @@ model ShiftReport {
   approvedBy     String?
   approvalNotes  String?
 
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
@@ -270,7 +272,7 @@ model ClockAmendmentRequest {
   decidedBy      Worker?   @relation("AmendDecidedBy", fields: [decidedById], references: [id])
   decidedById    String?
   decidedAt      DateTime?
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt

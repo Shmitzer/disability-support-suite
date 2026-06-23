@@ -6,6 +6,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { tenantOwner } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
 
 // Accept an auctioned shift: it becomes ALLOCATED to this worker.
@@ -40,6 +41,7 @@ export async function acceptShift(formData: FormData) {
           type: "ACCEPTED",
           actorId: worker.id,
           detail: `Accepted by ${worker.name}`,
+          ...tenantOwner(worker),
         },
       },
     },
@@ -64,6 +66,7 @@ export async function declineShift(formData: FormData) {
       type: "DECLINED",
       actorId: worker.id,
       detail: `Declined by ${worker.name}`,
+      ...tenantOwner(worker),
     },
   });
 

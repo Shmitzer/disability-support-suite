@@ -7,6 +7,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { tenantOwner } from "@/lib/tenant";
 import { isRosteringRole } from "@/lib/enums";
 import { revalidatePath } from "next/cache";
 
@@ -42,7 +43,8 @@ export async function createShift(formData: FormData) {
       createdById: manager.id,
       scheduledStart,
       scheduledEnd,
-      events: { create: { type: "CREATED", actorId: manager.id } },
+      ...tenantOwner(manager),
+      events: { create: { type: "CREATED", actorId: manager.id, ...tenantOwner(manager) } },
     },
   });
 
@@ -82,6 +84,7 @@ export async function allocateShift(formData: FormData) {
           type: "ALLOCATED",
           actorId: manager.id,
           detail: `Allocated to ${assignee?.name ?? "worker"}`,
+          ...tenantOwner(manager),
         },
       },
     },
@@ -113,6 +116,7 @@ export async function offerShift(formData: FormData) {
           type: "OFFERED",
           actorId: manager.id,
           detail: `Offered to workers linked to ${shift.participant.name}`,
+          ...tenantOwner(manager),
         },
       },
     },
@@ -141,7 +145,7 @@ export async function cancelShift(formData: FormData) {
       cancelledAt: new Date(),
       cancelReason: reason,
       events: {
-        create: { type: "CANCELLED", actorId: manager.id, detail: reason },
+        create: { type: "CANCELLED", actorId: manager.id, detail: reason, ...tenantOwner(manager) },
       },
     },
   });
