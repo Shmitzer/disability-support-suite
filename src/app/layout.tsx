@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
-import { BottomNav } from "@/components/BottomNav";
-import { listWorkers, getCurrentUser } from "@/lib/session";
 import { sectorLabels } from "@/lib/sector-config";
 
 const geistSans = Geist({
@@ -17,37 +14,25 @@ const geistMono = Geist_Mono({
 });
 
 // App-level metadata is static; it uses the default (NDIS) sector tagline. A
-// per-tenant title can move to generateMetadata() once auth lands (Phase E).
+// per-tenant title can move to generateMetadata() once orgs/RLS land.
 export const metadata: Metadata = {
   title: "Disability Support Suite",
   description: `${sectorLabels().tagline} — development build`,
 };
 
-export default async function RootLayout({
+// Root layout: html/body/fonts only. The authenticated chrome (nav, sign-out)
+// lives in (protected)/layout.tsx; the login screen lives in (public).
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [workers, current] = await Promise.all([listWorkers(), getCurrentUser()]);
-
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col pb-[calc(env(safe-area-inset-bottom)+4.5rem)]">
-        {/* Dev-only role switch — replaced by real PIN login later. */}
-        <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2">
-          <span className="rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
-            Dev
-          </span>
-          {workers.length > 0 && (
-            <RoleSwitcher workers={workers} currentId={current?.id} />
-          )}
-        </div>
-        {children}
-        <BottomNav />
-      </body>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

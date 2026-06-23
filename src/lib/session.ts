@@ -1,37 +1,56 @@
 // session.ts — the app's identity seam: the ONE place that answers "who is using
 // the app, and what can they do".
 //
-// Today this reads the dev role-switch cookie (no passwords yet). When Supabase
-// Auth lands (Phase E) only the internals of getCurrentUser() change — every
-// caller stays the same. Call getCurrentUser() from new code; getCurrentWorker is
-// kept as a deprecated alias so existing call sites keep working until they migrate.
+// Phase E (step 1): this now reads the signed-in Supabase Auth user and maps it
+// to a Worker row via Worker.supabaseUserId, creating the Worker on first login.
+// Every caller (getCurrentUser / getCurrentWorker / getCurrentSector) is
+// unchanged — only the internals moved from the dev role-switch cookie to real
+// auth. RLS is intentionally NOT wired here yet (later in Phase E).
 
-import { cookies } from "next/headers";
+import { cache } from "react";
+import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { SectorMode } from "@/lib/enums";
+import { Role, SectorMode } from "@/lib/enums";
 
-export const WORKER_COOKIE = "dsw_worker_id";
+// A friendly display name for a brand-new Worker, derived from the auth user.
+function deriveName(user: User): string {
+  const metaName =
+    (user.user_metadata?.name as string | undefined) ??
+    (user.user_metadata?.full_name as string | undefined);
+  if (metaName) return metaName;
+  if (user.email) return user.email.split("@")[0];
+  return "New worker";
+}
 
-// Everyone in the app, for the switcher dropdown.
-export async function listWorkers() {
-  return prisma.worker.findMany({
-    orderBy: [{ role: "asc" }, { name: "asc" }],
+// The user currently signed in, as a Worker row — or null if not authenticated.
+// Looks up the Worker linked to the Supabase auth user, creating it on first
+// login. Wrapped in cache() so repeated calls within one render (layout + page
+// + getCurrentSector) share a single Supabase/DB round-trip.
+export const getCurrentUser = cache(async () => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const existing = await prisma.worker.findUnique({
+    where: { supabaseUserId: user.id },
   });
-}
+  if (existing) return existing;
 
-// The user currently "logged in". Falls back to the first worker so the app always
-// has someone in context during development.
-export async function getCurrentUser() {
-  const store = await cookies();
-  const id = store.get(WORKER_COOKIE)?.value;
-
-  if (id) {
-    const worker = await prisma.worker.findUnique({ where: { id } });
-    if (worker) return worker;
-  }
-
-  return prisma.worker.findFirst({ orderBy: { createdAt: "asc" } });
-}
+  // First login for this auth user → create their Worker. upsert (not create)
+  // so two concurrent first requests can't race to a duplicate supabaseUserId.
+  return prisma.worker.upsert({
+    where: { supabaseUserId: user.id },
+    update: {},
+    create: {
+      supabaseUserId: user.id,
+      name: deriveName(user),
+      role: Role.WORKER,
+    },
+  });
+});
 
 /** @deprecated use getCurrentUser */
 export const getCurrentWorker = getCurrentUser;
