@@ -1,0 +1,65 @@
+// billing-actions.ts — server actions that send the current organisation to Stripe
+// Checkout and the Billing Portal (Phase F). Billing is at the ORGANISATION level
+// (the org pays); solo workers can reuse these helpers against Worker later.
+//
+// Inert without Stripe keys: each action returns early when Stripe isn't configured.
+// redirect() throws a control-flow signal, so it stays OUTSIDE any try/catch and is
+// the last thing each action does.
+
+"use server";
+
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
+import {
+  getStripe,
+  stripeConfigured,
+  STRIPE_PRICE_ID,
+  APP_URL,
+} from "@/lib/stripe";
+
+// Start a subscription checkout for the current org. Stripe Tax is enabled so AU
+// GST is calculated automatically (Rule 9 follow-up: receipts/tax).
+export async function startCheckout() {
+  if (!stripeConfigured() || !STRIPE_PRICE_ID) return;
+
+  const user = await getCurrentUser();
+  if (!user?.organisationId) return;
+  const org = await prisma.organisation.findUnique({
+    where: { id: user.organisationId },
+  });
+  if (!org) return;
+
+  const session = await getStripe().checkout.sessions.create({
+    mode: "subscription",
+    line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
+    client_reference_id: org.id, // the webhook maps the session back to the org
+    customer: org.stripeCustomerId ?? undefined,
+    customer_update: org.stripeCustomerId ? { address: "auto" } : undefined,
+    automatic_tax: { enabled: true },
+    allow_promotion_codes: true,
+    success_url: `${APP_URL}/billing?status=success`,
+    cancel_url: `${APP_URL}/billing?status=cancelled`,
+  });
+
+  if (session.url) redirect(session.url);
+}
+
+// Open the Stripe Billing Portal so the org can manage/cancel its subscription.
+export async function openBillingPortal() {
+  if (!stripeConfigured()) return;
+
+  const user = await getCurrentUser();
+  if (!user?.organisationId) return;
+  const org = await prisma.organisation.findUnique({
+    where: { id: user.organisationId },
+  });
+  if (!org?.stripeCustomerId) return;
+
+  const session = await getStripe().billingPortal.sessions.create({
+    customer: org.stripeCustomerId,
+    return_url: `${APP_URL}/billing`,
+  });
+
+  if (session.url) redirect(session.url);
+}

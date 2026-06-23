@@ -16,8 +16,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { DEV_AUTH } from "@/lib/dev-auth";
 
 // Paths reachable without a session. Everything else requires login.
-// /api/health is the public uptime probe (Phase F).
-const PUBLIC_PREFIXES = ["/login", "/auth", "/api/health"];
+// /api/health is the public uptime probe; /api/stripe is the signature-verified
+// webhook (both Phase F) — neither has a user session.
+const PUBLIC_PREFIXES = ["/login", "/auth", "/api/health", "/api/stripe"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
