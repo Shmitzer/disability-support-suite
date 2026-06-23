@@ -7,12 +7,22 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
 import { tenantOwner } from "@/lib/tenant";
 import { generateProgressNote } from "@/lib/ai";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
     const worker = await getCurrentWorker();
     if (!worker) {
       return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+    }
+
+    // Throttle the LLM endpoint per worker (no-op until Upstash is configured).
+    const rl = await checkRateLimit(`generate-note:${worker.id}`);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "You've hit the note-generation limit for now. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+      );
     }
 
     const { participantId, rawNotes } = await request.json();

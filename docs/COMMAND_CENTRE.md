@@ -47,11 +47,11 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 - [x] Real auth — Supabase magic-link (Phase E Step 1)
 - [~] RLS hardened via JWT claims — **SQL written (`auth_hook.sql`, `rls_policies.sql`); live apply pending**
 - [x] PII scrubbing (Phase C, Rule 2)
-- [ ] Rate limiting + hard spend cap (not in repo — Upstash 20/hr; AI Studio cap)
+- [~] Rate limiting + hard spend cap — **throttle scaffolded** (`src/lib/rate-limit.ts`, Upstash REST, on `/api/generate-note`, fail-open, inert without keys). Needs Upstash keys live; hard spend cap still provider-side (AI Studio budget)
 - [x] Graceful LLM fallback + output validation (Phase C, Rule 11)
 - [x] `/api/health` (Phase F — **done**)
-- [ ] Privacy policy live
-- [ ] Landing page + waitlist/trial
+- [~] Privacy policy — **placeholder route live** (`/privacy`); final copy + legal review (Privacy Act / NDIS) pending
+- [ ] Landing page + waitlist/trial (deferred: `/` is the protected dashboard, so this needs a routing decision + your branding)
 - [ ] `anonymiseUser()` right-to-erasure (needs full NDIS Participant fields first)
 
 ---
@@ -96,6 +96,7 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 
 ## Decision log (newest first)
 
+- **2026-06-23** — **Phase 0 gate, headless slice.** Knocked out the items that don't need the laptop: rate-limit throttle on the LLM endpoint (Upstash REST, dependency-free, fail-open, no-op without keys) + `/privacy` placeholder route. Health endpoint confirmed already done (Phase F). RLS left for the credentialed session (needs live Postgres — can't be exercised on the sandbox's SQLite). Landing page deferred pending a `/` routing decision + branding. `tsc`/`lint`/`build` green, 27 tests pass.
 - **2026-06-23** — **Phase F complete (code).** Health probe; Stripe billing (plumbing + `/billing` UI + webhook→AuditLog + analytics + transactional emails); Sentry/PostHog/Resend; photos→Supabase Storage (relative paths + signed URLs, inline fallback); 25 tests; CI; phone-pasteable `schema_baseline.sql`. **Security review** caught + fixed a HIGH issue: billing server actions enforced admin in the UI only — now re-checked server-side (`isRosteringRole`). Also Phase E Steps 2 & 4 landed (tenant stamping + `userId` NOT NULL + RLS/auth-hook SQL; `DEV_AUTH`).
 - **2026-06-23** — Phase E Step 1 live & tested (magic-link auth end-to-end; middleware; Worker provisioning; Postgres live aws-1:6543; seed data).
 - **2026-06-22** — Phase D cutover verified pre-run.
