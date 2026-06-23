@@ -72,19 +72,6 @@ export async function signPhotoUrls(paths: string[], expiresIn = 3600): Promise<
   return out;
 }
 
-// Extract the stored relative path back out of one of our signed URLs (the path
-// sits in the URL, before the ?token). Returns null for anything that isn't such a
-// URL — e.g. a legacy inline data URL, which the caller handles separately. Used on
-// save to map a round-tripped display URL back to the object it refers to.
-export function extractStoragePath(url: string): string | null {
-  const marker = `/storage/v1/object/sign/${BUCKET}/`;
-  const i = url.indexOf(marker);
-  if (i === -1) return null;
-  const rest = url.slice(i + marker.length);
-  const q = rest.indexOf("?");
-  return decodeURIComponent(q === -1 ? rest : rest.slice(0, q));
-}
-
 // Resolve a stored LogEntry.photos JSON (relative paths and/or legacy data URLs)
 // into a JSON array of display URLs (signed for paths, data URLs passed through).
 // Shape-preserving: null in → null out; malformed in → returned unchanged.

@@ -22,7 +22,8 @@ import {
   validDetailsFor,
 } from "@/lib/log-categories";
 import { getApprovedOptions, recordCustomOption } from "@/lib/learned-options";
-import { storageConfigured, uploadDataUrl, extractStoragePath } from "@/lib/storage";
+import { storageConfigured, uploadDataUrl } from "@/lib/storage";
+import { planPhotoUpdate } from "@/lib/photos";
 import { revalidatePath } from "next/cache";
 
 // Add one entry to a shift's log. Allowed only on the caller's own shift while
@@ -114,42 +115,32 @@ async function processPhotos(
 ): Promise<string | null> {
   const value = String(raw ?? "").trim();
   if (!value) return null;
-  let arr: unknown;
+  let items: unknown;
   try {
-    arr = JSON.parse(value);
+    items = JSON.parse(value);
   } catch {
     return null;
   }
-  if (!Array.isArray(arr)) return null;
 
-  // Paths the caller already has on this entry — the only ones we'll "keep" (so a
-  // tampered form can't attach an arbitrary object from another shift).
-  const keepable = new Set(opts.keepPaths ?? []);
+  // Pure planner decides what to keep/upload (see lib/photos.ts); we just execute it.
+  const plan = planPhotoUpdate(items, {
+    keepable: opts.keepPaths ?? [],
+    storageEnabled: storageConfigured(),
+  });
+
   const out: string[] = [];
-  for (const item of arr) {
-    if (out.length >= 5) break;
-    if (typeof item !== "string") continue;
-
-    if (item.startsWith("data:image/")) {
-      // A newly added image (also how a legacy inline photo round-trips — kept on
-      // edit it re-uploads, migrating it to Storage).
-      if (storageConfigured()) {
-        if (item.length > 8_000_000) continue; // pre-upload guard (~6 MB image)
-        try {
-          out.push(await uploadDataUrl(item, opts.prefix));
-        } catch (err) {
-          console.error("photo upload failed, skipping:", err);
-        }
-      } else if (item.length < 2_000_000) {
-        out.push(item); // no Storage configured: keep inline (legacy), ~2 MB cap
+  for (const action of plan) {
+    if (action.kind === "keep") {
+      out.push(action.path);
+    } else if (action.kind === "inline") {
+      out.push(action.dataUrl);
+    } else {
+      try {
+        out.push(await uploadDataUrl(action.dataUrl, opts.prefix));
+      } catch (err) {
+        console.error("photo upload failed, skipping:", err);
       }
-      continue;
     }
-
-    // Not a data URL → an existing stored photo being kept. Map the signed display
-    // URL back to its path and accept it only if it's already on this entry.
-    const path = extractStoragePath(item) ?? item;
-    if (keepable.has(path)) out.push(path);
   }
   return out.length ? JSON.stringify(out) : null;
 }
