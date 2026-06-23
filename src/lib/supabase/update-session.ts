@@ -16,11 +16,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import { DEV_AUTH } from "@/lib/dev-auth";
 
 // Paths reachable without a session. Everything else requires login.
+// "/" is the public marketing landing and /privacy is the public policy page;
 // /api/health is the public uptime probe; /api/stripe is the signature-verified
-// webhook (both Phase F) — neither has a user session.
-const PUBLIC_PREFIXES = ["/login", "/auth", "/api/health", "/api/stripe"];
+// webhook (both Phase F) — none of these have a user session.
+const PUBLIC_PREFIXES = ["/login", "/privacy", "/auth", "/api/health", "/api/stripe"];
 
 function isPublicPath(pathname: string): boolean {
+  // Exact root only (so "/" is public but it isn't a prefix for everything).
+  if (pathname === "/") return true;
   return PUBLIC_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(p + "/"),
   );

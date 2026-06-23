@@ -21,12 +21,13 @@ type Item = {
 };
 
 // The home tab leads to a different dashboard per role, but the path is the
-// same ("/"), so one set of tabs works for both workers and rostering staff.
+// same ("/dashboard"), so one set of tabs works for both workers and rostering
+// staff. ("/" is the public marketing landing, outside the app chrome.)
 const ITEMS: Item[] = [
   {
-    href: "/",
+    href: "/dashboard",
     label: "Home",
-    match: (p) => p === "/" || p.startsWith("/shift"),
+    match: (p) => p === "/dashboard" || p.startsWith("/shift"),
     icon: (active) => (
       <svg
         viewBox="0 0 24 24"

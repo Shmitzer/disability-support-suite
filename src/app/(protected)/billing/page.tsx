@@ -33,7 +33,7 @@ export default async function BillingPage({
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-10">
       <header className="flex flex-col gap-2">
-        <Link href="/" className="text-sm font-medium text-blue-600 hover:underline">
+        <Link href="/dashboard" className="text-sm font-medium text-blue-600 hover:underline">
           ← Home
         </Link>
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Billing</h1>
