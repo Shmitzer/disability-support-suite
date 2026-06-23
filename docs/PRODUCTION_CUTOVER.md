@@ -82,17 +82,33 @@ psql "$DIRECT_URL" -f prisma/sql/search_vector.sql
 ## Phase E — Supabase Auth + RLS
 
 ### E1. JWT org claim (live)
-Add a Supabase Auth hook (Custom Access Token hook) that, on sign-in, looks up the
-user's `organisationId` from `Worker` and injects it into `user_metadata`. The RLS
-policies read `auth.jwt() -> 'user_metadata' ->> 'organisationId'`.
+Install the **Custom Access Token hook** that looks up the user's `organisationId`
+from `Worker` and injects it as a **top-level, signed `organisationId` claim**
+(NOT `user_metadata`, which is user-editable and spoofable):
+```bash
+psql "$DIRECT_URL" -f prisma/sql/auth_hook.sql
+```
+Then enable it: dashboard → **Authentication → Hooks → Custom Access Token** →
+select `public.custom_access_token_hook`. RLS policies read
+`auth.jwt() ->> 'organisationId'`. (The claim only refreshes when the user's token
+does — sign out/in after changing someone's org.)
 
 ### E2. Apply RLS (live)
 ```bash
-psql "$DIRECT_URL" -f prisma/sql/rls_policies.sql
+psql "$DIRECT_URL" -f prisma/sql/rls_policies.sql   # after auth_hook.sql
 ```
-Decide how `userId` maps to the auth user (the policies assume **`userId` holds the
-Supabase `auth.uid()`**). Populate `userId` accordingly on write; `Worker.supabaseUserId`
-links the account row to the auth user.
+This enables RLS on every `public` table (incl. `_prisma_migrations`, locked down)
+so the Table Editor shows no UNRESTRICTED tags. The **Prisma app is unaffected** —
+it connects via `DATABASE_URL` (privileged role) which bypasses RLS (Option A).
+
+**Tenant reads via the Data API need the tenant columns populated.** Today the app
+sets neither `userId` nor `organisationId` on rows, so with RLS on, the Data API
+returns nothing to clients (safe deny-by-default). To enable org/owner-scoped Data
+API reads — and before flipping `userId` to `NOT NULL`:
+  1. Set `userId = auth.uid()` (and `organisationId`) on every write path.
+  2. Backfill existing rows.
+  3. Only then `ALTER TABLE … ALTER COLUMN "userId" SET NOT NULL;` per table.
+Flipping `NOT NULL` before (1)+(2) would break Prisma inserts.
 
 ### E3. Auth code (code edit)
 - Add `@supabase/ssr` + `@supabase/supabase-js`; create `src/lib/supabase.ts`
