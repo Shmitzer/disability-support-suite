@@ -1,9 +1,11 @@
-// proxy.ts — runs on the server before every matched request.
+// middleware.ts — runs on the server before every matched request. This is the
+// app's auth gate: it refreshes the Supabase session and redirects signed-out
+// users to /login.
 //
-// NOTE ON NAMING: in Next.js 16 the `middleware` file convention was renamed to
-// `proxy` (function `proxy`, Node.js runtime by default). This file IS the
-// "session-checking middleware" — it just uses the current convention. See
-// node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md.
+// NOTE: Next.js 16 renamed this file convention from `middleware` to `proxy`.
+// Both names still work in this version; we keep `middleware.ts`. To switch to
+// the newer name, rename to `src/proxy.ts` and the export to `proxy`
+// (or run: npx @next/codemod middleware-to-proxy .).
 //
 // All it does is delegate to updateSession(), which refreshes the Supabase auth
 // token and redirects unauthenticated users to /login.
@@ -11,7 +13,7 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/update-session";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   return await updateSession(request);
 }
 
