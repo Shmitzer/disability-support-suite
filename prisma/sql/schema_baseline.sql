@@ -1,0 +1,291 @@
+-- schema_baseline.sql — full table/enum DDL for the Disability Support Suite schema.
+--
+-- PURPOSE: a phone/SQL-editor-friendly way to stand the tables up WITHOUT a terminal
+-- (paste into Supabase → SQL Editor → Run). Generated from prisma/schema.prisma via:
+--   npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script
+--
+-- This is SCHEMA ONLY. Apply the rest in order afterwards (see docs/PRODUCTION_CUTOVER.md):
+--   search_vector.sql · auth_hook.sql · rls_policies.sql   (backfill_tenant.sql only for
+--   a pre-existing DB with NULL userId rows). Those are order-sensitive and security-
+--   critical, so they are kept as separate files — do NOT fold them in here.
+--
+-- CAVEAT: pasting this does NOT create Prisma's migration history (_prisma_migrations).
+-- For a production cutover prefer the documented `prisma migrate dev --name init` flow
+-- from a laptop; this baseline is best for staging / a quick phone spin-up. Regenerate
+-- with the command above whenever the schema changes.
+
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('SOLO_WORKER', 'WORKER', 'SUPERVISOR', 'ADMIN', 'PARTICIPANT', 'SUPERADMIN');
+
+-- CreateEnum
+CREATE TYPE "SectorMode" AS ENUM ('NDIS', 'AGED_CARE', 'MENTAL_HEALTH', 'COMMUNITY_SERVICES', 'EARLY_CHILDHOOD');
+
+-- CreateTable
+CREATE TABLE "Organisation" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "sectorMode" "SectorMode" NOT NULL DEFAULT 'NDIS',
+    "stripeCustomerId" TEXT,
+    "subscriptionStatus" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Organisation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Worker" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'WORKER',
+    "supabaseUserId" TEXT,
+    "organisationId" TEXT,
+    "referralCode" TEXT,
+    "referredBy" TEXT,
+    "stripeCustomerId" TEXT,
+    "subscriptionStatus" TEXT,
+    "trialEndsAt" TIMESTAMP(3),
+    "lastSeenVersion" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Worker_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Participant" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "ndisNumber" TEXT,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Participant_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WorkerParticipant" (
+    "id" TEXT NOT NULL,
+    "workerId" TEXT NOT NULL,
+    "participantId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "WorkerParticipant_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProgressNote" (
+    "id" TEXT NOT NULL,
+    "participantId" TEXT NOT NULL,
+    "rawNotes" TEXT NOT NULL,
+    "generatedNote" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ProgressNote_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Shift" (
+    "id" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'DRAFT',
+    "participantId" TEXT NOT NULL,
+    "location" TEXT,
+    "createdById" TEXT NOT NULL,
+    "allocatedToId" TEXT,
+    "scheduledStart" TIMESTAMP(3) NOT NULL,
+    "scheduledEnd" TIMESTAMP(3) NOT NULL,
+    "clockOnAt" TIMESTAMP(3),
+    "clockOffAt" TIMESTAMP(3),
+    "allocatedAt" TIMESTAMP(3),
+    "cancelledAt" TIMESTAMP(3),
+    "cancelReason" TEXT,
+    "idempotencyKey" TEXT,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Shift_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShiftEvent" (
+    "id" TEXT NOT NULL,
+    "shiftId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "actorId" TEXT,
+    "detail" TEXT,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ShiftEvent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "LogEntry" (
+    "id" TEXT NOT NULL,
+    "shiftId" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "detail" TEXT,
+    "notes" TEXT NOT NULL,
+    "photos" TEXT,
+    "timestamp" TIMESTAMP(3) NOT NULL,
+    "idempotencyKey" TEXT,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "LogEntry_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShiftReport" (
+    "id" TEXT NOT NULL,
+    "shiftId" TEXT NOT NULL,
+    "summary" TEXT NOT NULL,
+    "sourceLog" TEXT NOT NULL,
+    "model" TEXT,
+    "activitiesLog" JSONB,
+    "incidentFlag" BOOLEAN NOT NULL DEFAULT false,
+    "incidentFields" JSONB,
+    "idempotencyKey" TEXT,
+    "generatedByModel" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'DRAFT',
+    "questions" TEXT,
+    "clarifications" TEXT,
+    "approvedAt" TIMESTAMP(3),
+    "approvedBy" TEXT,
+    "approvalNotes" TEXT,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ShiftReport_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "LearnedOption" (
+    "id" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'SUGGESTED',
+    "source" TEXT NOT NULL DEFAULT 'custom',
+    "useCount" INTEGER NOT NULL DEFAULT 0,
+    "sortOrder" INTEGER NOT NULL DEFAULT 100,
+    "userId" TEXT,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastUsedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "LearnedOption_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ClockAmendmentRequest" (
+    "id" TEXT NOT NULL,
+    "shiftId" TEXT NOT NULL,
+    "requestedById" TEXT NOT NULL,
+    "field" TEXT NOT NULL,
+    "proposedValue" TIMESTAMP(3) NOT NULL,
+    "reason" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "decidedById" TEXT,
+    "decidedAt" TIMESTAMP(3),
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ClockAmendmentRequest_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AuditLog" (
+    "id" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "actorId" TEXT,
+    "organisationId" TEXT,
+    "targetType" TEXT NOT NULL,
+    "targetId" TEXT NOT NULL,
+    "detail" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Worker_supabaseUserId_key" ON "Worker"("supabaseUserId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Participant_ndisNumber_key" ON "Participant"("ndisNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WorkerParticipant_workerId_participantId_key" ON "WorkerParticipant"("workerId", "participantId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Shift_idempotencyKey_key" ON "Shift"("idempotencyKey");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LogEntry_idempotencyKey_key" ON "LogEntry"("idempotencyKey");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShiftReport_idempotencyKey_key" ON "ShiftReport"("idempotencyKey");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LearnedOption_kind_name_key" ON "LearnedOption"("kind", "name");
+
+-- AddForeignKey
+ALTER TABLE "WorkerParticipant" ADD CONSTRAINT "WorkerParticipant_workerId_fkey" FOREIGN KEY ("workerId") REFERENCES "Worker"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WorkerParticipant" ADD CONSTRAINT "WorkerParticipant_participantId_fkey" FOREIGN KEY ("participantId") REFERENCES "Participant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProgressNote" ADD CONSTRAINT "ProgressNote_participantId_fkey" FOREIGN KEY ("participantId") REFERENCES "Participant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Shift" ADD CONSTRAINT "Shift_participantId_fkey" FOREIGN KEY ("participantId") REFERENCES "Participant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Shift" ADD CONSTRAINT "Shift_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "Worker"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Shift" ADD CONSTRAINT "Shift_allocatedToId_fkey" FOREIGN KEY ("allocatedToId") REFERENCES "Worker"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShiftEvent" ADD CONSTRAINT "ShiftEvent_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES "Shift"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShiftEvent" ADD CONSTRAINT "ShiftEvent_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "Worker"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LogEntry" ADD CONSTRAINT "LogEntry_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES "Shift"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShiftReport" ADD CONSTRAINT "ShiftReport_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES "Shift"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ClockAmendmentRequest" ADD CONSTRAINT "ClockAmendmentRequest_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES "Shift"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ClockAmendmentRequest" ADD CONSTRAINT "ClockAmendmentRequest_requestedById_fkey" FOREIGN KEY ("requestedById") REFERENCES "Worker"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ClockAmendmentRequest" ADD CONSTRAINT "ClockAmendmentRequest_decidedById_fkey" FOREIGN KEY ("decidedById") REFERENCES "Worker"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
