@@ -16,7 +16,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { DEV_AUTH } from "@/lib/dev-auth";
 
 // Paths reachable without a session. Everything else requires login.
-const PUBLIC_PREFIXES = ["/login", "/auth"];
+// /api/health is the public uptime probe (Phase F).
+const PUBLIC_PREFIXES = ["/login", "/auth", "/api/health"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
