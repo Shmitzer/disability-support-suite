@@ -12,7 +12,7 @@
 import { useState } from "react";
 import { CopyButton } from "@/components/CopyButton";
 import { TimelineEntry } from "@/components/TimelineEntry";
-import { LOG_CATEGORIES, findCategory } from "@/lib/log-categories";
+import { LOG_CATEGORIES } from "@/lib/log-categories";
 
 type Entry = {
   id: string;
