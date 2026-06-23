@@ -13,6 +13,7 @@
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { DEV_AUTH } from "@/lib/dev-auth";
 
 // Paths reachable without a session. Everything else requires login.
 const PUBLIC_PREFIXES = ["/login", "/auth"];
@@ -24,6 +25,11 @@ function isPublicPath(pathname: string): boolean {
 }
 
 export async function updateSession(request: NextRequest) {
+  // DEV_AUTH (local/sandbox): there is no Supabase session to refresh and no
+  // /login to gate on — the dev role-switch drives identity. Skip the auth gate
+  // entirely so requests aren't bounced to /login. Never active in production.
+  if (DEV_AUTH) return NextResponse.next({ request });
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

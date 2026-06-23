@@ -1,17 +1,32 @@
 // session.ts — the app's identity seam: the ONE place that answers "who is using
 // the app, and what can they do".
 //
-// Phase E (step 1): this now reads the signed-in Supabase Auth user and maps it
-// to a Worker row via Worker.supabaseUserId, creating the Worker on first login.
-// Every caller (getCurrentUser / getCurrentWorker / getCurrentSector) is
-// unchanged — only the internals moved from the dev role-switch cookie to real
-// auth. RLS is intentionally NOT wired here yet (later in Phase E).
+// Phase E (step 1): this reads the signed-in Supabase Auth user and maps it to a
+// Worker row via Worker.supabaseUserId, creating the Worker on first login. Every
+// caller (getCurrentUser / getCurrentWorker / getCurrentSector) is unchanged —
+// only the internals moved from the dev role-switch cookie to real auth.
+//
+// Phase E (step 4): when DEV_AUTH=1 (local/sandbox, where Supabase Auth isn't
+// reachable) we fall back to the dev role-switch cookie. Never active in
+// production — see dev-auth.ts.
 
 import { cache } from "react";
+import { cookies } from "next/headers";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { DEV_AUTH } from "@/lib/dev-auth";
 import { Role, SectorMode } from "@/lib/enums";
+
+// The dev role-switch cookie: the worker id to act as (DEV_AUTH only).
+export const WORKER_COOKIE = "dsw_worker_id";
+
+// Everyone in the app, for the dev role-switch dropdown (DEV_AUTH only).
+export async function listWorkers() {
+  return prisma.worker.findMany({
+    orderBy: [{ role: "asc" }, { name: "asc" }],
+  });
+}
 
 // A friendly display name for a brand-new Worker, derived from the auth user.
 function deriveName(user: User): string {
@@ -28,6 +43,19 @@ function deriveName(user: User): string {
 // login. Wrapped in cache() so repeated calls within one render (layout + page
 // + getCurrentSector) share a single Supabase/DB round-trip.
 export const getCurrentUser = cache(async () => {
+  // DEV_AUTH (local/sandbox only): resolve from the role-switch cookie instead of
+  // Supabase, falling back to the first worker so the app always has someone in
+  // context during development. Never active in production (see dev-auth.ts).
+  if (DEV_AUTH) {
+    const store = await cookies();
+    const id = store.get(WORKER_COOKIE)?.value;
+    if (id) {
+      const worker = await prisma.worker.findUnique({ where: { id } });
+      if (worker) return worker;
+    }
+    return prisma.worker.findFirst({ orderBy: { createdAt: "asc" } });
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

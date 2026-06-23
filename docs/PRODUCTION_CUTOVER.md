@@ -128,10 +128,14 @@ chosen explicitly; see the file's commented lines.)
   and `(protected)/` (everything else). **Do this as its own commit** — it's the one
   structurally disruptive change; keeping it isolated makes a regression easy to find.
 
-### E4. DEV_AUTH flag
-Keep the dev role-switch usable behind `DEV_AUTH=1` for local/sandbox testing
-(Supabase Auth isn't reachable from the sandbox). **Hard-disable it in the Vercel
-production build** — it must never ship enabled.
+### E4. DEV_AUTH flag — implemented (code)
+Implemented in `src/lib/dev-auth.ts`. With `DEV_AUTH=1`, `getCurrentUser()` resolves
+identity from the role-switch cookie (falling back to the first worker) and the proxy
+skips the Supabase auth gate — so the app is usable in the sandbox / locally where
+Supabase Auth isn't reachable. The protected layout shows the role-switch dropdown
+instead of sign-out. **Hard-gated on `NODE_ENV !== "production"`** so it can never
+activate in the Vercel production build, even if the env var leaks in. To use:
+set `DEV_AUTH=1` in `.env`, then `npx tsx prisma/seed.ts`.
 
 ### E5. Verify (live)
 - RLS smoke test (BOLA/IDOR): sign in as an org-A user, attempt to read an org-B

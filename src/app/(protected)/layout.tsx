@@ -1,11 +1,13 @@
-// Layout for every authenticated page. Replaces the old dev role-switch banner
-// with the real signed-in identity + a sign-out control, and carries the
-// BottomNav (only authenticated pages get the app chrome).
+// Layout for every authenticated page. Shows the signed-in identity + a sign-out
+// control (or, under DEV_AUTH, the dev role-switch), and carries the BottomNav
+// (only authenticated pages get the app chrome).
 
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, listWorkers } from "@/lib/session";
+import { DEV_AUTH } from "@/lib/dev-auth";
 import { signOut } from "@/lib/auth-actions";
 import { roleLabel } from "@/lib/enums";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { BottomNav } from "@/components/BottomNav";
 
 export default async function ProtectedLayout({
@@ -19,6 +21,9 @@ export default async function ProtectedLayout({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  // Under DEV_AUTH the right-hand control is the dev role-switch, not sign-out.
+  const workers = DEV_AUTH ? await listWorkers() : [];
+
   return (
     <>
       <header className="flex items-center justify-between gap-3 border-b border-zinc-200 bg-white px-4 py-2">
@@ -30,14 +35,18 @@ export default async function ProtectedLayout({
             {roleLabel(user.role)}
           </span>
         </div>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-50"
-          >
-            Sign out
-          </button>
-        </form>
+        {DEV_AUTH ? (
+          <RoleSwitcher workers={workers} currentId={user.id} />
+        ) : (
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-50"
+            >
+              Sign out
+            </button>
+          </form>
+        )}
       </header>
 
       {/* Bottom padding leaves room for the fixed BottomNav. */}
