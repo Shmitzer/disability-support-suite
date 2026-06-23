@@ -12,6 +12,12 @@ import { getStripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { recordAudit } from "@/lib/audit";
 import { captureServerEvent } from "@/lib/analytics";
+import { interpretBillingEvent, type BillingUpdate } from "@/lib/billing";
+import { emailConfigured, sendEmail } from "@/lib/email";
+import {
+  subscriptionConfirmedEmail,
+  subscriptionCancelledEmail,
+} from "@/lib/email-templates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,61 +52,81 @@ export async function POST(request: Request) {
 }
 
 async function handleEvent(event: Stripe.Event): Promise<void> {
-  switch (event.type) {
-    case "checkout.session.completed": {
-      const s = event.data.object as Stripe.Checkout.Session;
-      const orgId = s.client_reference_id;
-      if (!orgId) break;
-      const customerId =
-        typeof s.customer === "string" ? s.customer : (s.customer?.id ?? null);
-      await prisma.organisation.update({
-        where: { id: orgId },
-        data: {
-          stripeCustomerId: customerId ?? undefined,
-          subscriptionStatus: "active",
-        },
-      });
-      await recordAudit({
-        action: "SUBSCRIPTION_UPDATED",
-        targetType: "Organisation",
-        targetId: orgId,
-        organisationId: orgId,
-        detail: { event: event.type, status: "active" },
-      });
-      await captureServerEvent(orgId, "subscription_activated", {
-        source: event.type,
-      });
-      break;
-    }
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted": {
-      const sub = event.data.object as Stripe.Subscription;
-      const customerId =
-        typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-      const org = await prisma.organisation.findFirst({
-        where: { stripeCustomerId: customerId },
-      });
-      if (!org) break;
-      const status =
-        event.type === "customer.subscription.deleted" ? "canceled" : sub.status;
-      await prisma.organisation.update({
-        where: { id: org.id },
-        data: { subscriptionStatus: status },
-      });
-      await recordAudit({
-        action: "SUBSCRIPTION_UPDATED",
-        targetType: "Organisation",
-        targetId: org.id,
-        organisationId: org.id,
-        detail: { event: event.type, status },
-      });
-      await captureServerEvent(org.id, "subscription_status_changed", {
-        source: event.type,
-        status,
-      });
-      break;
-    }
-    default:
-      break;
+  const update = interpretBillingEvent(event);
+  if (!update) return; // not an event we act on
+
+  // Apply the change to the org and read back its name (for the audit + email).
+  let org: { id: string; name: string };
+  if (update.target === "byOrg") {
+    org = await prisma.organisation.update({
+      where: { id: update.orgId },
+      data: {
+        stripeCustomerId: update.customerId ?? undefined,
+        subscriptionStatus: update.status,
+      },
+      select: { id: true, name: true },
+    });
+  } else {
+    const found = await prisma.organisation.findFirst({
+      where: { stripeCustomerId: update.customerId },
+    });
+    if (!found) return; // a customer we don't recognise — nothing to do
+    org = await prisma.organisation.update({
+      where: { id: found.id },
+      data: { subscriptionStatus: update.status },
+      select: { id: true, name: true },
+    });
+  }
+
+  await recordAudit({
+    action: "SUBSCRIPTION_UPDATED",
+    targetType: "Organisation",
+    targetId: org.id,
+    organisationId: org.id,
+    detail: { event: event.type, status: update.status },
+  });
+  await captureServerEvent(
+    org.id,
+    update.target === "byOrg" ? "subscription_activated" : "subscription_status_changed",
+    { source: event.type, status: update.status },
+  );
+
+  // Transactional email is best-effort: a send failure must never fail the webhook
+  // (that would make Stripe retry the whole event).
+  await sendBillingEmail(update, org.name).catch((err) =>
+    console.error("billing email failed:", err),
+  );
+}
+
+// Send the appropriate receipt: a confirmation when a checkout activates, a notice
+// when a subscription is cancelled. No-ops when email isn't configured or we can't
+// find a recipient address.
+async function sendBillingEmail(
+  update: BillingUpdate,
+  orgName: string,
+): Promise<void> {
+  if (!emailConfigured()) return;
+
+  if (update.target === "byOrg" && update.status === "active") {
+    if (!update.email) return;
+    const { subject, html, text } = subscriptionConfirmedEmail({ orgName });
+    await sendEmail({ to: update.email, subject, html, text });
+  } else if (update.target === "byCustomer" && update.status === "canceled") {
+    const to = await customerEmail(update.customerId);
+    if (!to) return;
+    const { subject, html, text } = subscriptionCancelledEmail({ orgName });
+    await sendEmail({ to, subject, html, text });
+  }
+}
+
+// Look up a Stripe customer's email (cancellation events don't carry one).
+async function customerEmail(customerId: string): Promise<string | null> {
+  try {
+    const customer = await getStripe().customers.retrieve(customerId);
+    if ("deleted" in customer && customer.deleted) return null;
+    return (customer as Stripe.Customer).email ?? null;
+  } catch (err) {
+    console.error("customer email lookup failed:", err);
+    return null;
   }
 }
