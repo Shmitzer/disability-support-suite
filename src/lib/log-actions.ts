@@ -22,6 +22,7 @@ import {
   validDetailsFor,
 } from "@/lib/log-categories";
 import { getApprovedOptions, recordCustomOption } from "@/lib/learned-options";
+import { storageConfigured, uploadDataUrl, extractStoragePath } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 
 // Add one entry to a shift's log. Allowed only on the caller's own shift while
@@ -66,13 +67,17 @@ export async function addLogEntry(formData: FormData) {
     }
   }
 
+  // Upload any newly-attached photos to Storage (or keep inline if not configured),
+  // keyed under this shift. New entry → nothing to "keep", only fresh images.
+  const photos = await processPhotos(formData.get("photos"), { prefix: shiftId });
+
   try {
     await prisma.logEntry.create({
       data: {
         shiftId,
         category,
         detail: detail || null, // null, not "", when nothing structured was picked
-        photos: parsePhotos(formData.get("photos")),
+        photos,
         notes,
         // `timestamp` = when it happened. Default is the server's "now"; if the
         // worker adjusted the time we use that (today's date + their HH:MM).
@@ -97,22 +102,66 @@ function isUniqueViolation(err: unknown): boolean {
   );
 }
 
-// Validate the submitted photos (a JSON array of small image data URLs). We never
-// trust the browser: keep only data:image/ strings, cap each size and the count.
-// Returns a JSON string to store, or null. DEV/DUMMY photos only until Phase 5.
-function parsePhotos(raw: FormDataEntryValue | null): string | null {
+// Validate + persist the submitted photos. We never trust the browser. Each item is
+// either a freshly-added image (a data: URL) or an existing stored photo being kept
+// (a signed display URL → its path). With Supabase Storage configured, new images
+// are uploaded and we store RELATIVE paths (Rule 3); without it we fall back to
+// storing the small inline data URLs (dev/sandbox). Caps the count at 5. Returns a
+// JSON string to store, or null.
+async function processPhotos(
+  raw: FormDataEntryValue | null,
+  opts: { prefix: string; keepPaths?: string[] },
+): Promise<string | null> {
   const value = String(raw ?? "").trim();
   if (!value) return null;
+  let arr: unknown;
   try {
-    const arr = JSON.parse(value);
-    if (!Array.isArray(arr)) return null;
-    const valid = arr
-      .filter((x): x is string => typeof x === "string" && x.startsWith("data:image/"))
-      .filter((x) => x.length < 2_000_000) // ~2 MB guard per image
-      .slice(0, 5);
-    return valid.length ? JSON.stringify(valid) : null;
+    arr = JSON.parse(value);
   } catch {
     return null;
+  }
+  if (!Array.isArray(arr)) return null;
+
+  // Paths the caller already has on this entry — the only ones we'll "keep" (so a
+  // tampered form can't attach an arbitrary object from another shift).
+  const keepable = new Set(opts.keepPaths ?? []);
+  const out: string[] = [];
+  for (const item of arr) {
+    if (out.length >= 5) break;
+    if (typeof item !== "string") continue;
+
+    if (item.startsWith("data:image/")) {
+      // A newly added image (also how a legacy inline photo round-trips — kept on
+      // edit it re-uploads, migrating it to Storage).
+      if (storageConfigured()) {
+        if (item.length > 8_000_000) continue; // pre-upload guard (~6 MB image)
+        try {
+          out.push(await uploadDataUrl(item, opts.prefix));
+        } catch (err) {
+          console.error("photo upload failed, skipping:", err);
+        }
+      } else if (item.length < 2_000_000) {
+        out.push(item); // no Storage configured: keep inline (legacy), ~2 MB cap
+      }
+      continue;
+    }
+
+    // Not a data URL → an existing stored photo being kept. Map the signed display
+    // URL back to its path and accept it only if it's already on this entry.
+    const path = extractStoragePath(item) ?? item;
+    if (keepable.has(path)) out.push(path);
+  }
+  return out.length ? JSON.stringify(out) : null;
+}
+
+// The stored photo identifiers currently on an entry (its kept-set on edit).
+function storedPhotoPaths(json: string | null): string[] {
+  if (!json) return [];
+  try {
+    const arr = JSON.parse(json);
+    return Array.isArray(arr) ? arr.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
   }
 }
 
@@ -240,14 +289,20 @@ export async function updateLogEntry(formData: FormData) {
   const rebuilt = await buildDetail(entry.category, formData);
   const detail = rebuilt !== "" ? rebuilt : entry.detail;
 
+  // The edit form submits the full photo set: existing photos (kept) + any new ones.
+  // Only paths already on this entry may be kept; new images are uploaded.
+  const photos = await processPhotos(formData.get("photos"), {
+    prefix: entry.shiftId,
+    keepPaths: storedPhotoPaths(entry.photos),
+  });
+
   await prisma.logEntry.update({
     where: { id: entryId },
     // Keep the entry's original date; the override only changes the time-of-day.
-    // The edit form always submits the full photo set, so we set it from the form.
     data: {
       detail,
       notes,
-      photos: parsePhotos(formData.get("photos")),
+      photos,
       timestamp: entryTimestamp(formData.get("loggedTime"), entry.timestamp),
     },
   });

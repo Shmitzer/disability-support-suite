@@ -23,6 +23,7 @@ import { ReportPanel } from "@/components/ReportPanel";
 import { buildShiftSourceLog } from "@/lib/report";
 import { getApprovedOptions } from "@/lib/learned-options";
 import { LOG_CATEGORIES } from "@/lib/log-categories";
+import { signStoredPhotos } from "@/lib/storage";
 
 // Always read fresh data — the timeline changes as entries are added.
 export const dynamic = "force-dynamic";
@@ -58,6 +59,13 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   const latestReport = shift.reports[0] ?? null;
   // The whole shift as plain text, for the copy-to-clipboard buttons.
   const logText = buildShiftSourceLog(shift);
+
+  // Resolve each entry's stored photos (relative paths) into signed display URLs for
+  // the timeline. Legacy inline data URLs pass through; a no-op when Storage isn't
+  // configured (the stored values are still inline data URLs).
+  const timelineEntries = await Promise.all(
+    shift.entries.map(async (e) => ({ ...e, photos: await signStoredPhotos(e.photos) })),
+  );
 
   // Approved options for every self-learning group (drink, activity, …), keyed by
   // group key. Grows as workers log new ones; falls back to the seed list in config
@@ -107,7 +115,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
       <ShiftTimeline
         clockOnAt={shift.clockOnAt}
         clockOffAt={shift.clockOffAt}
-        entries={shift.entries}
+        entries={timelineEntries}
         editable={canLog}
         logText={logText}
         learnedOptions={learnedOptions}
