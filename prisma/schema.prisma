@@ -290,3 +290,15 @@ model AuditLog {
   detail         Json? // extra context
   createdAt      DateTime @default(now())
 }
+
+// Pre-launch waitlist capture from the public landing page. Deliberately NOT a
+// tenant table: people on the waitlist are not users yet, so there is no userId /
+// organisationId (the same Rule 5/10 exception LearnedOption notes for global rows).
+// Writes go through the Prisma app only; the public Data API is denied by default
+// (enable-RLS-no-policy in rls_policies.sql), since this holds raw email addresses.
+model WaitlistSignup {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("landing") // where the signup came from
+  createdAt DateTime @default(now())
+}

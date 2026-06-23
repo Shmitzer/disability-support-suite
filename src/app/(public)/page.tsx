@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { DEV_AUTH } from "@/lib/dev-auth";
 import { sectorLabels } from "@/lib/sector-config";
+import { WaitlistForm } from "@/components/WaitlistForm";
 
 export default async function LandingPage() {
   // Signed-in users skip the marketing page and go straight to the app. Skipped
@@ -53,19 +54,17 @@ export default async function LandingPage() {
           </p>
         </header>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <Link
-            href="/login"
-            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-          >
-            Get started
-          </Link>
-          <Link
-            href="/login"
-            className="text-sm font-medium text-blue-600 hover:underline"
-          >
-            Sign in →
-          </Link>
+        <div className="flex flex-col gap-3">
+          <p className="text-sm font-medium text-zinc-700">
+            Join the waitlist for early access:
+          </p>
+          <WaitlistForm />
+          <p className="text-sm text-zinc-500">
+            Already have an account?{" "}
+            <Link href="/login" className="font-medium text-blue-600 hover:underline">
+              Sign in
+            </Link>
+          </p>
         </div>
       </section>
 

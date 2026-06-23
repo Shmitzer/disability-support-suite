@@ -289,3 +289,16 @@ ALTER TABLE "ClockAmendmentRequest" ADD CONSTRAINT "ClockAmendmentRequest_reques
 -- AddForeignKey
 ALTER TABLE "ClockAmendmentRequest" ADD CONSTRAINT "ClockAmendmentRequest_decidedById_fkey" FOREIGN KEY ("decidedById") REFERENCES "Worker"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+
+-- CreateTable: WaitlistSignup (pre-launch email capture; non-tenant, see schema.prisma)
+CREATE TABLE "WaitlistSignup" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "source" TEXT NOT NULL DEFAULT 'landing',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "WaitlistSignup_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WaitlistSignup_email_key" ON "WaitlistSignup"("email");

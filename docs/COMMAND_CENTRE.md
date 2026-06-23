@@ -51,7 +51,7 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 - [x] Graceful LLM fallback + output validation (Phase C, Rule 11)
 - [x] `/api/health` (Phase F — **done**)
 - [~] Privacy policy — **placeholder route live** (`/privacy`); final copy + legal review (Privacy Act / NDIS) pending
-- [~] Landing page — **public marketing page live at `/`** (dashboard moved to `/dashboard`; signed-in users auto-redirect there). Placeholder copy/branding to refine; waitlist/trial capture not yet wired
+- [x] Landing page + waitlist — **public marketing page live at `/`** (dashboard moved to `/dashboard`; signed-in users auto-redirect there) **with working waitlist capture** (`WaitlistSignup` table, `joinWaitlist` action, deny-by-default RLS). Placeholder copy/branding still to refine
 - [ ] `anonymiseUser()` right-to-erasure (needs full NDIS Participant fields first)
 
 ---
@@ -96,6 +96,7 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 
 ## Decision log (newest first)
 
+- **2026-06-23** — **Waitlist capture.** Added `WaitlistSignup` (non-tenant, unique email) to the schema + `schema_baseline.sql`; `joinWaitlist` server action (`waitlist-actions.ts`) with the pure helpers split into `waitlist.ts`; `WaitlistForm` (useActionState) on the landing hero; deny-by-default RLS (enable-RLS-no-policy, like `_prisma_migrations`) since the table holds raw emails and the Prisma role bypasses RLS to insert. Duplicate signup is treated as success (no email-enumeration leak). 30 tests pass. NOTE: no admin UI yet — read signups via the Supabase table editor / a query until one exists.
 - **2026-06-23** — **Landing page.** Took the routing fork: dashboard moved `/` → `/dashboard`; `/` is now a public marketing landing (sector-aware copy via sectorLabels, Rule 4). Signed-in users auto-redirect to `/dashboard` (skipped under DEV_AUTH so the sandbox can preview). Updated post-login redirect, BottomNav home tab, the three back-links, and the auth public-path allowlist (`/`, `/privacy`). Copy/branding are placeholder; waitlist/trial not yet wired. `tsc`/`lint`/`build` green, 27 tests pass.
 - **2026-06-23** — **Phase 0 gate, headless slice.** Knocked out the items that don't need the laptop: rate-limit throttle on the LLM endpoint (Upstash REST, dependency-free, fail-open, no-op without keys) + `/privacy` placeholder route. Health endpoint confirmed already done (Phase F). RLS left for the credentialed session (needs live Postgres — can't be exercised on the sandbox's SQLite). `tsc`/`lint`/`build` green, 27 tests pass.
 - **2026-06-23** — **Phase F complete (code).** Health probe; Stripe billing (plumbing + `/billing` UI + webhook→AuditLog + analytics + transactional emails); Sentry/PostHog/Resend; photos→Supabase Storage (relative paths + signed URLs, inline fallback); 25 tests; CI; phone-pasteable `schema_baseline.sql`. **Security review** caught + fixed a HIGH issue: billing server actions enforced admin in the UI only — now re-checked server-side (`isRosteringRole`). Also Phase E Steps 2 & 4 landed (tenant stamping + `userId` NOT NULL + RLS/auth-hook SQL; `DEV_AUTH`).

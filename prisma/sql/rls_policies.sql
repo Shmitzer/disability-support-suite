@@ -110,3 +110,12 @@ ALTER TABLE "_prisma_migrations" ENABLE ROW LEVEL SECURITY;
 -- work uses the service role; anything reachable from the browser uses the anon/
 -- authenticated key so these policies apply. The Prisma app uses DATABASE_URL and
 -- is unaffected by all of the above.
+
+-- ===========================================================================
+-- WaitlistSignup: pre-launch email capture, written only by the Prisma app. It
+-- holds raw email addresses and is NOT tenant-scoped, so there is no policy to
+-- write — enable RLS with NO policy → no anon/authenticated (Data API) access at
+-- all. The privileged Prisma role and service_role bypass RLS, so the landing
+-- page's server action keeps inserting. (Same pattern as _prisma_migrations.)
+-- ===========================================================================
+ALTER TABLE "WaitlistSignup" ENABLE ROW LEVEL SECURITY;
