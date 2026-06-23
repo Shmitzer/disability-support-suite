@@ -59,6 +59,9 @@ export default async function Home() {
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
             Hi {worker.name.split(" ")[0]}
           </h1>
+          <Link href="/billing" className="text-sm font-medium text-blue-600 hover:underline">
+            Billing &amp; subscription →
+          </Link>
         </header>
 
         <RosterView
