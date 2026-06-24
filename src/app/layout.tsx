@@ -1,24 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
+import { APP_NAME } from "@/lib/brand";
 import { sectorLabels } from "@/lib/sector-config";
 import { PostHogInit } from "@/components/PostHogInit";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Caira type system: Bricolage Grotesque for display/headings, Figtree for body.
+const display = Bricolage_Grotesque({
+  variable: "--font-display",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const sans = Figtree({
+  variable: "--font-sans-base",
   subsets: ["latin"],
+  display: "swap",
 });
 
 // App-level metadata is static; it uses the default (NDIS) sector tagline. A
 // per-tenant title can move to generateMetadata() once orgs/RLS land.
 export const metadata: Metadata = {
-  title: "Disability Support Suite",
-  description: `${sectorLabels().tagline} — development build`,
+  title: APP_NAME,
+  description: `${APP_NAME} — ${sectorLabels().tagline}`,
 };
 
 // Root layout: html/body/fonts only. The authenticated chrome (nav, sign-out)
@@ -31,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <PostHogInit />
