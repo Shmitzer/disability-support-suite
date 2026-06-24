@@ -289,6 +289,19 @@ model AuditLog {
   targetId       String
   detail         Json? // extra context
   createdAt      DateTime @default(now())
+
+  // Tamper-evidence (hash chain). Each row commits to the row before it within its
+  // chain (one chain per organisationId; null-org = the platform/system chain), so
+  // any after-the-fact edit or deletion breaks the chain and is detectable. `seq`
+  // is the strict append order; `prevHash` is the prior row's `hash` (null at the
+  // genesis of a chain); `hash` = sha256(prevHash + canonical(payload)). Nullable
+  // so rows written before the live migration (prisma/sql/audit_hash_chain.sql)
+  // don't break — see src/lib/audit.ts. Verified by verifyAuditChain().
+  seq            BigInt   @unique @default(autoincrement())
+  prevHash       String?
+  hash           String?
+
+  @@index([organisationId, seq])
 }
 
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a

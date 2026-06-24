@@ -225,9 +225,19 @@ CREATE TABLE "AuditLog" (
     "targetId" TEXT NOT NULL,
     "detail" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Tamper-evidence hash chain (see src/lib/audit.ts; prisma/sql/audit_hash_chain.sql).
+    "seq" BIGSERIAL,
+    "prevHash" TEXT,
+    "hash" TEXT,
 
     CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AuditLog_seq_key" ON "AuditLog"("seq");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_organisationId_seq_idx" ON "AuditLog"("organisationId", "seq");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Worker_supabaseUserId_key" ON "Worker"("supabaseUserId");
