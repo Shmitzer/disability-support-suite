@@ -10,6 +10,7 @@ import { isRosteringRole } from "@/lib/enums";
 import { sectorLabels } from "@/lib/sector-config";
 import { getWorkerHome } from "@/lib/shifts";
 import { getRosterData } from "@/lib/roster";
+import { tenantScope } from "@/lib/tenant";
 import { acceptShift, declineShift } from "@/lib/shift-actions";
 import { clockOn, clockOff } from "@/lib/clock-actions";
 import { WorkerCalendar } from "@/components/WorkerCalendar";
@@ -51,7 +52,7 @@ export default async function Home() {
   // Rostering staff get the roster dashboard: create / allocate / auction /
   // cancel shifts, every step audit-logged.
   if (isRosteringRole(worker.role)) {
-    const rosterData = await getRosterData();
+    const rosterData = await getRosterData(worker);
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-10">
         <header className="flex flex-col gap-1">
@@ -84,6 +85,7 @@ export default async function Home() {
 
   // The sample people for the quick-shift dropdown (sorted by name).
   const participants = await prisma.participant.findMany({
+    where: tenantScope(worker),
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });

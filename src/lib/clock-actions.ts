@@ -18,7 +18,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
-import { tenantOwner } from "@/lib/tenant";
+import { tenantOwner, tenantScope } from "@/lib/tenant";
 import { isRosteringRole } from "@/lib/enums";
 import { revalidatePath } from "next/cache";
 
@@ -136,7 +136,9 @@ export async function approveAmendment(formData: FormData) {
   const amendmentId = String(formData.get("amendmentId") ?? "");
   if (!amendmentId) return;
 
-  const req = await prisma.clockAmendmentRequest.findUnique({ where: { id: amendmentId } });
+  const req = await prisma.clockAmendmentRequest.findFirst({
+    where: { id: amendmentId, ...tenantScope(manager) },
+  });
   if (!req || req.status !== "PENDING") return;
 
   // Build the single field to write (typed, rather than a dynamic key).
@@ -173,7 +175,9 @@ export async function rejectAmendment(formData: FormData) {
   const amendmentId = String(formData.get("amendmentId") ?? "");
   if (!amendmentId) return;
 
-  const req = await prisma.clockAmendmentRequest.findUnique({ where: { id: amendmentId } });
+  const req = await prisma.clockAmendmentRequest.findFirst({
+    where: { id: amendmentId, ...tenantScope(manager) },
+  });
   if (!req || req.status !== "PENDING") return;
 
   await prisma.$transaction([

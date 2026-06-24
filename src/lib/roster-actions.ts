@@ -7,7 +7,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
-import { tenantOwner } from "@/lib/tenant";
+import { tenantOwner, tenantScope } from "@/lib/tenant";
 import { isRosteringRole } from "@/lib/enums";
 import { revalidatePath } from "next/cache";
 
@@ -35,6 +35,12 @@ export async function createShift(formData: FormData) {
   if (Number.isNaN(scheduledStart.getTime()) || Number.isNaN(scheduledEnd.getTime())) return;
   if (scheduledEnd <= scheduledStart) return; // end must be after start
 
+  // The participant must belong to the manager's tenant.
+  const participant = await prisma.participant.findFirst({
+    where: { id: participantId, ...tenantScope(manager) },
+  });
+  if (!participant) return;
+
   await prisma.shift.create({
     data: {
       status: "DRAFT",
@@ -60,7 +66,7 @@ export async function allocateShift(formData: FormData) {
   const workerId = String(formData.get("workerId") ?? "");
   if (!shiftId || !workerId) return;
 
-  const shift = await prisma.shift.findUnique({ where: { id: shiftId } });
+  const shift = await prisma.shift.findFirst({ where: { id: shiftId, ...tenantScope(manager) } });
   if (!shift || (shift.status !== "DRAFT" && shift.status !== "OFFERED")) return;
 
   // The worker must be linked to this shift's participant.
@@ -71,7 +77,9 @@ export async function allocateShift(formData: FormData) {
   });
   if (!link) return;
 
-  const assignee = await prisma.worker.findUnique({ where: { id: workerId } });
+  // The assignee must belong to the manager's tenant too.
+  const assignee = await prisma.worker.findFirst({ where: { id: workerId, ...tenantScope(manager) } });
+  if (!assignee) return;
 
   await prisma.shift.update({
     where: { id: shiftId },
@@ -101,8 +109,8 @@ export async function offerShift(formData: FormData) {
   const shiftId = String(formData.get("shiftId") ?? "");
   if (!shiftId) return;
 
-  const shift = await prisma.shift.findUnique({
-    where: { id: shiftId },
+  const shift = await prisma.shift.findFirst({
+    where: { id: shiftId, ...tenantScope(manager) },
     include: { participant: true },
   });
   if (!shift || shift.status !== "DRAFT") return; // only a draft can be offered
@@ -134,7 +142,7 @@ export async function cancelShift(formData: FormData) {
   const reason = String(formData.get("reason") ?? "").trim() || null;
   if (!shiftId) return;
 
-  const shift = await prisma.shift.findUnique({ where: { id: shiftId } });
+  const shift = await prisma.shift.findFirst({ where: { id: shiftId, ...tenantScope(manager) } });
   // Don't cancel something already finished or cancelled.
   if (!shift || shift.status === "COMPLETED" || shift.status === "CANCELLED") return;
 

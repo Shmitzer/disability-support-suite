@@ -4,22 +4,28 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { NoteGenerator } from "@/components/NoteGenerator";
-import { getCurrentSector } from "@/lib/session";
+import { getCurrentUser, getCurrentSector } from "@/lib/session";
+import { tenantScope } from "@/lib/tenant";
 import { sectorLabels } from "@/lib/sector-config";
 
 // Always read fresh data from the database on each request.
 export const dynamic = "force-dynamic";
 
 export default async function NotesPage() {
+  const worker = await getCurrentUser();
+  if (!worker) return null; // (protected) layout already gates this
   const sector = await getCurrentSector();
   const labels = sectorLabels(sector);
+  const scope = tenantScope(worker);
 
   const participants = await prisma.participant.findMany({
+    where: scope,
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });
 
   const recentNotes = await prisma.progressNote.findMany({
+    where: scope,
     orderBy: { createdAt: "desc" },
     take: 5,
     include: { participant: true },

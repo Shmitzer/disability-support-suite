@@ -5,7 +5,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
-import { tenantOwner } from "@/lib/tenant";
+import { tenantOwner, tenantScope } from "@/lib/tenant";
 import { generateProgressNote } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -34,8 +34,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const participant = await prisma.participant.findUnique({
-      where: { id: participantId },
+    // Scope by tenant: a caller can only generate notes for a participant in their
+    // own org (or their own, for solo workers) — never another tenant's by id.
+    const participant = await prisma.participant.findFirst({
+      where: { id: participantId, ...tenantScope(worker) },
     });
     if (!participant) {
       return NextResponse.json({ error: "Participant not found." }, { status: 404 });

@@ -16,6 +16,7 @@ import { getCurrentUser, getCurrentSector } from "@/lib/session";
 import { isRosteringRole } from "@/lib/enums";
 import { sectorLabels } from "@/lib/sector-config";
 import { prisma } from "@/lib/prisma";
+import { tenantScope } from "@/lib/tenant";
 import { clockOff } from "@/lib/clock-actions";
 import { ShiftTracker } from "@/components/ShiftTracker";
 import { ShiftTimeline } from "@/components/ShiftTimeline";
@@ -35,8 +36,10 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   if (!worker) notFound();
   const labels = sectorLabels(await getCurrentSector());
 
-  const shift = await prisma.shift.findUnique({
-    where: { id },
+  // Tenant-scoped fetch: even a rostering-role user can only open a shift in their
+  // own org — a cross-org admin gets notFound() instead of another tenant's data.
+  const shift = await prisma.shift.findFirst({
+    where: { id, ...tenantScope(worker) },
     include: {
       participant: true,
       allocatedTo: true, // the worker — included so the copied log names them
