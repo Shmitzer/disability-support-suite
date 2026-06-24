@@ -44,8 +44,16 @@ BEGIN
         OR "organisationId" = (auth.jwt() ->> 'organisationId')
       )
       WITH CHECK (
-        "userId" = (select auth.uid())::text
-        OR "organisationId" = (auth.jwt() ->> 'organisationId')
+        (
+          "userId" = (select auth.uid())::text
+          OR "organisationId" = (auth.jwt() ->> 'organisationId')
+        )
+        -- ...and the row's org, if set, must be YOUR org — so you can't create or
+        -- reassign a row into another tenant even on a row you "own" (userId = you).
+        AND (
+          "organisationId" IS NULL
+          OR "organisationId" = (auth.jwt() ->> 'organisationId')
+        )
       );
     $f$, t);
   END LOOP;
@@ -63,8 +71,14 @@ CREATE POLICY tenant_isolation ON "Worker"
     OR "organisationId" = (auth.jwt() ->> 'organisationId')
   )
   WITH CHECK (
-    "supabaseUserId" = (select auth.uid())::text
-    OR "organisationId" = (auth.jwt() ->> 'organisationId')
+    (
+      "supabaseUserId" = (select auth.uid())::text
+      OR "organisationId" = (auth.jwt() ->> 'organisationId')
+    )
+    AND (
+      "organisationId" IS NULL
+      OR "organisationId" = (auth.jwt() ->> 'organisationId')
+    )
   );
 
 -- ===========================================================================
@@ -93,8 +107,14 @@ DROP POLICY IF EXISTS audit_insert ON "AuditLog";
 CREATE POLICY audit_insert ON "AuditLog"
   FOR INSERT TO authenticated
   WITH CHECK (
-    "actorId" = (select auth.uid())::text
-    OR "organisationId" = (auth.jwt() ->> 'organisationId')
+    (
+      "actorId" = (select auth.uid())::text
+      OR "organisationId" = (auth.jwt() ->> 'organisationId')
+    )
+    AND (
+      "organisationId" IS NULL
+      OR "organisationId" = (auth.jwt() ->> 'organisationId')
+    )
   );
 
 -- ===========================================================================
