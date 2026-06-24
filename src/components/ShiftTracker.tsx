@@ -160,7 +160,7 @@ export function ShiftTracker({
             <button
               type="button"
               onClick={() => openCategory(null)}
-              className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-surface-sunk"
+              className="flex min-h-[44px] items-center gap-1 rounded-full border border-border bg-surface px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-surface-sunk"
             >
               <span aria-hidden>←</span> Back
             </button>
