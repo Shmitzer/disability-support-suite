@@ -27,7 +27,12 @@ file and are **not** applied; if blocked, note the blocker here and move on.
       `*.trycloudflare.com` for dev origins + Server Actions; `npm run dev:phone` opens the
       tunnel. **Note:** cloudflared can't run inside the cloud sandbox (outbound port
       blocked) — it's a local laptop workflow, as documented in `scripts/phone-tunnel.mjs`._
-- [ ] **3. Wire `CairaAdmin` in as an `/admin` route** (mock data).
+- [x] **3. Wire `CairaAdmin` in as an `/admin` route** (mock data). _No `CairaAdmin.jsx`
+      existed anywhere in the repo or git history, so — per the no-standalone-jsx
+      convention — built `src/app/admin/page.tsx` as a `CairaAdmin` TSX server component
+      from the design SSOT ("Web A · Coordinator dashboard"), in Sage & Clay, all mock
+      data. Placed outside the `(protected)` phone chrome for the full desktop canvas;
+      still auth-gated by `middleware.ts`. Builds as a static `/admin` route._
 - [ ] **4. #7 LearnedOption** — per-org custom + global seeds + de-identified
       analytics. Schema change → `.sql` file only, do NOT apply.
 - [ ] **5. Enterprise privacy draft** → `/privacy` (marked draft).
