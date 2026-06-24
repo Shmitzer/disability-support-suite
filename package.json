@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test test/*.test.ts",
-    "test:db": "tsx scripts/test-photos-db.ts"
+    "test:db": "tsx scripts/test-photos-db.ts",
+    "verify:rls": "psql \"$DIRECT_URL\" -f prisma/sql/verify_rls.sql"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

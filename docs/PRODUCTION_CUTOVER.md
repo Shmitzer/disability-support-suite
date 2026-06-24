@@ -138,8 +138,19 @@ activate in the Vercel production build, even if the env var leaks in. To use:
 set `DEV_AUTH=1` in `.env`, then `npx tsx prisma/seed.ts`.
 
 ### E5. Verify (live)
-- RLS smoke test (BOLA/IDOR): sign in as an org-A user, attempt to read an org-B
-  row id → denied.
+- **Automated cross-tenant check (run this):**
+  ```bash
+  npm run verify:rls          # = psql "$DIRECT_URL" -f prisma/sql/verify_rls.sql
+  ```
+  Simulates two orgs' authenticated users + an anon caller and asserts: no
+  cross-tenant read, deny-by-default for anon, `WITH CHECK` blocks cross-tenant
+  insert, cross-tenant UPDATE touches 0 rows, and **every `public` table has RLS
+  enabled** (catches a new table shipped without a policy). Runs in a rolled-back
+  transaction — non-destructive. Prints `ALL RLS CHECKS PASSED` on success; any
+  failure exits non-zero.
+- **Auth-hook smoke test (separate concern):** sign in as a real org-A user and
+  decode the JWT — it must carry a top-level `organisationId` claim. Then attempt
+  to read an org-B row via the Data API → denied.
 - Middleware: hitting a `(protected)` route while signed out → redirected to `/login`.
 - The dev role-switch still works locally with `DEV_AUTH=1`.
 
