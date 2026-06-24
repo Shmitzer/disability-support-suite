@@ -1,9 +1,10 @@
 // category-colors.ts — one colour per category, used by BOTH the "Log something"
 // chips and the timeline (dot + entry highlight), so they stay consistent.
 //
-// Tailwind can only see complete class strings, so each variant is written out in
-// full here rather than glued together. Keyed by the stored category key.
-//   chipIdle  — the capture chip at rest
+// Caira "Paper" palette: each category is a soft cut-paper FILL tint with a darker
+// stroked-glyph INK, taken from the HANDOFF spec. Tailwind can only see complete
+// class strings, so each variant is written out in full (arbitrary [#hex] values).
+//   chipIdle  — the capture tile at rest
 //   chipActive— the chosen-category chip in the compact header
 //   dot       — the coloured timeline dot
 //   card      — the light highlight on a timeline entry card
@@ -11,61 +12,69 @@
 type CatColor = { chipIdle: string; chipActive: string; dot: string; card: string };
 
 const COLORS: Record<string, CatColor> = {
+  // Food — fill #f6d99a / ink #8a5a18
   Meal: {
-    chipIdle: "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100",
-    chipActive: "border-amber-400 bg-amber-100 text-amber-900",
-    dot: "border-amber-300 bg-amber-100 text-amber-800",
-    card: "border-amber-200 bg-amber-50",
+    chipIdle: "border-[#8a5a18]/20 bg-[#f6d99a] text-[#8a5a18] hover:brightness-95",
+    chipActive: "border-[#8a5a18]/50 bg-[#f6d99a] text-[#8a5a18]",
+    dot: "border-[#8a5a18]/30 bg-[#f6d99a] text-[#8a5a18]",
+    card: "border-[#8a5a18]/15 bg-[#f6d99a]/50",
   },
+  // Drink — fill #a9ddd7 / ink #0e5e58
   Fluids: {
-    chipIdle: "border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100",
-    chipActive: "border-sky-400 bg-sky-100 text-sky-900",
-    dot: "border-sky-300 bg-sky-100 text-sky-800",
-    card: "border-sky-200 bg-sky-50",
+    chipIdle: "border-[#0e5e58]/20 bg-[#a9ddd7] text-[#0e5e58] hover:brightness-95",
+    chipActive: "border-[#0e5e58]/50 bg-[#a9ddd7] text-[#0e5e58]",
+    dot: "border-[#0e5e58]/30 bg-[#a9ddd7] text-[#0e5e58]",
+    card: "border-[#0e5e58]/15 bg-[#a9ddd7]/50",
   },
+  // Activity — fill #aedcb6 / ink #256b3f
   Activity: {
-    chipIdle: "border-green-200 bg-green-50 text-green-800 hover:bg-green-100",
-    chipActive: "border-green-400 bg-green-100 text-green-900",
-    dot: "border-green-300 bg-green-100 text-green-800",
-    card: "border-green-200 bg-green-50",
+    chipIdle: "border-[#256b3f]/20 bg-[#aedcb6] text-[#256b3f] hover:brightness-95",
+    chipActive: "border-[#256b3f]/50 bg-[#aedcb6] text-[#256b3f]",
+    dot: "border-[#256b3f]/30 bg-[#aedcb6] text-[#256b3f]",
+    card: "border-[#256b3f]/15 bg-[#aedcb6]/50",
   },
+  // Toilet — fill #b9e0da / ink #14756a
   Toileting: {
-    chipIdle: "border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100",
-    chipActive: "border-teal-400 bg-teal-100 text-teal-900",
-    dot: "border-teal-300 bg-teal-100 text-teal-800",
-    card: "border-teal-200 bg-teal-50",
+    chipIdle: "border-[#14756a]/20 bg-[#b9e0da] text-[#14756a] hover:brightness-95",
+    chipActive: "border-[#14756a]/50 bg-[#b9e0da] text-[#14756a]",
+    dot: "border-[#14756a]/30 bg-[#b9e0da] text-[#14756a]",
+    card: "border-[#14756a]/15 bg-[#b9e0da]/50",
   },
+  // Hygiene — fill #cdd6f0 / ink #4d5b9e
   Hygiene: {
-    chipIdle: "border-purple-200 bg-purple-50 text-purple-800 hover:bg-purple-100",
-    chipActive: "border-purple-400 bg-purple-100 text-purple-900",
-    dot: "border-purple-300 bg-purple-100 text-purple-800",
-    card: "border-purple-200 bg-purple-50",
+    chipIdle: "border-[#4d5b9e]/20 bg-[#cdd6f0] text-[#4d5b9e] hover:brightness-95",
+    chipActive: "border-[#4d5b9e]/50 bg-[#cdd6f0] text-[#4d5b9e]",
+    dot: "border-[#4d5b9e]/30 bg-[#cdd6f0] text-[#4d5b9e]",
+    card: "border-[#4d5b9e]/15 bg-[#cdd6f0]/50",
   },
+  // Medication — fill #f3c2d8 / ink #962f63
   Meds: {
-    chipIdle: "border-pink-200 bg-pink-50 text-pink-800 hover:bg-pink-100",
-    chipActive: "border-pink-400 bg-pink-100 text-pink-900",
-    dot: "border-pink-300 bg-pink-100 text-pink-800",
-    card: "border-pink-200 bg-pink-50",
+    chipIdle: "border-[#962f63]/20 bg-[#f3c2d8] text-[#962f63] hover:brightness-95",
+    chipActive: "border-[#962f63]/50 bg-[#f3c2d8] text-[#962f63]",
+    dot: "border-[#962f63]/30 bg-[#f3c2d8] text-[#962f63]",
+    card: "border-[#962f63]/15 bg-[#f3c2d8]/50",
   },
+  // Note — warm neutral paper (no spec tint; derived from ink/line)
   Note: {
-    chipIdle: "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100",
-    chipActive: "border-slate-400 bg-slate-100 text-slate-800",
-    dot: "border-slate-300 bg-slate-100 text-slate-700",
-    card: "border-slate-200 bg-slate-50",
+    chipIdle: "border-[#7a6a55]/20 bg-[#efe6d6] text-[#7a6a55] hover:brightness-95",
+    chipActive: "border-[#7a6a55]/50 bg-[#efe6d6] text-[#7a6a55]",
+    dot: "border-[#7a6a55]/30 bg-[#efe6d6] text-[#7a6a55]",
+    card: "border-[#7a6a55]/15 bg-[#efe6d6]/50",
   },
+  // Incident — soft clay warning (calm, not alarmist — accessibility intent)
   Incident: {
-    chipIdle: "border-red-200 bg-red-50 text-red-800 hover:bg-red-100",
-    chipActive: "border-red-400 bg-red-100 text-red-900",
-    dot: "border-red-300 bg-red-100 text-red-800",
-    card: "border-red-200 bg-red-50",
+    chipIdle: "border-[#b0402b]/25 bg-[#f7d8cd] text-[#b0402b] hover:brightness-95",
+    chipActive: "border-[#b0402b]/55 bg-[#f7d8cd] text-[#b0402b]",
+    dot: "border-[#b0402b]/30 bg-[#f7d8cd] text-[#b0402b]",
+    card: "border-[#b0402b]/15 bg-[#f7d8cd]/50",
   },
 };
 
 const DEFAULT: CatColor = {
-  chipIdle: "border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100",
-  chipActive: "border-zinc-400 bg-zinc-100 text-zinc-800",
-  dot: "border-zinc-200 bg-zinc-100 text-zinc-600",
-  card: "border-zinc-200 bg-white",
+  chipIdle: "border-[#8a7a66]/20 bg-[#efe6d6] text-[#7a6a55] hover:brightness-95",
+  chipActive: "border-[#8a7a66]/50 bg-[#efe6d6] text-[#7a6a55]",
+  dot: "border-[#8a7a66]/30 bg-[#efe6d6] text-[#7a6a55]",
+  card: "border-[#8a7a66]/15 bg-[#efe6d6]/50",
 };
 
 export function catColor(key: string): CatColor {

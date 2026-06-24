@@ -13,25 +13,29 @@
 */
 
 :root {
-  /* Surfaces — warm paper */
-  --background: #f3efe6;   /* soft warm paper the app sits on */
-  --surface: #fdfbf6;      /* cards / raised panels (warm white) */
-  --surface-sunk: #efe9dc; /* inset / tinted wells */
-  --foreground: #2b2a26;   /* primary text — warm near-black */
-  --muted: #7c776c;        /* secondary text */
+  /* Surfaces — warm paper (HANDOFF "Sage & Clay") */
+  --background: #f3ebdd;   /* canvas */
+  --surface: #fffaf2;      /* cards / headers */
+  --surface-sunk: #f3ebdd; /* inset / tinted wells */
+  --foreground: #3a3128;   /* ink — primary text */
+  --muted: #8a7a66;        /* secondary text */
 
-  /* Brand — sage */
-  --brand: #6f8270;        /* sage green, the primary accent */
-  --brand-strong: #586a59; /* pressed/hover */
-  --brand-tint: #e7ece4;   /* sage wash for selected/tinted chips */
+  /* Brand — teal (primary: actions, brand) */
+  --brand: #0f766e;
+  --brand-strong: #0b5d56; /* pressed/hover */
+  --brand-tint: #d8e9e6;   /* light teal wash for selected/headers */
 
-  /* Accent — clay */
-  --clay: #c17a57;         /* terracotta accent */
-  --clay-strong: #a5623f;
-  --clay-tint: #f3e4da;    /* clay wash */
+  /* Accent — clay (on-call, mic, urgent) */
+  --clay: #df5b40;
+  --clay-strong: #c2492f;
+  --clay-tint: #fbe4dd;
+
+  /* Status — "on shift" green */
+  --status: #34a07f;
+  --status-bg: #e7f1ec;
 
   /* Hairlines */
-  --border: #e6e0d4;
+  --border: #ece0cf;       /* line */
 
   /* Shape & depth — soft, never harsh */
   --radius: 1rem;
@@ -50,6 +54,8 @@
   --color-clay: var(--clay);
   --color-clay-strong: var(--clay-strong);
   --color-clay-tint: var(--clay-tint);
+  --color-status: var(--status);
+  --color-status-bg: var(--status-bg);
   --color-border: var(--border);
   --font-sans: var(--font-sans-base);
   --font-display: var(--font-display);

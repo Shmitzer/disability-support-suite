@@ -101,8 +101,8 @@ export function ShiftTracker({
           </div>
         )}
         {/* A clear "you're live" cue while the shift is running. */}
-        <span className="ml-auto flex items-center gap-1.5 text-xs font-medium text-brand">
-          <span className="h-2 w-2 rounded-full bg-brand" aria-hidden />
+        <span className="ml-auto flex items-center gap-1.5 rounded-full bg-status-bg px-2 py-0.5 text-xs font-medium text-status">
+          <span className="h-2 w-2 rounded-full bg-status" aria-hidden />
           On shift
         </span>
       </div>
@@ -110,20 +110,43 @@ export function ShiftTracker({
       {selected === null ? (
         // The full tile grid — icon-forward tiles, four across, so every target is
         // big and easy to tap one-handed on a phone (Caira "Tablet A" capture grid).
-        <div className="grid grid-cols-4 gap-2.5">
-          {LOG_CATEGORIES.map((c) => (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-4 gap-2.5">
+            {LOG_CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => openCategory(c.key)}
+                className={`${TILE_BASE} ${catColor(c.key).chipIdle}`}
+              >
+                <span className="text-2xl leading-none" aria-hidden>
+                  {c.emoji}
+                </span>
+                <span className="text-[11px] font-medium leading-tight">{c.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Record a voice note (stubbed) + a Type button that swaps the grid for a
+              free-text Note — the Caira "Tablet A" Record / Type model. */}
+          <div className="flex items-stretch gap-2">
             <button
-              key={c.key}
               type="button"
-              onClick={() => openCategory(c.key)}
-              className={`${TILE_BASE} ${catColor(c.key).chipIdle}`}
+              onClick={() => setVoiceHint((v) => !v)}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-clay px-4 py-3 text-base font-medium text-white transition-colors hover:bg-clay-strong"
             >
-              <span className="text-2xl leading-none" aria-hidden>
-                {c.emoji}
-              </span>
-              <span className="text-[11px] font-medium leading-tight">{c.label}</span>
+              <MicIcon /> Record a voice note
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => openCategory("Note")}
+              aria-label="Type a note"
+              className="flex items-center justify-center rounded-xl border border-border bg-surface px-4 text-muted transition-colors hover:bg-surface-sunk"
+            >
+              <TypeIcon />
+            </button>
+          </div>
+          {voiceHint && <p className="text-xs text-muted">Voice notes are coming soon.</p>}
         </div>
       ) : (
         // A category is chosen: hide the others, show a compact header with an
@@ -158,21 +181,9 @@ export function ShiftTracker({
             onGroupChange={(k, v) => setGroupValues((s) => ({ ...s, [k]: v }))}
           />
 
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-sm font-medium text-foreground">
-              Add a note{noteRequired ? " (required)" : " (optional)"}
-            </label>
-            {/* Voice capture — stubbed for now (real audio is out of scope). */}
-            <button
-              type="button"
-              onClick={() => setVoiceHint((v) => !v)}
-              aria-label="Voice note"
-              className="flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-surface-sunk"
-            >
-              <MicIcon /> Voice
-            </button>
-          </div>
-          {voiceHint && <p className="text-xs text-muted">Voice notes are coming soon.</p>}
+          <label className="text-sm font-medium text-foreground">
+            Add a note{noteRequired ? " (required)" : " (optional)"}
+          </label>
           <textarea
             name="notes"
             rows={2}
@@ -265,6 +276,24 @@ function MicIcon() {
     >
       <rect x="9" y="3" width="6" height="11" rx="3" />
       <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </svg>
+  );
+}
+
+// "Type" glyph (text lines) for the swap-to-free-text Note button.
+function TypeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 7h16M4 12h16M4 17h10" />
     </svg>
   );
 }
