@@ -16,6 +16,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
 import { tenantOwner } from "@/lib/tenant";
+import { recordAudit } from "@/lib/audit";
 import { buildShiftSourceLog } from "@/lib/report";
 import {
   generateShiftReport,
@@ -233,6 +234,17 @@ export async function approveReport(formData: FormData) {
     data: { status: "APPROVED", approvedAt: new Date() },
   });
 
+  // Approving a report locks the final note — a compliance-significant event, so
+  // record it on the cross-app audit trail (Rule 9).
+  await recordAudit({
+    action: "REPORT_APPROVED",
+    targetType: "ShiftReport",
+    targetId: report.id,
+    actorId: shift.allocatedToId,
+    organisationId: shift.organisationId,
+    detail: { shiftId },
+  });
+
   revalidatePath(`/shift/${shiftId}`);
 }
 
@@ -245,6 +257,16 @@ export async function reopenReport(formData: FormData) {
   await prisma.shiftReport.update({
     where: { id: report.id },
     data: { status: "DRAFT", approvedAt: null },
+  });
+
+  // Unlocking an approved note is equally audit-worthy.
+  await recordAudit({
+    action: "REPORT_REOPENED",
+    targetType: "ShiftReport",
+    targetId: report.id,
+    actorId: shift.allocatedToId,
+    organisationId: shift.organisationId,
+    detail: { shiftId },
   });
 
   revalidatePath(`/shift/${shiftId}`);

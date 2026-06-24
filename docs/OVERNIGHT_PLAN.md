@@ -55,7 +55,12 @@ file and are **not** applied; if blocked, note the blocker here and move on.
       Breaches, children/vulnerable persons. Clearly marked **Draft — not in effect**
       (banner + title + metadata), styled in Sage & Clay. Placeholders (entity, contact,
       retention periods, sub-processor list) flagged for legal review._
-- [ ] **6. Extend `recordAudit()`** to roster / report actions.
+- [x] **6. Extend `recordAudit()`** to roster / report actions. _Added cross-app
+      `AuditLog` entries (alongside the existing per-shift `ShiftEvent` rows) for the
+      roster actions — `SHIFT_CREATED`, `SHIFT_ALLOCATED`, `SHIFT_OFFERED`,
+      `SHIFT_CANCELLED` (`roster-actions.ts`) — and the report approval flow —
+      `REPORT_APPROVED` / `REPORT_REOPENED` (`report-actions.ts`). Each stamps actor +
+      organisationId + minimal JSON detail; best-effort (never breaks the action)._
 
 ## Notes & blockers
 
