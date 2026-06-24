@@ -1,49 +1,77 @@
 @import "tailwindcss";
 
-/* Calm & clinical design system (Option A). */
 /*
-  Design system — "Option A: Calm & clinical"
+  Caira design system — "Sage & Clay"
   ------------------------------------------------------------------
-  Generous white space, soft blue accents, clean and professional,
-  mobile-first. These are the shared tokens; pages use Tailwind
-  utility classes (blue-* / zinc-*) that align with this palette.
+  Warm, calm, paper-like. Sage green is the primary; clay/terracotta is
+  the warm accent; surfaces sit on a soft warm-paper background. Display
+  type is Bricolage Grotesque, body is Figtree (loaded in layout.tsx).
+
+  NOTE: these are first-pass token values for the Caira re-skin — tune the
+  hexes here against the HANDOFF / .dc.html reference and the whole app
+  follows (anything using the brand/clay/surface utilities or CSS vars).
 */
 
 :root {
-  /* Surfaces */
-  --background: #f4f6f8;   /* calm off-white the whole app sits on */
-  --surface: #ffffff;      /* cards / raised panels */
-  --foreground: #18222e;   /* primary text — soft near-black, not pure #000 */
+  /* Surfaces — warm paper (HANDOFF "Sage & Clay") */
+  --background: #f3ebdd;   /* canvas */
+  --surface: #fffaf2;      /* cards / headers */
+  --surface-sunk: #f3ebdd; /* inset / tinted wells */
+  --foreground: #3a3128;   /* ink — primary text */
+  --muted: #8a7a66;        /* secondary text */
 
-  /* Brand — soft clinical blue */
-  --brand: #2563eb;        /* = blue-600, the accent already used across pages */
-  --brand-strong: #1d4ed8; /* = blue-700, hover/pressed */
+  /* Brand — teal (primary: actions, brand) */
+  --brand: #0f766e;
+  --brand-strong: #0b5d56; /* pressed/hover */
+  --brand-tint: #d8e9e6;   /* light teal wash for selected/headers */
+
+  /* Accent — clay (on-call, mic, urgent) */
+  --clay: #df5b40;
+  --clay-strong: #c2492f;
+  --clay-tint: #fbe4dd;
+
+  /* Status — "on shift" green */
+  --status: #34a07f;
+  --status-bg: #e7f1ec;
 
   /* Hairlines */
-  --border: #e4e7ec;
+  --border: #ece0cf;       /* line */
 
   /* Shape & depth — soft, never harsh */
-  --radius: 1rem;          /* matches the rounded-2xl cards */
-  --shadow-soft: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --radius: 1rem;
+  --shadow-soft: 0 1px 2px rgb(43 42 38 / 0.04), 0 1px 3px rgb(43 42 38 / 0.06);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
+  --color-brand-tint: var(--brand-tint);
+  --color-clay: var(--clay);
+  --color-clay-strong: var(--clay-strong);
+  --color-clay-tint: var(--clay-tint);
+  --color-status: var(--status);
+  --color-status-bg: var(--status-bg);
   --color-border: var(--border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans-base);
+  --font-display: var(--font-display);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  /* Use the Geist font loaded in layout.tsx (was previously overridden to Arial). */
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Figtree body font (loaded in layout.tsx). */
+  font-family: var(--font-sans-base), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Display/heading face — Bricolage Grotesque. Use class="font-display". */
+.font-display {
+  font-family: var(--font-display), var(--font-sans-base), ui-sans-serif, system-ui, sans-serif;
 }
 
 /*

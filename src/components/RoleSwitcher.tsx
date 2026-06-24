@@ -1,4 +1,4 @@
-// RoleSwitcher.tsx — dev-only control to act as any worker.
+// RoleSwitcher.tsx — dev-only control to act as any worker (DEV_AUTH only).
 // Picking a name submits the form, which runs the server action and refreshes.
 
 "use client";

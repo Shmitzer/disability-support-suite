@@ -15,6 +15,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { tenantOwner, tenantScope } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -49,13 +50,17 @@ export async function startQuickShift(formData: FormData) {
     // Free text wins. Find an existing participant with this exact name, or
     // create one. (name isn't unique in the schema, so we use findFirst here,
     // not a unique upsert.)
-    const existing = await prisma.participant.findFirst({ where: { name: typedName } });
+    const existing = await prisma.participant.findFirst({
+      where: { name: typedName, ...tenantScope(worker) },
+    });
     participantId = existing
       ? existing.id
-      : (await prisma.participant.create({ data: { name: typedName } })).id;
+      : (await prisma.participant.create({ data: { name: typedName, ...tenantOwner(worker) } })).id;
   } else if (pickedId) {
-    // Otherwise use the dropdown choice — but confirm it really exists.
-    const picked = await prisma.participant.findUnique({ where: { id: pickedId } });
+    // Otherwise use the dropdown choice — but confirm it's one of THIS tenant's.
+    const picked = await prisma.participant.findFirst({
+      where: { id: pickedId, ...tenantScope(worker) },
+    });
     participantId = picked?.id ?? null;
   }
 
@@ -86,10 +91,11 @@ export async function startQuickShift(formData: FormData) {
         scheduledEnd,
         clockOnAt: now,
         idempotencyKey,
+        ...tenantOwner(worker),
         events: {
           create: [
-            { type: "CREATED", actorId: worker.id, detail: "Quick shift" },
-            { type: "CLOCK_ON", actorId: worker.id },
+            { type: "CREATED", actorId: worker.id, detail: "Quick shift", ...tenantOwner(worker) },
+            { type: "CLOCK_ON", actorId: worker.id, ...tenantOwner(worker) },
           ],
         },
       },

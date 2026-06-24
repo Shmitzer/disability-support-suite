@@ -18,6 +18,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { tenantOwner, tenantScope } from "@/lib/tenant";
 import { isRosteringRole } from "@/lib/enums";
 import { revalidatePath } from "next/cache";
 
@@ -50,7 +51,7 @@ export async function clockOn(formData: FormData) {
     data: {
       status: "IN_PROGRESS",
       clockOnAt: now,
-      events: { create: { type: "CLOCK_ON", actorId: worker.id } },
+      events: { create: { type: "CLOCK_ON", actorId: worker.id, ...tenantOwner(worker) } },
     },
   });
 
@@ -75,7 +76,7 @@ export async function clockOff(formData: FormData) {
     data: {
       status: "COMPLETED",
       clockOffAt: new Date(),
-      events: { create: { type: "CLOCK_OFF", actorId: worker.id } },
+      events: { create: { type: "CLOCK_OFF", actorId: worker.id, ...tenantOwner(worker) } },
     },
   });
 
@@ -107,7 +108,7 @@ export async function requestAmendment(formData: FormData) {
   if (!shift || shift.allocatedToId !== worker.id) return;
 
   await prisma.clockAmendmentRequest.create({
-    data: { shiftId, requestedById: worker.id, field, proposedValue, reason },
+    data: { shiftId, requestedById: worker.id, field, proposedValue, reason, ...tenantOwner(worker) },
   });
 
   await prisma.shiftEvent.create({
@@ -116,6 +117,7 @@ export async function requestAmendment(formData: FormData) {
       type: "AMEND_REQUESTED",
       actorId: worker.id,
       detail: `Requested ${labelFor(field)} = ${formatStamp(proposedValue)}`,
+      ...tenantOwner(worker),
     },
   });
 
@@ -134,7 +136,9 @@ export async function approveAmendment(formData: FormData) {
   const amendmentId = String(formData.get("amendmentId") ?? "");
   if (!amendmentId) return;
 
-  const req = await prisma.clockAmendmentRequest.findUnique({ where: { id: amendmentId } });
+  const req = await prisma.clockAmendmentRequest.findFirst({
+    where: { id: amendmentId, ...tenantScope(manager) },
+  });
   if (!req || req.status !== "PENDING") return;
 
   // Build the single field to write (typed, rather than a dynamic key).
@@ -156,6 +160,7 @@ export async function approveAmendment(formData: FormData) {
         type: "AMEND_APPROVED",
         actorId: manager.id,
         detail: `Approved ${labelFor(req.field)} = ${formatStamp(req.proposedValue)}`,
+        ...tenantOwner(manager),
       },
     }),
   ]);
@@ -170,7 +175,9 @@ export async function rejectAmendment(formData: FormData) {
   const amendmentId = String(formData.get("amendmentId") ?? "");
   if (!amendmentId) return;
 
-  const req = await prisma.clockAmendmentRequest.findUnique({ where: { id: amendmentId } });
+  const req = await prisma.clockAmendmentRequest.findFirst({
+    where: { id: amendmentId, ...tenantScope(manager) },
+  });
   if (!req || req.status !== "PENDING") return;
 
   await prisma.$transaction([
@@ -184,6 +191,7 @@ export async function rejectAmendment(formData: FormData) {
         type: "AMEND_REJECTED",
         actorId: manager.id,
         detail: `Rejected ${labelFor(req.field)} request`,
+        ...tenantOwner(manager),
       },
     }),
   ]);

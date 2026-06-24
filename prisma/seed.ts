@@ -2,12 +2,10 @@
 // Run with:  npx tsx prisma/seed.ts
 // Never put real participant data here.
 
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient, Role } from "../src/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 // --- People ----------------------------------------------------------------
@@ -25,10 +23,20 @@ const DEMO_ORG_ID = "org_demo";
 // Roles use the 6-value set (see src/lib/enums.ts); the old "ROSTERING" role is
 // now ADMIN.
 const sampleWorkers = [
-  { id: "wkr_edward", name: "Edward Neppl", role: "WORKER" },
-  { id: "wkr_sam", name: "Sam Taylor", role: "WORKER" },
-  { id: "wkr_roster", name: "Alex Rivera", role: "ADMIN" },
+  { id: "wkr_edward", name: "Edward Neppl", role: Role.WORKER },
+  { id: "wkr_sam", name: "Sam Taylor", role: Role.WORKER },
+  { id: "wkr_roster", name: "Alex Rivera", role: Role.ADMIN },
 ];
+
+// RLS ownership stamp for seed rows. Real auth users carry a Supabase UID in
+// userId; seed workers predate auth, so we use the Worker id (non-null is all the
+// NOT NULL column needs — seed data is only ever read through Prisma, which
+// bypasses RLS). organisationId scopes everything to the demo tenant.
+const ev = (e: { type: string; actorId: string; detail?: string; createdAt?: Date }) => ({
+  ...e,
+  userId: e.actorId,
+  organisationId: DEMO_ORG_ID,
+});
 
 // --- Date helpers ----------------------------------------------------------
 // Returns a real Date offset from "now" — e.g. at(-1, 9) = yesterday 09:00.
@@ -65,12 +73,12 @@ async function main() {
     create: { id: DEMO_ORG_ID, name: "Demo Care", sectorMode: "NDIS" },
   });
 
-  // Participants (keep any that already exist).
+  // Participants (keep any that already exist). Owned by the org's admin.
   for (const p of sampleParticipants) {
     await prisma.participant.upsert({
       where: { ndisNumber: p.ndisNumber },
       update: { name: p.name, organisationId: DEMO_ORG_ID },
-      create: { ...p, organisationId: DEMO_ORG_ID },
+      create: { ...p, userId: "wkr_roster", organisationId: DEMO_ORG_ID },
     });
   }
 
@@ -93,7 +101,9 @@ async function main() {
     { workerId: "wkr_sam", participantId: liam.id },
   ];
   for (const l of links) {
-    await prisma.workerParticipant.create({ data: l });
+    await prisma.workerParticipant.create({
+      data: { ...l, userId: l.workerId, organisationId: DEMO_ORG_ID },
+    });
   }
 
   // Shifts — built around Edward so his homepage has a last/current/next to show.
@@ -112,12 +122,14 @@ async function main() {
       clockOffAt: at(-1, 13, 5),
       allocatedAt: at(-3, 10),
       createdAt: at(-4, 9),
+      userId: "wkr_edward",
+      organisationId: DEMO_ORG_ID,
       events: {
         create: [
-          { type: "CREATED", actorId: "wkr_roster", createdAt: at(-4, 9) },
-          { type: "ALLOCATED", actorId: "wkr_roster", detail: "Allocated to Edward Neppl", createdAt: at(-3, 10) },
-          { type: "CLOCK_ON", actorId: "wkr_edward", createdAt: at(-1, 8, 58) },
-          { type: "CLOCK_OFF", actorId: "wkr_edward", createdAt: at(-1, 13, 5) },
+          ev({ type: "CREATED", actorId: "wkr_roster", createdAt: at(-4, 9) }),
+          ev({ type: "ALLOCATED", actorId: "wkr_roster", detail: "Allocated to Edward Neppl", createdAt: at(-3, 10) }),
+          ev({ type: "CLOCK_ON", actorId: "wkr_edward", createdAt: at(-1, 8, 58) }),
+          ev({ type: "CLOCK_OFF", actorId: "wkr_edward", createdAt: at(-1, 13, 5) }),
         ],
       },
     },
@@ -137,10 +149,12 @@ async function main() {
       scheduledEnd: soon(5 + 240), // a 4-hour shift
       allocatedAt: at(-1, 11),
       createdAt: at(-2, 9),
+      userId: "wkr_edward",
+      organisationId: DEMO_ORG_ID,
       events: {
         create: [
-          { type: "CREATED", actorId: "wkr_roster", createdAt: at(-2, 9) },
-          { type: "ALLOCATED", actorId: "wkr_roster", detail: "Allocated to Edward Neppl", createdAt: at(-1, 11) },
+          ev({ type: "CREATED", actorId: "wkr_roster", createdAt: at(-2, 9) }),
+          ev({ type: "ALLOCATED", actorId: "wkr_roster", detail: "Allocated to Edward Neppl", createdAt: at(-1, 11) }),
         ],
       },
     },
@@ -158,10 +172,12 @@ async function main() {
       scheduledEnd: at(1, 13),
       allocatedAt: at(0, 8),
       createdAt: at(-1, 15),
+      userId: "wkr_edward",
+      organisationId: DEMO_ORG_ID,
       events: {
         create: [
-          { type: "CREATED", actorId: "wkr_roster", createdAt: at(-1, 15) },
-          { type: "ALLOCATED", actorId: "wkr_roster", detail: "Allocated to Edward Neppl", createdAt: at(0, 8) },
+          ev({ type: "CREATED", actorId: "wkr_roster", createdAt: at(-1, 15) }),
+          ev({ type: "ALLOCATED", actorId: "wkr_roster", detail: "Allocated to Edward Neppl", createdAt: at(0, 8) }),
         ],
       },
     },
@@ -177,10 +193,12 @@ async function main() {
       scheduledStart: at(2, 10),
       scheduledEnd: at(2, 14),
       createdAt: at(0, 9),
+      userId: "wkr_roster",
+      organisationId: DEMO_ORG_ID,
       events: {
         create: [
-          { type: "CREATED", actorId: "wkr_roster", createdAt: at(0, 9) },
-          { type: "OFFERED", actorId: "wkr_roster", detail: "Offered to workers linked to Priya Sharma", createdAt: at(0, 9) },
+          ev({ type: "CREATED", actorId: "wkr_roster", createdAt: at(0, 9) }),
+          ev({ type: "OFFERED", actorId: "wkr_roster", detail: "Offered to workers linked to Priya Sharma", createdAt: at(0, 9) }),
         ],
       },
     },
@@ -198,10 +216,12 @@ async function main() {
       cancelledAt: at(-8, 16),
       cancelReason: "Participant admitted to hospital",
       createdAt: at(-9, 9),
+      userId: "wkr_roster",
+      organisationId: DEMO_ORG_ID,
       events: {
         create: [
-          { type: "CREATED", actorId: "wkr_roster", createdAt: at(-9, 9) },
-          { type: "CANCELLED", actorId: "wkr_roster", detail: "Participant admitted to hospital", createdAt: at(-8, 16) },
+          ev({ type: "CREATED", actorId: "wkr_roster", createdAt: at(-9, 9) }),
+          ev({ type: "CANCELLED", actorId: "wkr_roster", detail: "Participant admitted to hospital", createdAt: at(-8, 16) }),
         ],
       },
     },
@@ -223,11 +243,13 @@ async function main() {
       clockOffAt: null, // forgot to clock off
       allocatedAt: at(-4, 10),
       createdAt: at(-5, 9),
+      userId: "wkr_edward",
+      organisationId: DEMO_ORG_ID,
       events: {
         create: [
-          { type: "CREATED", actorId: "wkr_roster", createdAt: at(-5, 9) },
-          { type: "ALLOCATED", actorId: "wkr_roster", detail: "Allocated to Edward Neppl", createdAt: at(-4, 10) },
-          { type: "CLOCK_ON", actorId: "wkr_edward", createdAt: at(-2, 9, 2) },
+          ev({ type: "CREATED", actorId: "wkr_roster", createdAt: at(-5, 9) }),
+          ev({ type: "ALLOCATED", actorId: "wkr_roster", detail: "Allocated to Edward Neppl", createdAt: at(-4, 10) }),
+          ev({ type: "CLOCK_ON", actorId: "wkr_edward", createdAt: at(-2, 9, 2) }),
         ],
       },
     },

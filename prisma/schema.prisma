@@ -1,14 +1,13 @@
-// Prisma schema — defines the shape of the local SQLite database.
+// Prisma schema — Supabase PostgreSQL (Phase 0 cutover).
 // Docs: https://pris.ly/d/prisma-schema
 //
-// Phase A (schema hardening): every data table carries the multi-tenant columns
-// `organisationId` (Rule 5) and a forward-looking `userId`, plus `updatedAt`.
-// All new columns are NULLABLE so existing dummy rows migrate cleanly on SQLite.
-// JSON-shaped columns are stored as `String` here (matching the existing
-// questions/clarifications/photos convention); they convert to native Json/Jsonb
-// at the PostgreSQL migration (Phase D). `role`/`status`/`sectorMode` stay strings
-// for now and become native Prisma enums at Phase D — keep all role/sector logic
-// flowing through src/lib/enums.ts.
+// Multi-tenant: every data table carries organisationId (Rule 5) and a userId.
+// userId holds the owner's Supabase auth uid (auth.uid()) and is NOT NULL on the
+// owned tables — the app stamps it via tenantOwner() on every write (Phase E step 2).
+// LearnedOption stays nullable (shared global picklist). role/sectorMode are native
+// enums; JSON columns use
+// Json. Full-text search (ShiftReport.searchVector) and RLS live as checked-in SQL
+// (prisma/sql/) applied after `prisma migrate deploy` — see docs/PRODUCTION_CUTOVER.md.
 
 generator client {
   provider = "prisma-client"
@@ -16,7 +15,24 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+}
+
+enum Role {
+  SOLO_WORKER // independent support worker, no org
+  WORKER // worker within an organisation
+  SUPERVISOR // can view/approve worker notes within org
+  ADMIN // full org management (formerly the "ROSTERING" role)
+  PARTICIPANT // NDIS participant (future self-managed portal)
+  SUPERADMIN // platform-level admin (internal use only)
+}
+
+enum SectorMode {
+  NDIS
+  AGED_CARE
+  MENTAL_HEALTH
+  COMMUNITY_SERVICES
+  EARLY_CHILDHOOD
 }
 
 // The tenant. Nullable organisationId on every other table points here by id
@@ -24,7 +40,7 @@ datasource db {
 model Organisation {
   id                 String   @id @default(cuid())
   name               String
-  sectorMode         String   @default("NDIS") // NDIS | AGED_CARE | MENTAL_HEALTH | COMMUNITY_SERVICES | EARLY_CHILDHOOD
+  sectorMode         SectorMode @default(NDIS)
   stripeCustomerId   String?
   subscriptionStatus String?
   createdAt          DateTime @default(now())
@@ -37,7 +53,7 @@ model Organisation {
 model Worker {
   id   String @id @default(cuid())
   name String
-  role String @default("WORKER") // SOLO_WORKER | WORKER | SUPERVISOR | ADMIN | PARTICIPANT | SUPERADMIN
+  role Role @default(WORKER)
 
   // Account / billing fields (Worker extended into the spec's User). All nullable
   // until real auth (Phase E) and payments (Phase F) are wired.
@@ -72,7 +88,7 @@ model Participant {
   id             String              @id @default(cuid())
   name           String
   ndisNumber     String?             @unique
-  userId         String? // owning user (e.g. solo worker), for future RLS
+  userId         String // owning user (e.g. solo worker), for future RLS
   organisationId String?
   notes          ProgressNote[]
   shifts         Shift[]
@@ -89,7 +105,7 @@ model WorkerParticipant {
   workerId       String
   participant    Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
   participantId  String
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @default(now()) @updatedAt
@@ -104,7 +120,7 @@ model ProgressNote {
   participantId  String
   rawNotes       String // what the support worker typed
   generatedNote  String // the cleaned-up NDIS-style note from the AI
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @default(now()) @updatedAt
@@ -144,7 +160,7 @@ model Shift {
   reports    ShiftReport[]           // AI-generated progress reports for this shift
 
   idempotencyKey String? @unique // client-generated; prevents duplicate shifts on mobile (Rule 12)
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
@@ -162,7 +178,7 @@ model ShiftEvent {
   actor          Worker?  @relation("EventActor", fields: [actorId], references: [id])
   actorId        String? // who did it (null for system-generated events)
   detail         String? // optional human-readable / JSON extra context
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime @default(now()) // when the event happened
   updatedAt      DateTime @default(now()) @updatedAt
@@ -179,7 +195,7 @@ model LogEntry {
   photos         String? // JSON array of small image data URLs (DEV/DUMMY photos only until Phase 5)
   timestamp      DateTime // when the event happened (not when it was logged)
   idempotencyKey String? @unique // client-generated; prevents duplicate entries on mobile (Rule 12)
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
@@ -198,10 +214,10 @@ model ShiftReport {
   sourceLog String // the exact compiled log fed to the AI (hidden source of truth)
   model     String? // which AI model produced it (e.g. gemini-2.5-flash)
 
-  // Structured/compliance fields (String-encoded JSON on SQLite → Json at Phase D):
-  activitiesLog   String? // structured array of activities (not free text)
+  // Structured/compliance fields:
+  activitiesLog   Json? // structured array of activities (not free text)
   incidentFlag    Boolean @default(false)
-  incidentFields  String? // NDIS mandatory incident fields (JSON)
+  incidentFields  Json? // NDIS mandatory incident fields
   idempotencyKey  String? @unique // prevents duplicate notes on mobile (Rule 12); wired in Phase C
   generatedByModel String?
 
@@ -213,7 +229,7 @@ model ShiftReport {
   approvedBy     String?
   approvalNotes  String?
 
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
@@ -256,7 +272,7 @@ model ClockAmendmentRequest {
   decidedBy      Worker?   @relation("AmendDecidedBy", fields: [decidedById], references: [id])
   decidedById    String?
   decidedAt      DateTime?
-  userId         String?
+  userId         String
   organisationId String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt
@@ -271,6 +287,18 @@ model AuditLog {
   organisationId String?
   targetType     String // e.g. "Shift" | "Worker" | "ShiftReport"
   targetId       String
-  detail         String? // JSON extra context (→ Json at Phase D)
+  detail         Json? // extra context
   createdAt      DateTime @default(now())
+}
+
+// Pre-launch waitlist capture from the public landing page. Deliberately NOT a
+// tenant table: people on the waitlist are not users yet, so there is no userId /
+// organisationId (the same Rule 5/10 exception LearnedOption notes for global rows).
+// Writes go through the Prisma app only; the public Data API is denied by default
+// (enable-RLS-no-policy in rls_policies.sql), since this holds raw email addresses.
+model WaitlistSignup {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("landing") // where the signup came from
+  createdAt DateTime @default(now())
 }

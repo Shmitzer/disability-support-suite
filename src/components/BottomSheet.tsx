@@ -20,16 +20,21 @@ export function BottomSheet({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  // Start off-screen, then slide up on the next tick — a simple mount animation.
+  // Start off-screen, then slide up — a simple mount animation.
   const [shown, setShown] = useState(false);
   useEffect(() => {
-    setShown(true);
+    // Paint the off-screen state first, then slide up on the next frame, so the CSS
+    // transition actually runs (and we don't setState synchronously in the effect).
+    const raf = requestAnimationFrame(() => setShown(true));
     // Close on Escape, for keyboard / switch-access users.
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("keydown", onKey);
+    };
   }, [onClose]);
 
   return (

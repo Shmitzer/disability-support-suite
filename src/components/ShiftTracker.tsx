@@ -1,62 +1,65 @@
-// ShiftTracker.tsx — the quick-capture chips at the top of a running shift.
-//
-// Why this one is a *client* component ("use client"): it remembers which chip
-// you tapped (a tiny bit of in-browser state) and shows a note box for it. The
-// page around it stays a server component; only this interactive strip runs in
-// the browser — same split as the calendar.
-//
-// Flow: tap a chip → a note box opens (note is optional) → "Log it" saves via the
-// server action → the timeline below refreshes and the box closes ready for the
-// next one. Built for one-handed use on a phone during a shift.
+// ShiftTracker.tsx — Caira in-shift capture (rebuilt to match the design source of
+// truth: docs/design/Caira Tracker.dc.html + screenshots). One client island with
+// three views via a segmented control:
+//   • Mic      → voice mode: a (stubbed) record button + a free-text box that saves
+//                as a Note (real audio is out of scope).
+//   • Capture  → the 3-across Paper-icon tile grid; tapping a tile opens that
+//                category's detail panel (quick-options + note) → saves an entry.
+//   • Timeline → the shift's history (passed in, rendered as-is).
+// Plus a "Report an incident" button. Everything saves through the existing
+// addLogEntry server action against live Supabase. Built for one-handed phone use
+// (thumb-zone, >=44px targets).
 
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { LOG_CATEGORIES, categoryRequiresNote, findCategory } from "@/lib/log-categories";
-import { catColor } from "@/lib/category-colors";
+import { categoryRequiresNote, findCategory } from "@/lib/log-categories";
 import { addLogEntry } from "@/lib/log-actions";
 import { DetailFields } from "@/components/DetailFields";
 import { PhotoInput } from "@/components/PhotoInput";
+import { PaperIcon, PaperDefs } from "@/components/PaperIcon";
+
+// The six categories shown as Paper tiles, in design order. Note is reached via the
+// voice/type free-text; Incident via its own button below the grid.
+const TILE_KEYS = ["Meal", "Fluids", "Hygiene", "Activity", "Toileting", "Meds"];
+
+type View = "capture" | "timeline" | "voice";
 
 export function ShiftTracker({
   shiftId,
   learnedOptions,
+  timeline,
 }: {
   shiftId: string;
-  // Approved options for each self-learning group, keyed by the group key
-  // (e.g. { drink: [...], activity: [...] }). From the DB; falls back to config.
+  // Approved options for each self-learning group (e.g. { drink: [...] }).
   learnedOptions: Record<string, string[]>;
+  // The shift history, rendered into the Timeline tab.
+  timeline?: ReactNode;
 }) {
-  // Which chip is currently open for a note (null = none open yet).
+  const [view, setView] = useState<View>("capture");
+  // Which category's detail panel is open (null = the tile grid).
   const [selected, setSelected] = useState<string | null>(null);
-  // Whether the worker is overriding the entry time (default = now).
   const [adjusting, setAdjusting] = useState(false);
-  // Current value of each option group, so the note can react (e.g. PRN → required).
   const [groupValues, setGroupValues] = useState<Record<string, string[]>>({});
-  // Photos attached to the entry being logged (data URLs).
   const [photos, setPhotos] = useState<string[]>([]);
-  // The note text, kept in state so it can be backed up locally (Rule 8).
   const [note, setNote] = useState("");
-  // Client-generated idempotency key for the entry being composed (Rule 12).
   const [entryKey, setEntryKey] = useState("");
+  // Voice mode: a visual recording toggle (no real audio) + a typed note.
+  const [recording, setRecording] = useState(false);
+  const [voiceNote, setVoiceNote] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Where this shift+category's in-progress note is backed up (Rule 8).
   const noteBackupKey = (cat: string) => `dsw:note:${shiftId}:${cat}`;
-  // The chosen category (for its renamed label + emoji in the compact header).
+  const voiceBackupKey = `dsw:voicenote:${shiftId}`;
   const selectedCat = selected ? findCategory(selected) : null;
 
-  // Whether the note is required: always (e.g. free-text Note) or conditionally
-  // (e.g. medication PRN/Refused needs a reason).
   const rnw = selectedCat?.requireNoteWhen;
   const noteRequired =
     (selected ? categoryRequiresNote(selected) : false) ||
     (!!rnw && (groupValues[rnw.group] ?? []).some((v) => rnw.in.includes(v)));
 
-  // Open a category fresh: clear any leftover time override + group picks. Mint a
-  // new idempotency key for this entry, and restore any note we backed up earlier
-  // (so a refresh or a dropped submit doesn't lose the worker's typing — Rule 8).
+  // Open a category's detail panel fresh (Rule 8 restore + Rule 12 idempotency key).
   function openCategory(key: string | null) {
     setSelected(key);
     setAdjusting(false);
@@ -70,13 +73,20 @@ export function ShiftTracker({
     }
   }
 
-  // Runs when the note form is submitted. We call the server action, then reset
-  // the strip so it's clear and ready for the next entry. Passing an async
-  // function to <form action> is allowed in a client component.
+  function gotoView(next: View) {
+    setView(next);
+    setSelected(null);
+    if (next === "voice") {
+      setEntryKey(crypto.randomUUID());
+      setVoiceNote(lsGet(voiceBackupKey));
+      setRecording(false);
+    }
+  }
+
+  // Save a category entry (detail panel), then reset back to the grid.
   async function handleSubmit(formData: FormData) {
     const cat = selected;
     await addLogEntry(formData);
-    // Success only reaches here (a thrown action leaves the backup intact, Rule 8).
     if (cat) lsRemove(noteBackupKey(cat));
     setNote("");
     formRef.current?.reset();
@@ -86,170 +96,289 @@ export function ShiftTracker({
     setPhotos([]);
   }
 
+  // Save the voice/typed free-text as a Note entry, then return to capture.
+  async function handleVoiceSubmit(formData: FormData) {
+    await addLogEntry(formData);
+    lsRemove(voiceBackupKey);
+    setVoiceNote("");
+    setRecording(false);
+    setView("capture");
+  }
+
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-zinc-900">Log something</h2>
-        {/* Photo button (icon only) — enlarged and centred between the title and the
-            "On shift" cue, while adding a log. */}
-        {selected && (
-          <div className="flex flex-1 justify-center">
-            <PhotoInput photos={photos} onChange={setPhotos} iconOnly />
-          </div>
-        )}
-        {/* A clear "you're live" cue while the shift is running. */}
-        <span className="ml-auto flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-          On shift
-        </span>
+    <section className="flex flex-1 flex-col gap-3">
+      <PaperDefs />
+
+      {/* Segmented control: Mic · Capture · Timeline */}
+      <div className="grid grid-cols-[56px_1fr_1fr] gap-1 rounded-2xl bg-[#efe6d6] p-1">
+        <button
+          type="button"
+          onClick={() => gotoView("voice")}
+          aria-label="Voice note"
+          aria-pressed={view === "voice"}
+          className={`flex h-[44px] items-center justify-center rounded-xl transition-colors ${
+            view === "voice" ? "bg-brand text-white shadow-sm" : "text-[#9b8a72]"
+          }`}
+        >
+          <MicIcon />
+        </button>
+        <button
+          type="button"
+          onClick={() => gotoView("capture")}
+          aria-pressed={view === "capture"}
+          className={`h-[44px] rounded-xl text-sm font-bold transition-colors ${
+            view === "capture" ? "bg-brand text-white shadow-sm" : "text-muted"
+          }`}
+        >
+          Capture
+        </button>
+        <button
+          type="button"
+          onClick={() => gotoView("timeline")}
+          aria-pressed={view === "timeline"}
+          className={`h-[44px] rounded-xl text-sm font-bold transition-colors ${
+            view === "timeline" ? "bg-brand text-white shadow-sm" : "text-muted"
+          }`}
+        >
+          Timeline
+        </button>
       </div>
 
-      {selected === null ? (
-        // The full chip grid — fills the width so every target is big and easy to
-        // tap on a phone (2 across on mobile, 4 on wider screens).
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {LOG_CATEGORIES.map((c) => (
+      {/* CAPTURE */}
+      {view === "capture" &&
+        (selected === null ? (
+          <div className="flex flex-1 flex-col gap-3">
+            <p className="text-center text-[11px] font-semibold text-muted">
+              Tap a category to log — or tap the mic for a voice note
+            </p>
+            <div className="grid grid-cols-3 gap-2.5">
+              {TILE_KEYS.map((key) => {
+                const c = findCategory(key);
+                if (!c) return null;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => openCategory(key)}
+                    className="flex aspect-square flex-col items-center justify-center gap-2 rounded-[20px] border border-border bg-surface transition-colors hover:bg-surface-sunk"
+                  >
+                    <PaperIcon category={key} size={46} />
+                    <span className="text-xs font-semibold text-foreground">{c.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* Report an incident — opens the Incident note panel (calm, not alarmist). */}
             <button
-              key={c.key}
               type="button"
-              onClick={() => openCategory(c.key)}
-              className={`${CHIP_BASE} ${catColor(c.key).chipIdle}`}
+              onClick={() => openCategory("Incident")}
+              className="mt-auto flex h-[46px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#ecd9d2] bg-[#f9f1ef]"
             >
-              <span aria-hidden>{c.emoji}</span>
-              {c.label}
+              <span className="h-2 w-2 rounded-full bg-[#d2a596]" aria-hidden />
+              <span className="text-xs font-extrabold tracking-wide text-[#ad9087]">
+                REPORT AN INCIDENT
+              </span>
             </button>
-          ))}
-        </div>
-      ) : (
-        // A category is chosen: hide the others, show a compact header with an
-        // obvious Back button to reselect, then just this category's note box.
-        <form ref={formRef} action={handleSubmit} className="flex flex-col gap-3">
-          <input type="hidden" name="shiftId" value={shiftId} />
-          <input type="hidden" name="category" value={selected} />
-          <input type="hidden" name="idempotencyKey" value={entryKey} />
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => openCategory(null)}
-              className="flex items-center gap-1 rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100"
-            >
-              <span aria-hidden>←</span> Back
-            </button>
-            <span
-              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${catColor(selected).chipActive}`}
-            >
-              <span aria-hidden>{selectedCat?.emoji}</span>
-              {selectedCat?.label ?? selected}
-            </span>
           </div>
+        ) : (
+          // Detail panel for the chosen category.
+          <form ref={formRef} action={handleSubmit} className="flex flex-col gap-3">
+            <input type="hidden" name="shiftId" value={shiftId} />
+            <input type="hidden" name="category" value={selected} />
+            <input type="hidden" name="idempotencyKey" value={entryKey} />
 
-          {/* Quick-pick detail chips / pickers for this category. */}
-          <DetailFields
-            key={selected}
-            category={selected}
-            learnedOptions={learnedOptions}
-            values={groupValues}
-            onGroupChange={(k, v) => setGroupValues((s) => ({ ...s, [k]: v }))}
-          />
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3">
+              {hasTile(selected) ? (
+                <PaperIcon category={selected} size={40} />
+              ) : (
+                <span className="text-2xl" aria-hidden>
+                  {selectedCat?.emoji}
+                </span>
+              )}
+              <span className="font-display text-lg font-bold text-foreground">
+                {selectedCat?.label ?? selected}
+              </span>
+              <button
+                type="button"
+                onClick={() => openCategory(null)}
+                className="ml-auto flex min-h-[44px] items-center gap-1 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-sunk"
+              >
+                <span aria-hidden>←</span> Back
+              </button>
+            </div>
 
-          <label className="text-sm font-medium text-zinc-700">
-            Add a note{noteRequired ? " (required)" : " (optional)"}
-          </label>
-          <textarea
-            name="notes"
-            rows={2}
-            // No autoFocus: tap into the box to type. This keeps the phone
-            // keyboard from popping up the moment you open a category to log.
-            // Controlled so each keystroke is backed up locally (Rule 8).
-            value={note}
-            onChange={(e) => {
-              setNote(e.target.value);
-              if (selected) lsSet(noteBackupKey(selected), e.target.value);
+            <DetailFields
+              key={selected}
+              category={selected}
+              learnedOptions={learnedOptions}
+              values={groupValues}
+              onGroupChange={(k, v) => setGroupValues((s) => ({ ...s, [k]: v }))}
+            />
+
+            <label className="text-sm font-medium text-foreground">
+              Add a note{noteRequired ? " (required)" : " (optional)"}
+            </label>
+            <textarea
+              name="notes"
+              rows={2}
+              value={note}
+              onChange={(e) => {
+                setNote(e.target.value);
+                if (selected) lsSet(noteBackupKey(selected), e.target.value);
+              }}
+              required={noteRequired}
+              placeholder={
+                categoryRequiresNote(selected)
+                  ? "Type your note…"
+                  : (selectedCat?.notePlaceholder ?? "e.g. add any detail worth noting")
+              }
+              className="rounded-2xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-brand focus:outline-none"
+            />
+
+            <input type="hidden" name="photos" value={JSON.stringify(photos)} />
+
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-foreground">Time</span>
+                {adjusting ? (
+                  <>
+                    <input
+                      type="time"
+                      name="loggedTime"
+                      defaultValue={nowHHMM()}
+                      className="rounded-lg border border-border bg-surface px-3 py-1.5 text-base text-foreground focus:border-brand focus:outline-none"
+                    />
+                    <button type="button" onClick={() => setAdjusting(false)} className="font-medium text-brand">
+                      Use now
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-muted">Now</span>
+                    <button type="button" onClick={() => setAdjusting(true)} className="font-medium text-brand">
+                      Adjust
+                    </button>
+                  </>
+                )}
+              </div>
+              <PhotoInput photos={photos} onChange={setPhotos} iconOnly />
+            </div>
+
+            <SubmitButton label={selectedCat?.label ?? selected} />
+          </form>
+        ))}
+
+      {/* VOICE — record (stub) + free-text that saves as a Note */}
+      {view === "voice" && (
+        <div className="flex flex-1 flex-col items-center gap-4 pt-2">
+          <button
+            type="button"
+            onClick={() => setRecording((r) => !r)}
+            aria-pressed={recording}
+            className="flex h-24 w-24 items-center justify-center rounded-full text-white transition-shadow"
+            style={{
+              background: recording ? "#b23a28" : "var(--clay)",
+              boxShadow: recording
+                ? "0 0 0 10px rgba(223,91,64,.16)"
+                : "0 12px 24px rgba(223,91,64,.40)",
             }}
-            // Required either always (e.g. free-text Note) or conditionally (e.g.
-            // medication PRN/Refused). The browser blocks an empty submit and the
-            // server re-checks the same rule.
-            required={noteRequired}
-            placeholder={
-              categoryRequiresNote(selected)
-                ? "Type your note…"
-                : (selectedCat?.notePlaceholder ?? "e.g. add any detail worth noting")
-            }
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400 focus:outline-none"
-          />
-
-          {/* Photos are chosen via the 📷 button in the header above; they ride
-              along in this hidden field. */}
-          <input type="hidden" name="photos" value={JSON.stringify(photos)} />
-
-          {/* When it happened. Default is the server's "now"; tap Adjust to set an
-              earlier time (e.g. logging something from 20 min ago). Only when
-              adjusting do we send a time — otherwise the server stamps now, keeping
-              the server clock the source of truth. */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium text-zinc-700">Time</span>
-            {adjusting ? (
-              <>
-                <input
-                  type="time"
-                  name="loggedTime"
-                  defaultValue={nowHHMM()}
-                  className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-base text-zinc-900 focus:border-blue-400 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setAdjusting(false)}
-                  className="font-medium text-blue-600 hover:underline"
-                >
-                  Use now
-                </button>
-              </>
-            ) : (
-              <>
-                <span className="text-zinc-500">Now</span>
-                <button
-                  type="button"
-                  onClick={() => setAdjusting(true)}
-                  className="font-medium text-blue-600 hover:underline"
-                >
-                  Adjust
-                </button>
-              </>
-            )}
+          >
+            <MicIcon size={34} />
+          </button>
+          <div className="text-center">
+            <div className="font-display text-base font-bold text-foreground">
+              {recording ? "Recording…" : "Tap to record"}
+            </div>
+            <div className="mt-1 text-[11px] font-semibold text-muted">
+              Voice transcription is coming soon — type your note below.
+            </div>
           </div>
 
-          <SubmitButton label={selectedCat?.label ?? selected} />
-        </form>
+          <form action={handleVoiceSubmit} className="flex w-full flex-col gap-3">
+            <input type="hidden" name="shiftId" value={shiftId} />
+            <input type="hidden" name="category" value="Note" />
+            <input type="hidden" name="idempotencyKey" value={entryKey} />
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted">Note</div>
+            <textarea
+              name="notes"
+              required
+              value={voiceNote}
+              onChange={(e) => {
+                setVoiceNote(e.target.value);
+                lsSet(voiceBackupKey, e.target.value);
+              }}
+              placeholder="Transcript appears here — or type a note…"
+              className="h-28 resize-none rounded-2xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-brand focus:outline-none"
+            />
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => gotoView("capture")}
+                className="h-12 w-28 rounded-[14px] border border-[#e3d6c1] bg-surface text-sm font-bold text-muted"
+              >
+                Cancel
+              </button>
+              <SubmitButton label="voice note" full />
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* TIMELINE */}
+      {view === "timeline" && (
+        <div className="flex-1">
+          {timeline ?? <p className="py-8 text-center text-sm text-muted">No entries yet.</p>}
+        </div>
       )}
     </section>
   );
 }
 
-// Current time as "HH:MM" (24h), used as the starting value when the worker taps
-// "Adjust". They can change it from there; an unchanged "Now" sends no time at all.
+function hasTile(key: string): boolean {
+  return TILE_KEYS.includes(key);
+}
+
 function nowHHMM(): string {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-// The save button. It lives inside the form so useFormStatus() can tell us when
-// the entry is mid-save — we disable it then so a double-tap can't log twice.
-function SubmitButton({ label }: { label: string }) {
+// Save button: disabled while the action is mid-flight so a double-tap can't log twice.
+function SubmitButton({ label, full }: { label: string; full?: boolean }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-blue-600 px-5 py-3 text-base font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+      className={`${full ? "flex-1" : "w-full"} h-12 rounded-[14px] bg-brand px-5 text-base font-bold text-white transition-colors hover:bg-brand-strong disabled:opacity-60`}
     >
-      {pending ? "Saving…" : `Log ${label}`}
+      {pending ? "Saving…" : `Save ${label}`}
     </button>
   );
 }
 
-// Small localStorage helpers for the Rule 8 note backup. Guarded so private mode
-// (or any storage error) never breaks logging.
+function MicIcon({ size = 17 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="9" y="2" width="6" height="12" rx="3" />
+      <path d="M5 10a7 7 0 0 0 14 0" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+    </svg>
+  );
+}
+
+// localStorage helpers for the Rule 8 note backup. Guarded so private mode never
+// breaks logging.
 function lsGet(key: string): string {
   try {
     return localStorage.getItem(key) ?? "";
@@ -261,18 +390,13 @@ function lsSet(key: string, value: string) {
   try {
     localStorage.setItem(key, value);
   } catch {
-    /* ignore storage failures */
+    /* ignore */
   }
 }
 function lsRemove(key: string) {
   try {
     localStorage.removeItem(key);
   } catch {
-    /* ignore storage failures */
+    /* ignore */
   }
 }
-
-// Tailwind needs the full class strings written out, so the per-category colours
-// live in `category-colors.ts` (shared with the timeline) and we glue on the base.
-const CHIP_BASE =
-  "flex w-full items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-base font-medium transition-colors";

@@ -25,7 +25,8 @@ type Entry = {
   category: string;
   detail: string | null;
   notes: string;
-  photos: string | null; // JSON array of small image data URLs
+  photos: string | null; // JSON array of display URLs (signed Storage URLs, or
+  // inline data URLs when Storage isn't configured); resolved server-side
   timestamp: Date;
 };
 

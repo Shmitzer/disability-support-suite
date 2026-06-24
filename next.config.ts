@@ -9,10 +9,15 @@ const nextConfig: NextConfig = {
   // (Server Actions) would be rejected. The wildcard covers the random tunnel
   // name Cloudflare assigns each run. See node_modules/next/dist/docs:
   //   allowedDevOrigins.md  and  serverActions.md
-  allowedDevOrigins: ["*.trycloudflare.com"],
+  //
+  // LAN testing (same Wi-Fi) uses the laptop's local IP. Accessing it is same-origin
+  // so Server Actions already pass; the IP is listed here only to silence Next's
+  // cross-origin dev-asset warning. Update it if your laptop's IP changes
+  // (`ipconfig`, or read the "Network:" line `next dev` prints).
+  allowedDevOrigins: ["*.trycloudflare.com", "192.168.1.107"],
   experimental: {
     serverActions: {
-      allowedOrigins: ["*.trycloudflare.com"],
+      allowedOrigins: ["*.trycloudflare.com", "192.168.1.107:3000"],
     },
   },
 };

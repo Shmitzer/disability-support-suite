@@ -15,6 +15,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { tenantOwner } from "@/lib/tenant";
 import { buildShiftSourceLog } from "@/lib/report";
 import {
   generateShiftReport,
@@ -89,6 +90,9 @@ export async function generateReport(
   const shift = await loadOwnCompletedShift(shiftId);
   if (!shift) return { error: "Finish the shift (clock off) before generating its report." };
 
+  const worker = await getCurrentWorker();
+  if (!worker) return { error: "Sign in to generate a report." };
+
   const sourceLog = buildShiftSourceLog(shift);
 
   let summary: string;
@@ -114,7 +118,7 @@ export async function generateReport(
   if (existing) {
     await prisma.shiftReport.update({ where: { id: existing.id }, data });
   } else {
-    await prisma.shiftReport.create({ data: { shiftId, ...data } });
+    await prisma.shiftReport.create({ data: { shiftId, ...data, ...tenantOwner(worker) } });
   }
 
   revalidatePath(`/shift/${shiftId}`);

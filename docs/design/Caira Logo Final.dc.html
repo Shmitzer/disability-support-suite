@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; font-family:'Figtree',sans-serif; }
+.card { background:#fff; border:1px solid #e7e9ed; border-radius:22px; box-shadow:0 8px 28px rgba(30,34,42,.07); padding:26px; }
+.lab { font:700 10px 'Figtree'; letter-spacing:.1em; color:#a8987f; margin-bottom:14px; }
+.word { font:800 'Bricolage Grotesque'; color:#0f766e; letter-spacing:-.01em; }
+svg { display:block; overflow:visible; }
+</style>
+</helmet>
+
+<div style="position:absolute; left:60px; top:26px; width:1100px;">
+  <div data-drags-parent="1" style="font:800 16px 'Figtree'; color:#3a3128;">CAIRA · LOGO</div>
+  <div data-drags-parent="1" style="font:600 13px 'Figtree'; color:#9aa1ab; margin-top:4px;">The chosen mark (4): a solid heart with a “C” carved into the left lobe, opening tilted up.</div>
+</div>
+
+<!-- primary lockup -->
+<div style="position:absolute; left:60px; top:96px; width:520px;">
+  <div data-drags-parent="1" class="card">
+    <div class="lab">PRIMARY LOCKUP</div>
+    <div style="display:flex; align-items:center; gap:18px;">
+      <svg width="84" height="84" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg>
+      <span class="word" style="font-size:52px;">Caira</span>
+    </div>
+  </div>
+</div>
+
+<!-- stacked + tagline -->
+<div style="position:absolute; left:620px; top:96px; width:330px;">
+  <div data-drags-parent="1" class="card" style="display:flex; flex-direction:column; align-items:center;">
+    <div class="lab" style="align-self:flex-start;">STACKED</div>
+    <svg width="76" height="76" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg>
+    <span class="word" style="font-size:34px; margin-top:10px;">Caira</span>
+    <span style="font:600 11px 'Figtree'; letter-spacing:.14em; color:#a8987f; margin-top:4px;">SUPPORT, LOGGED WITH CARE</span>
+  </div>
+</div>
+
+<!-- app icons -->
+<div style="position:absolute; left:60px; top:300px; width:520px;">
+  <div data-drags-parent="1" class="card">
+    <div class="lab">APP ICON</div>
+    <div style="display:flex; align-items:center; gap:18px;">
+      <div style="width:96px; height:96px; border-radius:24px; background:#0f766e; display:flex; align-items:center; justify-content:center;"><svg width="62" height="62" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#fff"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#0f766e" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></div>
+      <div style="width:72px; height:72px; border-radius:18px; background:#0f766e; display:flex; align-items:center; justify-content:center;"><svg width="46" height="46" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#fff"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#0f766e" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></div>
+      <div style="width:48px; height:48px; border-radius:12px; background:#0f766e; display:flex; align-items:center; justify-content:center;"><svg width="32" height="32" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#fff"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#0f766e" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></div>
+      <div style="width:30px; height:30px; border-radius:8px; background:#0f766e; display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#fff"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#0f766e" stroke-width="6.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></div>
+    </div>
+  </div>
+</div>
+
+<!-- colourways -->
+<div style="position:absolute; left:620px; top:300px; width:330px;">
+  <div data-drags-parent="1" class="card">
+    <div class="lab">COLOURWAYS</div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div style="width:64px; height:64px; border-radius:16px; background:#f3ebdd; display:flex; align-items:center; justify-content:center;"><svg width="44" height="44" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#f3ebdd" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></div>
+      <div style="width:64px; height:64px; border-radius:16px; background:#df5b40; display:flex; align-items:center; justify-content:center;"><svg width="44" height="44" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#fff"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#df5b40" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></div>
+      <div style="width:64px; height:64px; border-radius:16px; background:#23272e; display:flex; align-items:center; justify-content:center;"><svg width="44" height="44" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#fff"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#23272e" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

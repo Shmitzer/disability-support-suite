@@ -5,6 +5,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { isWorkerRole } from "@/lib/enums";
+import { tenantScope, type TenantActor } from "@/lib/tenant";
 
 // Shifts that still need or allow manager action come first; finished ones last.
 const STATUS_ORDER: Record<string, number> = {
@@ -16,13 +17,19 @@ const STATUS_ORDER: Record<string, number> = {
   CANCELLED: 5,
 };
 
-export async function getRosterData() {
+// Everything is scoped to the viewer's tenant (org members see their whole org;
+// a solo worker sees only their own rows), so the roster never shows another
+// tenant's participants/shifts/links/amendments.
+export async function getRosterData(viewer: TenantActor) {
+  const scope = tenantScope(viewer);
   const [participants, shifts, links, amendments] = await Promise.all([
     prisma.participant.findMany({
+      where: scope,
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
     prisma.shift.findMany({
+      where: scope,
       include: {
         participant: true,
         allocatedTo: true,
@@ -31,12 +38,12 @@ export async function getRosterData() {
       },
     }),
     // Worker↔participant links, so we know who each shift can go to.
-    prisma.workerParticipant.findMany({ include: { worker: true } }),
+    prisma.workerParticipant.findMany({ where: scope, include: { worker: true } }),
     // Outstanding clock-time amendment requests, oldest first, with the shift
     // (and its participant) and who asked — everything the approve/reject card
     // needs to show the manager.
     prisma.clockAmendmentRequest.findMany({
-      where: { status: "PENDING" },
+      where: { status: "PENDING", ...scope },
       include: { shift: { include: { participant: true } }, requestedBy: true },
       orderBy: { createdAt: "asc" },
     }),
