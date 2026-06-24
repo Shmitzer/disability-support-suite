@@ -33,8 +33,20 @@ file and are **not** applied; if blocked, note the blocker here and move on.
       from the design SSOT ("Web A · Coordinator dashboard"), in Sage & Clay, all mock
       data. Placed outside the `(protected)` phone chrome for the full desktop canvas;
       still auth-gated by `middleware.ts`. Builds as a static `/admin` route._
-- [ ] **4. #7 LearnedOption** — per-org custom + global seeds + de-identified
+- [x] **4. #7 LearnedOption** — per-org custom + global seeds + de-identified
       analytics. Schema change → `.sql` file only, do NOT apply.
+      _Code (`src/lib/learned-options.ts`): `getApprovedOptions`/`recordCustomOption`
+      now take an optional `organisationId` and scope to **global seeds (org=null) +
+      this org's own rows**; new typed options are stamped with the worker's org so
+      they stay private to that tenant; solo workers keep seed-only behaviour. Threaded
+      org through `log-actions.ts` (`buildDetail`) and the `/shift/[id]` page.
+      **De-identified analytics:** `reportOptionEvent()` fires `learned_option_suggested`
+      / `learned_option_promoted` to PostHog with a constant distinctId and only
+      `{kind, name, useCount}` — no org/user/participant data. Schema change written to
+      `prisma/sql/learned_options_per_org.sql` (per-org unique via `COALESCE`, read
+      index, LearnedOption-specific RLS so globals are world-readable) — **NOT applied**.
+      Code degrades gracefully under the current global-unique schema (create race is
+      caught)._
 - [ ] **5. Enterprise privacy draft** → `/privacy` (marked draft).
 - [ ] **6. Extend `recordAudit()`** to roster / report actions.
 

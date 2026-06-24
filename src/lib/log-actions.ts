@@ -51,7 +51,7 @@ export async function addLogEntry(formData: FormData) {
   // Structured detail: the picked options + amount + free-text fields, rebuilt on
   // the server (never trust the browser's text). Self-learning groups spell-match
   // and learn typed "Other" values.
-  const detail = await buildDetail(category, formData);
+  const detail = await buildDetail(category, formData, worker.organisationId);
 
   const shift = await prisma.shift.findUnique({ where: { id: shiftId } });
   // Must be this worker's own shift, and currently being worked.
@@ -182,7 +182,11 @@ function entryTimestamp(raw: FormDataEntryValue | null, base: Date = new Date())
 //   • a fixed group — picks validated against its options; a free-text "Other" (if
 //     allowed, e.g. duration "45 min") is taken as typed.
 // Categories not yet revamped fall back to the flat `details` list.
-async function buildDetail(category: string, formData: FormData): Promise<string> {
+async function buildDetail(
+  category: string,
+  formData: FormData,
+  organisationId: string | null,
+): Promise<string> {
   const cat = findCategory(category);
   const parts: string[] = [];
 
@@ -201,10 +205,10 @@ async function buildDetail(category: string, formData: FormData): Promise<string
       if (g.learn) {
         // Self-learning list (kind = the group key).
         if (custom) {
-          const name = await recordCustomOption(g.key, custom);
+          const name = await recordCustomOption(g.key, custom, organisationId);
           vals = name ? [name] : [];
         } else {
-          const approved = await getApprovedOptions(g.key);
+          const approved = await getApprovedOptions(g.key, organisationId);
           vals = formData.getAll(g.key).map((v) => String(v)).filter((v) => approved.includes(v));
         }
       } else {
@@ -277,7 +281,7 @@ export async function updateLogEntry(formData: FormData) {
 
   // If the worker re-picked the detail ("Change"), rebuild it; otherwise keep the
   // existing detail (editing just the note/time must not wipe it).
-  const rebuilt = await buildDetail(entry.category, formData);
+  const rebuilt = await buildDetail(entry.category, formData, worker.organisationId);
   const detail = rebuilt !== "" ? rebuilt : entry.detail;
 
   // The edit form submits the full photo set: existing photos (kept) + any new ones.

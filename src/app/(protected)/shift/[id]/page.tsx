@@ -76,7 +76,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   const learnedGroups = LOG_CATEGORIES.flatMap((c) => c.groups ?? []).filter((g) => g.learn);
   const learnedOptions: Record<string, string[]> = {};
   for (const g of learnedGroups) {
-    const approved = await getApprovedOptions(g.key);
+    const approved = await getApprovedOptions(g.key, worker.organisationId);
     learnedOptions[g.key] = approved.length > 0 ? approved : g.options;
   }
 

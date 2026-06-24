@@ -9,8 +9,21 @@
 // `kind` namespaces each list ("drink", "activity", …). Server-only (touches the
 // database). An admin screen to review/adjust comes later — the table already has
 // status / useCount / source.
+//
+// SCOPING (#7): a picklist is "global seeds + this org's own options". Curated
+// seeds (and any globally-promoted option) carry organisationId = null and are
+// shared by every tenant; a word an org's workers type that isn't a global seed
+// becomes a SUGGESTED row stamped with that org's id, private to them until it's
+// promoted. Passing organisationId scopes both the read and the write; omit it
+// (or pass null) for a solo worker, who then sees only the global seeds.
+//
+// The per-org uniqueness + RLS this implies live as a hand-applied migration:
+// prisma/sql/learned_options_per_org.sql. Until that's applied the live DB still
+// has the old global unique([kind, name]); the create() below degrades gracefully
+// (the unique race is caught), so this code is correct under either schema.
 
 import { prisma } from "@/lib/prisma";
+import { captureServerEvent } from "@/lib/analytics";
 
 // How many uses promote a suggested option into the picker.
 const PROMOTE_AT = 3;
@@ -18,46 +31,91 @@ const PROMOTE_AT = 3;
 // are too easy to wrongly merge, so they must match exactly or become new.
 const FUZZY_MIN_LENGTH = 5;
 
+// Visibility filter: global rows (organisationId null) plus, when given, this org's
+// own rows. A null org sees only the globals.
+function scopeWhere(organisationId?: string | null) {
+  return organisationId
+    ? { OR: [{ organisationId: null }, { organisationId }] }
+    : { organisationId: null };
+}
+
 // The options shown in a picker, in a sensible order (curated seeds first, then
-// the most-used promoted ones).
-export async function getApprovedOptions(kind: string): Promise<string[]> {
+// the most-used promoted ones). Scoped to global seeds + the caller's org.
+export async function getApprovedOptions(
+  kind: string,
+  organisationId?: string | null,
+): Promise<string[]> {
   const rows = await prisma.learnedOption.findMany({
-    where: { kind, status: "APPROVED" },
+    where: { kind, status: "APPROVED", ...scopeWhere(organisationId) },
     orderBy: [{ sortOrder: "asc" }, { useCount: "desc" }, { name: "asc" }],
   });
-  return rows.map((r) => r.name);
+  // Dedupe by name in case a global seed and an org row share a canonical name
+  // (keeps the first — globals sort first via sortOrder).
+  return [...new Set(rows.map((r) => r.name))];
 }
 
 // Record one use of a typed (custom) option and return the CANONICAL name to store
-// on the entry. Spell-matches to an existing option where possible; otherwise
-// creates a new suggestion. Auto-promotes once used enough.
-export async function recordCustomOption(kind: string, raw: string): Promise<string> {
+// on the entry. Spell-matches to an existing global/org option where possible;
+// otherwise creates a new suggestion stamped with the caller's org. Auto-promotes
+// once used enough.
+export async function recordCustomOption(
+  kind: string,
+  raw: string,
+  organisationId?: string | null,
+): Promise<string> {
   const cleaned = raw.trim().replace(/\s+/g, " ");
   if (!cleaned) return "";
 
-  const all = await prisma.learnedOption.findMany({ where: { kind } });
+  // Match against the same scope the worker sees: global seeds + their own org.
+  const all = await prisma.learnedOption.findMany({
+    where: { kind, ...scopeWhere(organisationId) },
+  });
   const match = exactMatch(cleaned, all) ?? fuzzyMatch(cleaned, all);
 
   if (match) {
     const useCount = match.useCount + 1;
-    const status = match.status !== "APPROVED" && useCount >= PROMOTE_AT ? "APPROVED" : match.status;
+    const promoted = match.status !== "APPROVED" && useCount >= PROMOTE_AT;
+    const status = promoted ? "APPROVED" : match.status;
     await prisma.learnedOption.update({
       where: { id: match.id },
       data: { useCount, status, lastUsedAt: new Date() },
     });
+    if (promoted) reportOptionEvent("learned_option_promoted", kind, match.name, useCount);
     return match.name;
   }
 
   const canonical = toCanonical(cleaned);
   try {
     const created = await prisma.learnedOption.create({
-      data: { kind, name: canonical, status: "SUGGESTED", source: "custom", useCount: 1 },
+      // Stamp the org so the suggestion stays private to that tenant. A solo worker
+      // (no org) creates a null-org row, matching the legacy behaviour.
+      data: {
+        kind,
+        name: canonical,
+        status: "SUGGESTED",
+        source: "custom",
+        useCount: 1,
+        organisationId: organisationId ?? null,
+      },
     });
+    reportOptionEvent("learned_option_suggested", kind, canonical, 1);
     return created.name;
   } catch {
     // Race: another save created it first. Just return the canonical name.
     return canonical;
   }
+}
+
+// De-identified analytics (#7): tell product when the vocabulary grows — a new
+// option is suggested, or one auto-promotes — WITHOUT identifying who. We send a
+// constant distinctId and only the kind + canonical name + useCount; no
+// organisationId, no userId, no participant or worker data ever leaves. This gives
+// a platform-wide view of emerging terms (e.g. a drink lots of orgs invent) to
+// feed back into the curated global seeds, while staying tenant-blind.
+function reportOptionEvent(event: string, kind: string, name: string, useCount: number): void {
+  // Fire-and-forget: analytics must never block or fail a worker's save, and no-ops
+  // entirely when PostHog isn't configured.
+  void captureServerEvent("learned-options", event, { kind, name, useCount });
 }
 
 // --- matching helpers ------------------------------------------------------
