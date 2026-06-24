@@ -103,8 +103,17 @@ CREATE POLICY audit_insert ON "AuditLog"
 -- authenticated access at all. The privileged Prisma role and service_role still
 -- reach it (they bypass RLS), so migrations keep working. Do NOT use FORCE RLS,
 -- which would also subject the owner and break `prisma migrate`.
+--
+-- GUARDED: this table only exists when the schema was applied with `prisma migrate`.
+-- Under `prisma db push` it isn't created, so skip it instead of erroring — an error
+-- here would roll back this whole script and leave RLS OFF on every table.
 -- ===========================================================================
-ALTER TABLE "_prisma_migrations" ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF to_regclass('public."_prisma_migrations"') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE "_prisma_migrations" ENABLE ROW LEVEL SECURITY';
+  END IF;
+END $$;
 
 -- NOTE: Supabase's service-role key bypasses RLS. Deliberate cross-tenant server
 -- work uses the service role; anything reachable from the browser uses the anon/
