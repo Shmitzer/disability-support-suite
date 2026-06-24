@@ -7,10 +7,11 @@
 // obligations before any real user data is collected.
 
 import type { Metadata } from "next";
+import { APP_NAME } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How the Disability Support Suite collects, uses and protects your data.",
+  description: `How ${APP_NAME} collects, uses and protects your data.`,
 };
 
 const UPDATED = "Draft — not yet finalised";
@@ -30,7 +31,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-base font-semibold text-zinc-900">Who we are</h2>
           <p className="mt-2">
-            The Disability Support Suite is a tool used by disability support workers and
+            {APP_NAME} is a tool used by disability support workers and
             providers to record shifts, progress notes and related records. This policy
             explains what information we collect and how we handle it.
           </p>

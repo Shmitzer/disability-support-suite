@@ -5,9 +5,9 @@
 // page around it stays a server component; only this interactive strip runs in
 // the browser — same split as the calendar.
 //
-// Flow: tap a chip → a note box opens (note is optional) → "Log it" saves via the
-// server action → the timeline below refreshes and the box closes ready for the
-// next one. Built for one-handed use on a phone during a shift.
+// Flow: tap a tile → a detail/note panel opens → "Log it" saves via the server
+// action → the timeline below refreshes and the panel closes ready for the next
+// one. Built for one-handed use on a phone during a shift (Caira "Tablet A" grid).
 
 "use client";
 
@@ -40,6 +40,8 @@ export function ShiftTracker({
   const [note, setNote] = useState("");
   // Client-generated idempotency key for the entry being composed (Rule 12).
   const [entryKey, setEntryKey] = useState("");
+  // Voice capture is stubbed for now — tapping the mic just shows a hint.
+  const [voiceHint, setVoiceHint] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Where this shift+category's in-progress note is backed up (Rule 8).
@@ -62,6 +64,7 @@ export function ShiftTracker({
     setAdjusting(false);
     setGroupValues({});
     setPhotos([]);
+    setVoiceHint(false);
     if (key) {
       setEntryKey(crypto.randomUUID());
       setNote(lsGet(noteBackupKey(key)));
@@ -87,9 +90,9 @@ export function ShiftTracker({
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+    <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-zinc-900">Log something</h2>
+        <h2 className="font-display text-lg font-semibold text-foreground">Log something</h2>
         {/* Photo button (icon only) — enlarged and centred between the title and the
             "On shift" cue, while adding a log. */}
         {selected && (
@@ -98,25 +101,27 @@ export function ShiftTracker({
           </div>
         )}
         {/* A clear "you're live" cue while the shift is running. */}
-        <span className="ml-auto flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+        <span className="ml-auto flex items-center gap-1.5 text-xs font-medium text-brand">
+          <span className="h-2 w-2 rounded-full bg-brand" aria-hidden />
           On shift
         </span>
       </div>
 
       {selected === null ? (
-        // The full chip grid — fills the width so every target is big and easy to
-        // tap on a phone (2 across on mobile, 4 on wider screens).
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        // The full tile grid — icon-forward tiles, four across, so every target is
+        // big and easy to tap one-handed on a phone (Caira "Tablet A" capture grid).
+        <div className="grid grid-cols-4 gap-2.5">
           {LOG_CATEGORIES.map((c) => (
             <button
               key={c.key}
               type="button"
               onClick={() => openCategory(c.key)}
-              className={`${CHIP_BASE} ${catColor(c.key).chipIdle}`}
+              className={`${TILE_BASE} ${catColor(c.key).chipIdle}`}
             >
-              <span aria-hidden>{c.emoji}</span>
-              {c.label}
+              <span className="text-2xl leading-none" aria-hidden>
+                {c.emoji}
+              </span>
+              <span className="text-[11px] font-medium leading-tight">{c.label}</span>
             </button>
           ))}
         </div>
@@ -132,7 +137,7 @@ export function ShiftTracker({
             <button
               type="button"
               onClick={() => openCategory(null)}
-              className="flex items-center gap-1 rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100"
+              className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-surface-sunk"
             >
               <span aria-hidden>←</span> Back
             </button>
@@ -153,9 +158,21 @@ export function ShiftTracker({
             onGroupChange={(k, v) => setGroupValues((s) => ({ ...s, [k]: v }))}
           />
 
-          <label className="text-sm font-medium text-zinc-700">
-            Add a note{noteRequired ? " (required)" : " (optional)"}
-          </label>
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-sm font-medium text-foreground">
+              Add a note{noteRequired ? " (required)" : " (optional)"}
+            </label>
+            {/* Voice capture — stubbed for now (real audio is out of scope). */}
+            <button
+              type="button"
+              onClick={() => setVoiceHint((v) => !v)}
+              aria-label="Voice note"
+              className="flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-surface-sunk"
+            >
+              <MicIcon /> Voice
+            </button>
+          </div>
+          {voiceHint && <p className="text-xs text-muted">Voice notes are coming soon.</p>}
           <textarea
             name="notes"
             rows={2}
@@ -176,7 +193,7 @@ export function ShiftTracker({
                 ? "Type your note…"
                 : (selectedCat?.notePlaceholder ?? "e.g. add any detail worth noting")
             }
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400 focus:outline-none"
+            className="rounded-xl border border-border bg-surface px-3 py-2 text-base text-foreground placeholder:text-muted focus:border-brand focus:outline-none"
           />
 
           {/* Photos are chosen via the 📷 button in the header above; they ride
@@ -188,30 +205,30 @@ export function ShiftTracker({
               adjusting do we send a time — otherwise the server stamps now, keeping
               the server clock the source of truth. */}
           <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium text-zinc-700">Time</span>
+            <span className="font-medium text-foreground">Time</span>
             {adjusting ? (
               <>
                 <input
                   type="time"
                   name="loggedTime"
                   defaultValue={nowHHMM()}
-                  className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-base text-zinc-900 focus:border-blue-400 focus:outline-none"
+                  className="rounded-lg border border-border bg-surface px-3 py-1.5 text-base text-foreground focus:border-brand focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setAdjusting(false)}
-                  className="font-medium text-blue-600 hover:underline"
+                  className="font-medium text-brand hover:underline"
                 >
                   Use now
                 </button>
               </>
             ) : (
               <>
-                <span className="text-zinc-500">Now</span>
+                <span className="text-muted">Now</span>
                 <button
                   type="button"
                   onClick={() => setAdjusting(true)}
-                  className="font-medium text-blue-600 hover:underline"
+                  className="font-medium text-brand hover:underline"
                 >
                   Adjust
                 </button>
@@ -233,6 +250,25 @@ function nowHHMM(): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+// Small inline mic glyph for the (stubbed) voice button — no icon library.
+function MicIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </svg>
+  );
+}
+
 // The save button. It lives inside the form so useFormStatus() can tell us when
 // the entry is mid-save — we disable it then so a double-tap can't log twice.
 function SubmitButton({ label }: { label: string }) {
@@ -241,7 +277,7 @@ function SubmitButton({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-blue-600 px-5 py-3 text-base font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+      className="w-full rounded-xl bg-brand px-5 py-3 text-base font-medium text-white transition-colors hover:bg-brand-strong disabled:opacity-60"
     >
       {pending ? "Saving…" : `Log ${label}`}
     </button>
@@ -274,5 +310,5 @@ function lsRemove(key: string) {
 
 // Tailwind needs the full class strings written out, so the per-category colours
 // live in `category-colors.ts` (shared with the timeline) and we glue on the base.
-const CHIP_BASE =
-  "flex w-full items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-base font-medium transition-colors";
+const TILE_BASE =
+  "flex aspect-square w-full flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 text-center transition-colors";

@@ -82,23 +82,23 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-6 py-8">
-      <Link href="/dashboard" className="text-sm font-medium text-blue-600 hover:underline">
+      <Link href="/dashboard" className="text-sm font-medium text-brand hover:underline">
         ← Back
       </Link>
 
       {/* Shift details, pulled forward from the shift itself. */}
-      <header className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm">
+      <header className="flex flex-col gap-2 rounded-2xl border border-border bg-brand-tint p-5 shadow-sm">
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
             {shift.participant.name}
           </h1>
           <StatusBadge status={shift.status} />
         </div>
-        <p className="text-sm text-zinc-600">{formatDay(shift.scheduledStart)}</p>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted">{formatDay(shift.scheduledStart)}</p>
+        <p className="text-sm text-muted">
           {formatTime(shift.scheduledStart)} – {formatTime(shift.scheduledEnd)}
         </p>
-        {shift.location && <p className="text-sm text-zinc-500">{shift.location}</p>}
+        {shift.location && <p className="text-sm text-muted">{shift.location}</p>}
       </header>
 
       {/* Capture chips — only while the shift is in progress and it's yours. */}
@@ -129,7 +129,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
       {canLog && (
         <form action={clockOff}>
           <input type="hidden" name="shiftId" value={shift.id} />
-          <button className="w-full rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100">
+          <button className="w-full rounded-xl bg-brand px-4 py-3 text-base font-medium text-white transition-colors hover:bg-brand-strong">
             Finish shift (clock off)
           </button>
         </form>

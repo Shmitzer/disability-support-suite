@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { DEV_AUTH } from "@/lib/dev-auth";
 import { sectorLabels } from "@/lib/sector-config";
+import { APP_NAME } from "@/lib/brand";
 import { WaitlistForm } from "@/components/WaitlistForm";
 
 export default async function LandingPage() {
@@ -44,13 +45,13 @@ export default async function LandingPage() {
       {/* Hero */}
       <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-8 px-6 py-20">
         <header className="flex flex-col gap-4">
-          <p className="text-sm font-medium text-blue-600">{labels.tagline}</p>
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
+          <p className="text-sm font-medium text-brand">{APP_NAME} · {labels.tagline}</p>
+          <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             Support work, minus the paperwork.
           </h1>
-          <p className="max-w-xl text-lg text-zinc-600">
-            Disability Support Suite keeps shifts, notes and mileage in one place, so
-            you can spend less time on admin and more time on support.
+          <p className="max-w-xl text-lg text-muted">
+            {APP_NAME} keeps shifts, notes and mileage in one place, so you can spend
+            less time on admin and more time on support.
           </p>
         </header>
 
