@@ -312,3 +312,66 @@ CREATE TABLE "WaitlistSignup" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "WaitlistSignup_email_key" ON "WaitlistSignup"("email");
+
+
+-- CreateTable: RBAC frame — Membership / ParticipantAccessGrant / Consent
+-- (see schema.prisma + prisma/sql/rbac_grants.sql). Authorization = org-membership
+-- roles ∪ active participant grants (+ platform override), resolved in src/lib/access.ts.
+CREATE TABLE "Membership" (
+    "id" TEXT NOT NULL,
+    "workerId" TEXT NOT NULL,
+    "organisationId" TEXT NOT NULL,
+    "role" "Role" NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "invitedById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Membership_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Membership_workerId_organisationId_role_key" ON "Membership"("workerId", "organisationId", "role");
+CREATE INDEX "Membership_workerId_status_idx" ON "Membership"("workerId", "status");
+CREATE INDEX "Membership_organisationId_status_idx" ON "Membership"("organisationId", "status");
+
+CREATE TABLE "ParticipantAccessGrant" (
+    "id" TEXT NOT NULL,
+    "principalId" TEXT NOT NULL,
+    "participantId" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "grantedById" TEXT,
+    "consentId" TEXT,
+    "startsAt" TIMESTAMP(3),
+    "expiresAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ParticipantAccessGrant_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "ParticipantAccessGrant_principalId_status_idx" ON "ParticipantAccessGrant"("principalId", "status");
+CREATE INDEX "ParticipantAccessGrant_participantId_status_idx" ON "ParticipantAccessGrant"("participantId", "status");
+
+CREATE TABLE "Consent" (
+    "id" TEXT NOT NULL,
+    "participantId" TEXT NOT NULL,
+    "scope" TEXT NOT NULL,
+    "grantedToPrincipalId" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'GRANTED',
+    "method" TEXT,
+    "capturedById" TEXT,
+    "organisationId" TEXT,
+    "grantedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "withdrawnAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Consent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "Consent_participantId_scope_status_idx" ON "Consent"("participantId", "scope", "status");

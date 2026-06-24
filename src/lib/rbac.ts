@@ -39,6 +39,16 @@ export const Capability = {
   BillingManage: "billing:manage",
   // Read the organisation's audit trail.
   AuditRead: "audit:read",
+
+  // Participant-scoped capabilities (used by external/family carer + guardian
+  // grants, see GRANT_ROLE_CAPABILITIES). These are only ever held against a
+  // SPECIFIC participant via a ParticipantAccessGrant — never org-wide.
+  NotesRead: "notes:read", // view a participant's progress notes
+  MedicationSubmit: "medication:submit", // record a medication administration
+  RoutineSubmit: "routine:submit", // record a routine / daily-living entry
+  HandoverReceive: "handover:receive", // receive shift handover for the participant
+  FeedbackSubmit: "feedback:submit", // submit feedback about the participant's support
+  ConsentManage: "consent:manage", // grant/withdraw consent on the participant's behalf
 } as const;
 export type Capability = (typeof Capability)[keyof typeof Capability];
 
@@ -65,14 +75,117 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
   SUPERADMIN: [],
 };
 
-// The capability set for a role (empty for unknown/null roles — deny by default).
+// --- Participant-grant roles ------------------------------------------------
+//
+// A second role namespace, distinct from org-membership Roles: these are granted
+// to a principal against a SINGLE participant via a ParticipantAccessGrant (e.g.
+// an external family carer, or a participant's legal guardian). Their capabilities
+// only ever apply to that one participant's resources — never org-wide. Seeded
+// here per the spec; add grant roles by editing this map alone.
+export type GrantRole = "family_carer_clinical" | "participant_guardian";
+
+export const GRANT_ROLE_CAPABILITIES: Record<GrantRole, readonly Capability[]> = {
+  // External carer with clinical involvement (the NLS / Zef / mother case): can
+  // read the participant's notes, record medication + routine entries, receive
+  // handover, and give feedback — and nothing else, for that one participant.
+  family_carer_clinical: [
+    Capability.NotesRead,
+    Capability.MedicationSubmit,
+    Capability.RoutineSubmit,
+    Capability.HandoverReceive,
+    Capability.FeedbackSubmit,
+  ],
+  // Legal/decision-making guardian: oversight + consent authority for the
+  // participant (no medication administration — that's a hands-on care act).
+  participant_guardian: [
+    Capability.NotesRead,
+    Capability.RoutineSubmit,
+    Capability.HandoverReceive,
+    Capability.FeedbackSubmit,
+    Capability.ConsentManage,
+  ],
+};
+
+// The capability set for an org role (empty for unknown/null roles — deny by default).
 export function capabilitiesFor(role: string | null | undefined): readonly Capability[] {
   if (!role) return [];
   return ROLE_CAPABILITIES[role as Role] ?? [];
 }
 
-// The single authorization primitive: may a holder of `role` do `capability`?
-// Deny-by-default — an unknown role or capability is always false.
-export function can(role: string | null | undefined, capability: Capability): boolean {
-  return capabilitiesFor(role).includes(capability);
+// The capability set for a participant-grant role (empty for unknown roles).
+export function grantCapabilitiesFor(role: string | null | undefined): readonly Capability[] {
+  if (!role) return [];
+  return GRANT_ROLE_CAPABILITIES[role as GrantRole] ?? [];
+}
+
+// --- Principal & resource ---------------------------------------------------
+//
+// A Principal is the resolved authorization context for an actor: the UNION of
+// the org roles they hold (via Membership) and the active participant grants they
+// hold (via ParticipantAccessGrant), plus an optional platform-admin override.
+// It's a plain value (no DB) so `can()` stays pure and testable; build one with
+// resolvePrincipal() in src/lib/access.ts.
+export type Principal = {
+  workerId?: string;
+  // Org-membership roles: each role applies to resources in THAT organisation.
+  memberships: { organisationId: string; role: string }[];
+  // Active participant grants: each role applies ONLY to that participant.
+  grants: { participantId: string; role: string }[];
+  // Platform-level override (internal SUPERADMIN seat). Grants everything.
+  platformAdmin?: boolean;
+};
+
+// What an action is being performed against. Org capabilities require the
+// resource to be in the actor's org; participant-grant capabilities require the
+// resource to be that participant's. Omitting a field widens the match for the
+// org path (an org-wide capability with no specific resource still resolves).
+export type Resource = {
+  organisationId?: string | null;
+  participantId?: string | null;
+};
+
+// The single authorization primitive — two forms:
+//
+//   can(role, capability)
+//     Legacy/shorthand: does an actor holding this ORG role inherently have the
+//     capability? (No resource scoping.) Used by the existing org-staff gates.
+//
+//   can(principal, capability, resource?)
+//     Full resolution: TRUE if the principal is a platform admin, OR holds the
+//     capability through an org membership matching the resource's org, OR holds
+//     it through an active participant grant matching the resource's participant.
+//     Deny-by-default everywhere else.
+export function can(role: string | null | undefined, capability: Capability): boolean;
+export function can(principal: Principal, capability: Capability, resource?: Resource): boolean;
+export function can(
+  subject: string | null | undefined | Principal,
+  capability: Capability,
+  resource?: Resource,
+): boolean {
+  // Legacy/shorthand form: a bare org-role string (or null).
+  if (subject === null || subject === undefined || typeof subject === "string") {
+    return capabilitiesFor(subject).includes(capability);
+  }
+
+  // Principal form: platform override first.
+  if (subject.platformAdmin) return true;
+
+  // Org-membership path: a membership grants the capability for resources in its
+  // org. If the resource names an org, the membership must be in that same org.
+  for (const m of subject.memberships) {
+    if (resource?.organisationId && m.organisationId !== resource.organisationId) continue;
+    if (capabilitiesFor(m.role).includes(capability)) return true;
+  }
+
+  // Participant-grant path: only for a resource that names a participant, and only
+  // from a grant on THAT participant. This is what scopes an external carer to one
+  // person and nothing else.
+  if (resource?.participantId) {
+    for (const g of subject.grants) {
+      if (g.participantId !== resource.participantId) continue;
+      if (grantCapabilitiesFor(g.role).includes(capability)) return true;
+    }
+  }
+
+  return false;
 }

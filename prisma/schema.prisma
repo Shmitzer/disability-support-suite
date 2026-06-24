@@ -304,6 +304,78 @@ model AuditLog {
   @@index([organisationId, seq])
 }
 
+// ===========================================================================
+// RBAC FRAME — Membership, ParticipantAccessGrant, Consent
+// ===========================================================================
+// The authorization model is the UNION of (a) org-membership roles and (b)
+// active participant-scoped grants, resolved by src/lib/access.ts → can(). These
+// three tables back that. NOT YET WIRED into the request path (the existing gates
+// still read Worker.role); they're the frame the enterprise 32-role / 6-surface
+// model and external-carer access slot into. Schema is checked-in SQL applied by
+// hand — see prisma/sql/rbac_grants.sql (NOT auto-applied).
+
+// A principal's role WITHIN an organisation. Generalises the single Worker.role +
+// organisationId into a many-to-many so one person can hold roles in several orgs
+// (and several roles in one). `role` is an org Role (see enum Role).
+model Membership {
+  id             String   @id @default(cuid())
+  workerId       String // the principal (Worker.id)
+  organisationId String // the org this role is held in
+  role           Role // org role within this org
+  status         String   @default("ACTIVE") // ACTIVE | SUSPENDED | REVOKED
+  invitedById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@unique([workerId, organisationId, role])
+  @@index([workerId, status])
+  @@index([organisationId, status])
+}
+
+// A participant-SCOPED grant of access to a principal who is NOT (necessarily)
+// org staff — e.g. an external family carer or a legal guardian. `role` is a
+// GrantRole (see GRANT_ROLE_CAPABILITIES), and its capabilities apply ONLY to
+// this one participant. A grant is "active" when status = ACTIVE and now is within
+// [startsAt, expiresAt] (null bounds = open-ended). Consent backs the grant.
+model ParticipantAccessGrant {
+  id             String    @id @default(cuid())
+  principalId    String // who receives the access (Worker.id)
+  participantId  String // the single participant the access is for
+  role           String // grant role, e.g. "family_carer_clinical" | "participant_guardian"
+  organisationId String? // the participant's org context (for tenant scoping)
+  status         String    @default("ACTIVE") // ACTIVE | REVOKED
+  grantedById    String? // who granted it (audit)
+  consentId      String? // the Consent record that authorises this grant
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  @@index([principalId, status])
+  @@index([participantId, status])
+}
+
+// A consent record about a participant — the lawful basis that backs external
+// access and sensitive processing (Privacy Act / NDIS). Append-style: a withdrawal
+// sets status = WITHDRAWN + withdrawnAt rather than deleting, so the consent
+// history is auditable.
+model Consent {
+  id                   String    @id @default(cuid())
+  participantId        String // who the consent is about
+  scope                String // e.g. "external_carer_access" | "ai_processing" | "data_sharing"
+  grantedToPrincipalId String? // the principal the consent covers, if specific
+  status               String    @default("GRANTED") // GRANTED | WITHDRAWN
+  method               String? // how it was captured (e.g. "guardian_signed", "verbal_recorded")
+  capturedById         String? // the staff member who recorded it
+  organisationId       String?
+  grantedAt            DateTime  @default(now())
+  withdrawnAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @default(now()) @updatedAt
+
+  @@index([participantId, scope, status])
+}
+
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a
 // tenant table: people on the waitlist are not users yet, so there is no userId /
 // organisationId (the same Rule 5/10 exception LearnedOption notes for global rows).
