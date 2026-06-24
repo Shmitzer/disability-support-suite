@@ -8,14 +8,14 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
 import { tenantOwner, tenantScope } from "@/lib/tenant";
-import { isRosteringRole } from "@/lib/enums";
+import { can, Capability } from "@/lib/rbac";
 import { recordAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 
-// Confirm the person doing this is rostering staff. Returns the worker, or null.
+// Confirm the caller may manage the roster. Returns the worker, or null.
 async function requireRostering() {
   const worker = await getCurrentWorker();
-  return isRosteringRole(worker?.role) ? worker : null;
+  return can(worker?.role, Capability.RosterManage) ? worker : null;
 }
 
 // Create a new shift as a DRAFT (not yet allocated or offered).

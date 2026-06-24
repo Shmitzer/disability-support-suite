@@ -10,7 +10,7 @@
 
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
-import { isRosteringRole } from "@/lib/enums";
+import { can, Capability } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { captureServerEvent } from "@/lib/analytics";
 import {
@@ -28,7 +28,7 @@ export async function startCheckout() {
   // Billing is admin-managed: re-check the role on the SERVER (the page only hides
   // the button; a server action is a callable endpoint on its own).
   const user = await getCurrentUser();
-  if (!user?.organisationId || !isRosteringRole(user.role)) return;
+  if (!user?.organisationId || !can(user.role, Capability.BillingManage)) return;
   const org = await prisma.organisation.findUnique({
     where: { id: user.organisationId },
   });
@@ -62,7 +62,7 @@ export async function openBillingPortal() {
 
   // Admin-only, enforced server-side (see startCheckout).
   const user = await getCurrentUser();
-  if (!user?.organisationId || !isRosteringRole(user.role)) return;
+  if (!user?.organisationId || !can(user.role, Capability.BillingManage)) return;
   const org = await prisma.organisation.findUnique({
     where: { id: user.organisationId },
   });
