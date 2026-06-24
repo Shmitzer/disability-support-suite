@@ -5,8 +5,8 @@
 MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
-- **Working branch:** `claude/phase-e-auth` → open **PR #2**
-- **Last updated:** 2026-06-23 (end of Phase F build session)
+- **Working branch:** `claude/sharp-hypatia-6zdy2h` (Caira overnight build)
+- **Last updated:** 2026-06-24 (end of Caira overnight build session)
 
 ---
 
@@ -14,11 +14,11 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 | | |
 |---|---|
-| **Branch / PR** | `claude/phase-e-auth` · PR #2 · latest commit `606124c` |
-| **Just finished** | **Phase F — all slices code-complete** (health, Stripe billing, observability/email, photos→Storage) + tests + CI + a security fix |
-| **Verified** | `tsc` ✓ · `lint` ✓ · `npm test` (25/25) ✓ · `build` ✓ — all **headless** (no live DB/keys in the sandbox) |
-| **Next up** | Laptop: apply DB (migrate + RLS/auth SQL), wire integration keys, deploy, smoke-test. See `docs/PHASE_F.md` + `docs/PRODUCTION_CUTOVER.md` |
-| **Gate status** | Pre-real-user gate NOT fully met — RLS live-apply, rate limiting, privacy policy, landing page still outstanding |
+| **Branch / PR** | `claude/sharp-hypatia-6zdy2h` (Caira overnight build) |
+| **Just finished** | **Caira overnight build** — rebrand verified; phone capture verified; new `/admin` coordinator dashboard (mock); LearnedOption per-org + de-identified analytics (schema → `.sql`, unapplied); enterprise `/privacy` draft; `recordAudit()` extended to roster/report. See `docs/OVERNIGHT_PLAN.md` |
+| **Verified** | `tsc` ✓ · `lint` ✓ · `npm test` (34/34) ✓ · `build` ✓ — all **headless** (no live DB/keys in the sandbox) |
+| **Next up** | Laptop: apply `prisma/sql/learned_options_per_org.sql` (by hand, NOT db push); legal review of `/privacy`; wire integration keys, deploy, smoke-test. See `docs/PHASE_F.md` + `docs/PRODUCTION_CUTOVER.md` |
+| **Gate status** | Pre-real-user gate: privacy now an enterprise draft (legal review pending); RLS live-applied. Rate-limit keys + final cutover still outstanding |
 
 ---
 
@@ -87,7 +87,7 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 6. No SQLite in production — *Phase D live*
 7. No auth shortcuts (Supabase Auth + JWT-hardened middleware) — *Phase E*
 8. No form submit without local-state backup — *Phase C*
-9. No sensitive action without an AuditLog entry — *Phase F: `recordAudit()` writes billing events; expand to roster/report actions*
+9. No sensitive action without an AuditLog entry — *Phase F: billing events; Caira overnight: `recordAudit()` now also covers roster (create/allocate/offer/cancel) + report (approve/reopen) actions*
 10. No new table without `userId` + `organisationId?` — *Phase A/E*
 11. No LLM output shown without validation (check, retry, fallback) — *Phase C*
 12. No shift mutation without an idempotency key — *Phase C*
@@ -96,6 +96,7 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 
 ## Decision log (newest first)
 
+- **2026-06-24** — **Caira overnight build** (branch `claude/sharp-hypatia-6zdy2h`, see `docs/OVERNIGHT_PLAN.md`). Six-task autonomous session. (1+2) Confirmed the Caira rebrand (`APP_NAME`, Bricolage/Figtree, Sage & Clay) and the phone capture flow (`/shift/[id]`: chip grid → detail/type → finish → AI note) were already complete from prior commits — verified, no change. (3) Built **`/admin`** coordinator dashboard (`CairaAdmin`, `src/app/admin/page.tsx`) from the design SSOT, mock data, auth-gated by middleware — no `CairaAdmin.jsx` existed so authored as TSX per the no-standalone-jsx convention. (4) **LearnedOption #7**: picklists now scope to global seeds + the caller's org, new typed options stamped per-org, de-identified PostHog events on growth (`kind/name/useCount`, no tenant ids); schema change (per-org unique via `COALESCE`, RLS so globals stay world-readable) written to `prisma/sql/learned_options_per_org.sql` and **NOT applied** — code degrades gracefully under the current global-unique constraint. (5) Replaced the `/privacy` placeholder with a 13-section **enterprise privacy draft** (processor/controller, AI de-identification, sub-processors, AU residency, retention, OAIC NDB), clearly marked draft. (6) Extended `recordAudit()` to roster + report actions (Rule 9). `tsc`/`lint`/`build` green, 34 tests. NOTE: cloudflared can't run in the cloud sandbox (local-only tunnel workflow); COMMAND_CENTRE updated on the feature branch rather than main, since the session's branch rules forbid pushing elsewhere without explicit permission.
 - **2026-06-24** — **App-layer tenant isolation (the other half of RLS).** Audit found that because Prisma bypasses RLS (Option A), the app's own reads/admin-rechecks scoped by *worker identity* but **not by organisation** — latent cross-tenant/IDOR risks that activate with a 2nd real org (admins reading other orgs' shifts/participants/notes; `/api/generate-note` and `/shift/[id]` by id; unscoped roster/notes list reads). Added `tenantScope(worker)` next to `tenantOwner` and applied it to all 6 findings (generate-note, shift page, roster-actions allocate/offer/cancel/create, clock-actions approve/reject, roster.ts + notes/dashboard list reads, quick-shift). Helper unit-tested. No behaviour change for the current single-org/solo setup. **Deferred (finding #7, design call):** `LearnedOption` picklists are global across orgs — the schema calls it a "shared global picklist", but RLS scopes it; decide whether picklists should be per-org before multi-org launch. tsc/lint/build green, 34 tests.
 - **2026-06-24** — **RLS APPLIED LIVE + verified (milestone).** Live Supabase cutover on Windows via `prisma db push --force-reset` (CLI reads `DIRECT_URL` via `prisma.config.ts`; SQL run through the Supabase SQL Editor, no psql). All 6 cross-tenant checks pass. Three real fixes surfaced during apply: (1) `--force-reset` drops/recreates schema `public`, stripping Supabase API-role grants → added `prisma/sql/grant_api_roles.sql` (cutover step E0); (2) `rls_policies.sql` errored on `_prisma_migrations` (not created by `db push`), which rolled back the whole script and left RLS OFF → guarded with `to_regclass`; (3) `WITH CHECK` was `own OR org`, allowing a Data-API caller to plant a row they own into another org → added `AND (org IS NULL OR org = claim)` on the data-table/Worker/AuditLog policies. App unaffected throughout (writes via Prisma, bypasses RLS). Remaining for RLS: live JWT/auth-hook smoke test (sign in → token carries top-level `organisationId`).
 - **2026-06-23** — **RLS audit + automated cross-tenant check.** Reviewed `rls_policies.sql` / `auth_hook.sql` / `backfill_tenant.sql` — design is sound (Option A, `WITH CHECK` blocks tenant reassignment, signed top-level org claim, append-only AuditLog). Added `prisma/sql/verify_rls.sql` (+ `npm run verify:rls`): a deterministic BOLA check that injects `request.jwt.claims` for two simulated orgs/users and asserts no cross-tenant read, anon deny-by-default, `WITH CHECK` blocks cross-tenant insert, cross-tenant UPDATE hits 0 rows, and **every `public` table has RLS enabled** (regression guard for new tables). Runs in a rolled-back transaction. The live apply + run is still laptop-gated (no live Postgres in the sandbox). Minor flags logged for the cutover: global `LearnedOption` rows are invisible to the Data API under RLS (fine — app reads via Prisma); intra-org RBAC is app-layer, not RLS.
