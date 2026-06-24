@@ -32,11 +32,11 @@ BEGIN;
 -- than the org member on the org-scoped rows, so visibility there can only come
 -- from the org claim (proving org-scoping, not just ownership).
 -- ---------------------------------------------------------------------------
-INSERT INTO "Organisation"(id, name) VALUES
+INSERT INTO public."Organisation"(id, name) VALUES
   ('verify_orgA', 'Verify Org A'),
   ('verify_orgB', 'Verify Org B');
 
-INSERT INTO "Participant"(id, name, "userId", "organisationId") VALUES
+INSERT INTO public."Participant"(id, name, "userId", "organisationId") VALUES
   ('verify_pA',    'Alice (org A)',      'ffffffff-0000-0000-0000-0000000000a9', 'verify_orgA'),
   ('verify_pB',    'Bob (org B)',        'ffffffff-0000-0000-0000-0000000000b9', 'verify_orgB'),
   ('verify_pSolo', 'Solo (owner = A)',   :'uidA',                                 NULL);
@@ -51,15 +51,15 @@ BEGIN
   PERFORM set_config('request.jwt.claims',
     '{"sub":"00000000-0000-0000-0000-0000000000a1","organisationId":"verify_orgA"}', true);
 
-  SELECT count(*) INTO total  FROM "Participant" WHERE id LIKE 'verify_%';
-  SELECT count(*) INTO leaked FROM "Participant" WHERE id = 'verify_pB';
+  SELECT count(*) INTO total  FROM public."Participant" WHERE id LIKE 'verify_%';
+  SELECT count(*) INTO leaked FROM public."Participant" WHERE id = 'verify_pB';
 
   IF leaked <> 0 THEN
     RAISE EXCEPTION 'BOLA: org A member can read org B participant (cross-tenant leak)';
   END IF;
   IF total <> 2 THEN
     RAISE EXCEPTION 'org A member should see 2 rows (org A + own solo), saw %. '
-      'If 0, check that the authenticated role has SELECT on "Participant".', total;
+      'If 0, check that the authenticated role has SELECT on public."Participant".', total;
   END IF;
   RAISE NOTICE 'PASS 1: org A member sees own org only (no leak of org B).';
 END $$;
@@ -74,8 +74,8 @@ BEGIN
   PERFORM set_config('request.jwt.claims',
     '{"sub":"00000000-0000-0000-0000-0000000000b1","organisationId":"verify_orgB"}', true);
 
-  SELECT count(*) INTO total  FROM "Participant" WHERE id LIKE 'verify_%';
-  SELECT count(*) INTO leaked FROM "Participant" WHERE id IN ('verify_pA','verify_pSolo');
+  SELECT count(*) INTO total  FROM public."Participant" WHERE id LIKE 'verify_%';
+  SELECT count(*) INTO leaked FROM public."Participant" WHERE id IN ('verify_pA','verify_pSolo');
 
   IF leaked <> 0 THEN
     RAISE EXCEPTION 'BOLA: org B member can read org A / solo participant (cross-tenant leak)';
@@ -95,7 +95,7 @@ BEGIN
   PERFORM set_config('role', 'anon', true);
   PERFORM set_config('request.jwt.claims', '{}', true);  -- valid empty JSON (not '')
 
-  SELECT count(*) INTO total FROM "Participant" WHERE id LIKE 'verify_%';
+  SELECT count(*) INTO total FROM public."Participant" WHERE id LIKE 'verify_%';
   IF total <> 0 THEN
     RAISE EXCEPTION 'anon can read % participant rows (should be 0 — deny by default)', total;
   END IF;
@@ -112,7 +112,7 @@ BEGIN
   PERFORM set_config('request.jwt.claims',
     '{"sub":"00000000-0000-0000-0000-0000000000a1","organisationId":"verify_orgA"}', true);
   BEGIN
-    INSERT INTO "Participant"(id, name, "userId", "organisationId")
+    INSERT INTO public."Participant"(id, name, "userId", "organisationId")
       VALUES ('verify_evil', 'cross-tenant insert',
               '00000000-0000-0000-0000-0000000000a1', 'verify_orgB');
   EXCEPTION WHEN insufficient_privilege OR check_violation THEN
@@ -136,7 +136,7 @@ BEGIN
     '{"sub":"00000000-0000-0000-0000-0000000000a1","organisationId":"verify_orgA"}', true);
 
   WITH upd AS (
-    UPDATE "Participant" SET name = 'hijacked' WHERE id = 'verify_pB' RETURNING 1
+    UPDATE public."Participant" SET name = 'hijacked' WHERE id = 'verify_pB' RETURNING 1
   )
   SELECT count(*) INTO affected FROM upd;
 
