@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&amp;family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&amp;display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body { margin:0; background:#dfe2e6; font-family:'Figtree',sans-serif; }
+::-webkit-scrollbar { width:0; height:0; }
+</style>
+</helmet>
+<div style="min-height:100vh; display:flex; justify-content:center; align-items:flex-start; padding:34px 16px 56px; background:#dfe2e6;">
+
+  <div style="width:384px; height:860px; background:var(--canvas, #f3ebdd); border-radius:48px; border:12px solid #1b1712; box-shadow:0 36px 72px rgba(40,30,18,.28); overflow:hidden; display:flex; flex-direction:column; position:relative; --canvas:{{ canvas }}; --surface:{{ surface }}; --surface2:{{ surface2 }}; --primary:{{ primary }}; --accent:{{ accent }}; --ink:{{ ink }}; --line:{{ line }}; --muted:{{ muted }}; --accent-soft:{{ accentSoft }}; --accent-line:{{ accentLine }}; --accent-text:{{ accentText }}; --avatar-bg:{{ avatarBg }}; --status-bg:{{ statusBg }}; --status-line:{{ statusLine }}; --status-dot:{{ statusDot }}; --status-fg:{{ statusFg }};">
+
+    <svg width="0" height="0" style="position:absolute;"><defs><filter id="paperSh" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="2.5" stdDeviation="2.2" flood-color="#7a5a36" flood-opacity="0.22"></feDropShadow></filter></defs></svg>
+
+    <!-- status bar -->
+    <div style="height:44px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 30px 0 34px; background:var(--surface, #fffaf2);">
+      <span style="font:700 15px 'Figtree'; color:var(--ink, #3a3128);">9:41</span>
+      <span style="display:flex; align-items:center; gap:7px;">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="var(--ink, #3a3128)"><rect x="0" y="8" width="3" height="4" rx="1"></rect><rect x="5" y="5" width="3" height="7" rx="1"></rect><rect x="10" y="2" width="3" height="10" rx="1"></rect><rect x="15" y="0" width="3" height="12" rx="1"></rect></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="var(--ink, #3a3128)"><path d="M8 11.5l2-2.6a2.7 2.7 0 0 0-4 0l2 2.6zM3.2 6.2a7.6 7.6 0 0 1 9.6 0l-1.4 1.6a5.4 5.4 0 0 0-6.8 0L3.2 6.2zM.6 3.4a11.4 11.4 0 0 1 14.8 0L14 5a9.2 9.2 0 0 0-12 0z"></path></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3" stroke="var(--ink, #3a3128)" opacity=".4"></rect><rect x="2" y="2" width="16" height="8" rx="1.5" fill="var(--ink, #3a3128)"></rect><rect x="22.5" y="4" width="2" height="4" rx="1" fill="var(--ink, #3a3128)" opacity=".4"></rect></svg>
+      </span>
+    </div>
+
+    <!-- app bar: logo + soft on-call -->
+    <div style="flex:none; height:54px; background:var(--surface, #fffaf2); display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid var(--line, #ece0cf);">
+      <span style="display:flex; align-items:center; gap:9px;">
+        <span style="width:30px; height:30px; border-radius:9px; background:var(--primary, #0f766e); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#fff"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="var(--primary, #0f766e)" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></span>
+        <span style="font:800 19px 'Bricolage Grotesque'; color:var(--primary, #0f766e); letter-spacing:-.01em;">Caira</span>
+      </span>
+      <button onClick="{{ callOnCall }}" style="height:36px; padding:0 14px 0 9px; border-radius:999px; background:var(--accent-soft, #f7e7e0); border:1px solid var(--accent-line, #efd5cb); display:flex; align-items:center; gap:8px; cursor:pointer; white-space:nowrap;">
+        <span style="width:22px; height:22px; border-radius:50%; background:var(--accent, #df5b40); display:flex; align-items:center; justify-content:center; flex:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.1 2.2z"></path></svg></span>
+        <span style="font:800 11px 'Figtree'; letter-spacing:.03em; color:var(--accent-text, #bd6149);">On-call</span>
+      </button>
+    </div>
+
+    <!-- participant card -->
+    <div style="flex:none; padding:14px 16px 6px;">
+      <div style="background:var(--surface, #fffaf2); border:1px solid var(--line, #ece0cf); border-radius:20px; padding:14px; display:flex; align-items:center; gap:14px;">
+        <div style="width:76px; height:76px; border-radius:20px; background:var(--avatar-bg, #e9dcc8); border:2px solid #fff; box-shadow:0 0 0 1.5px var(--primary, #0f766e); flex:none; display:flex; align-items:center; justify-content:center; font:700 26px 'Bricolage Grotesque'; color:var(--primary, #0f766e);">JD</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font:800 22px 'Bricolage Grotesque'; color:var(--ink, #3a3128);">John Donnelly</div>
+          <div style="font:500 12px 'Figtree'; color:var(--muted, #8a7a66); margin-top:3px;">Shift 13:00 – 21:00</div>
+          <div style="display:inline-flex; align-items:center; gap:6px; margin-top:8px; padding:4px 10px; border-radius:999px; background:var(--status-bg, #e7f1ec); border:1px solid var(--status-line, #d2e7dd); white-space:nowrap;">
+            <span style="width:7px; height:7px; border-radius:50%; background:var(--status-dot, #34a07f); flex:none;"></span>
+            <span style="font:700 9px 'Figtree'; letter-spacing:.05em; color:var(--status-fg, #2f7d63);">ON SHIFT · 07:31 ELAPSED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- key contacts -->
+    <div style="flex:none; padding:6px 16px 4px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <span style="font:700 10px 'Figtree'; letter-spacing:.10em; color:var(--muted, #8a7a66);">KEY CONTACTS</span>
+        
+      </div>
+      <div style="display:flex; gap:9px;">
+        <sc-for list="{{ contacts }}" as="k" hint-placeholder-count="3">
+          <button onClick="{{ k.onCall }}" style="flex:1; height:74px; border-radius:15px; background:var(--surface2, #fffaf3); border:1px solid var(--line, #ece0cf); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:0 6px; cursor:pointer; min-width:0;">
+            <span style="width:34px; height:34px; border-radius:50%; background:{{ k.tint }}; flex:none; display:flex; align-items:center; justify-content:center; font:700 12px 'Bricolage Grotesque'; color:{{ k.fg }};">{{ k.initials }}</span>
+            <span style="display:flex; flex-direction:column; align-items:center; gap:1px;">
+              <span style="font:700 11px 'Figtree'; color:var(--ink, #3a3128); white-space:nowrap;">{{ k.name }}</span>
+              <span style="font:500 9px 'Figtree'; color:var(--muted, #8a7a66); white-space:nowrap;">{{ k.role }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- body -->
+    
+
+    <!-- footer: finish -->
+    <div style="flex: 1; overflow-y: auto; padding: 12px 16px 6px; display: flex; flex-direction: column; min-height: 0; position: relative">
+      <!-- toggle: MIC · CAPTURE · TIMELINE -->
+      
+      <div style="display:grid; grid-template-columns:56px 1fr 1fr; gap:4px; padding:4px; background:#efe6d6; border-radius:15px; flex:none;">
+        <button onClick="{{ showVoice }}" style="height:38px; border-radius:11px; border:none; cursor:pointer; background:{{ micTabBg }}; display:flex; align-items:center; justify-content:center; box-shadow:{{ micTabShadow }};">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{ micStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+        </button>
+        <button onClick="{{ showCapture }}" style="height:38px; border-radius:11px; border:none; cursor:pointer; background:{{ captureTabBg }}; color:{{ captureTabFg }}; font:700 13px 'Figtree'; box-shadow:{{ captureTabShadow }};">Capture</button>
+        <button onClick="{{ showTimeline }}" style="height:38px; border-radius:11px; border:none; cursor:pointer; background:{{ timelineTabBg }}; color:{{ timelineTabFg }}; font:700 13px 'Figtree'; box-shadow:{{ timelineTabShadow }};">Timeline</button>
+      </div><div style="text-align: center; font: 600 10px 'Figtree'; color: {{ micHintColor }}; margin-top: 7px; height: 12px; margin-bottom: 3px"><br></div>
+
+      <!-- VOICE record mode (mic swaps chips for record + free text) -->
+      <sc-if value="{{ isVoice }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:8px; display:flex; flex-direction:column; align-items:center; gap:15px;">
+          <button onClick="{{ toggleRec }}" style="width:94px; height:94px; border-radius:50%; border:none; cursor:pointer; background:{{ recBtnBg }}; display:flex; align-items:center; justify-content:center; box-shadow:{{ recBtnShadow }}; transition:box-shadow .15s ease;">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+          </button>
+          <div style="text-align:center;">
+            <div style="font:800 15px 'Figtree'; color:var(--ink, #3a3128);">{{ recTitle }}</div>
+            <div style="font:600 11px 'Figtree'; color:{{ recSubColor }}; margin-top:3px;">{{ recSub }}</div>
+          </div>
+          <div style="width:100%;">
+            <div style="font:700 10px 'Figtree'; letter-spacing:.06em; color:var(--muted, #8a7a66); margin-bottom:7px;">NOTE</div>
+            <textarea placeholder="Transcript appears here — or type a note…" style="width:100%; height:110px; resize:none; border-radius:16px; border:1px solid var(--line, #ece0cf); background:var(--surface2, #fffaf3); padding:13px 15px; font:500 13px 'Figtree'; color:var(--ink, #3a3128); outline:none; box-sizing:border-box;"></textarea>
+          </div>
+          <div style="display:flex; gap:10px; width:100%;">
+            <button onClick="{{ showCapture }}" style="flex:none; width:104px; height:48px; border-radius:14px; border:1px solid #e3d6c1; background:var(--surface2, #fffaf3); color:var(--muted, #8a7a66); font:700 13px 'Figtree'; cursor:pointer;">Cancel</button>
+            <button onClick="{{ showCapture }}" style="flex:1; height:48px; border-radius:14px; border:none; background:var(--primary, #0f766e); color:#fff; font:800 13px 'Figtree'; cursor:pointer; box-shadow:0 8px 18px rgba(15,118,110,.30);">Save voice log</button>
+          </div>
+        </div>
+      </sc-if>
+
+            <!-- CAPTURE — square Paper tiles, centred in the thumb zone -->
+      <sc-if value="{{ isCapture }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1; min-height:0; display:flex; align-items:center;">
+          <div style="width:100%; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+          <button onClick="{{ tapFood }}" style="border:1px solid var(--line, #ece0cf); cursor:pointer; aspect-ratio:1; border-radius:20px; background:var(--surface2, #fffaf3); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:0;">
+            <svg width="46" height="46" viewBox="0 0 56 56" style="overflow:visible;"><path d="M28 5C40 5 51 11 50 26C49 40 45 51 27 51C12 51 6 40 7 26C8 13 16 5 28 5Z" fill="#f6d99a" filter="url(#paperSh)"></path><g transform="translate(16,16)" fill="none" stroke="#8a5a18" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"></path><path d="M8 10v11"></path><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"></path></g></svg>
+            <span style="font:600 12px 'Figtree'; color:var(--ink, #3a3128);">Food</span>
+          </button>
+          <button onClick="{{ tapDrink }}" style="border:1px solid var(--line, #ece0cf); cursor:pointer; aspect-ratio:1; border-radius:20px; background:var(--surface2, #fffaf3); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:0;">
+            <svg width="46" height="46" viewBox="0 0 56 56" style="overflow:visible;"><path d="M27 5C41 4 52 12 50 27C49 41 43 52 26 51C12 50 5 41 7 25C9 12 17 6 27 5Z" fill="#a9ddd7" filter="url(#paperSh)"></path><g transform="translate(16,16)" fill="none" stroke="#0e5e58" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"></path><path d="M6.4 9h11.2"></path></g></svg>
+            <span style="font:600 12px 'Figtree'; color:var(--ink, #3a3128);">Drink</span>
+          </button>
+          <button onClick="{{ tapHyg }}" style="border:1px solid var(--line, #ece0cf); cursor:pointer; aspect-ratio:1; border-radius:20px; background:var(--surface2, #fffaf3); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:0;">
+            <svg width="46" height="46" viewBox="0 0 56 56" style="overflow:visible;"><path d="M28 5C40 5 51 11 50 26C49 40 45 51 27 51C12 51 6 40 7 26C8 13 16 5 28 5Z" fill="#cdd6f0" filter="url(#paperSh)"></path><g transform="translate(16,16)" fill="none" stroke="#4d5b9e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6 6 11a6 6 0 0 1-12 0c0-5 6-11 6-11z"></path></g></svg>
+            <span style="font:600 12px 'Figtree'; color:var(--ink, #3a3128);">Hygiene</span>
+          </button>
+          <button onClick="{{ tapAct }}" style="border:1px solid var(--line, #ece0cf); cursor:pointer; aspect-ratio:1; border-radius:20px; background:var(--surface2, #fffaf3); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:0;">
+            <svg width="46" height="46" viewBox="0 0 56 56" style="overflow:visible;"><path d="M28 4C41 5 51 12 51 27C51 41 44 52 27 51C13 50 5 40 6 26C7 12 17 4 28 4Z" fill="#aedcb6" filter="url(#paperSh)"></path><g transform="translate(16,16)" fill="none" stroke="#256b3f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.5"></circle><path d="M12 9l-2.5 4 3 2.5L11 21"></path><path d="M12 9l3.5 1.5L18 9"></path><path d="M12 9l-4 1"></path></g></svg>
+            <span style="font:600 12px 'Figtree'; color:var(--ink, #3a3128);">Activity</span>
+          </button>
+          <button onClick="{{ tapToilet }}" style="border:1px solid var(--line, #ece0cf); cursor:pointer; aspect-ratio:1; border-radius:20px; background:var(--surface2, #fffaf3); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:0;">
+            <svg width="46" height="46" viewBox="0 0 56 56" style="overflow:visible;"><path d="M27 5C41 4 52 12 50 27C49 41 43 52 26 51C12 50 5 41 7 25C9 12 17 6 27 5Z" fill="#b9e0da" filter="url(#paperSh)"></path><g transform="translate(16,16)" fill="none" stroke="#14756a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"></path><path d="M9 17v3"></path><path d="M15 17v3"></path></g></svg>
+            <span style="font:600 12px 'Figtree'; color:var(--ink, #3a3128);">Toilet</span>
+          </button>
+          <button onClick="{{ tapMed }}" style="border:1px solid var(--line, #ece0cf); cursor:pointer; aspect-ratio:1; border-radius:20px; background:var(--surface2, #fffaf3); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:0;">
+            <svg width="46" height="46" viewBox="0 0 56 56" style="overflow:visible;"><path d="M28 5C40 5 51 11 50 26C49 40 45 51 27 51C12 51 6 40 7 26C8 13 16 5 28 5Z" fill="#f3c2d8" filter="url(#paperSh)"></path><g transform="translate(16,16)" fill="none" stroke="#962f63" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"></rect><line x1="9" y1="9" x2="15" y2="15"></line></g></svg>
+            <span style="font:600 12px 'Figtree'; color:var(--ink, #3a3128);">Medication</span>
+          </button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- TIMELINE -->
+      <sc-if value="{{ isTimeline }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:5px; display:flex; flex-direction:column; gap:9px;">
+          <sc-for list="{{ logs }}" as="l" hint-placeholder-count="4">
+            <div style="display:flex; gap:11px; align-items:flex-start; background:var(--surface2, #fffaf3); border:1px solid var(--line, #ece0cf); border-radius:15px; padding:11px 13px;">
+              <span style="width:40px; height:40px; flex:none; display:flex; align-items:center; justify-content:center;">{{ l.iconEl }}</span>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+                  <span style="font:700 12px 'Figtree'; color:var(--ink, #3a3128);">{{ l.label }}</span>
+                  <span style="font:600 10px 'Figtree'; color:var(--muted, #8a7a66);">{{ l.time }}</span>
+                </div>
+                <div style="font:500 11px 'Figtree'; color:var(--muted, #8a7a66); margin-top:2px;">{{ l.detail }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- incident: low in the coloured area -->
+      <button onClick="{{ openIncident }}" style="margin-top:auto; width:100%; height:46px; border-radius:14px; border:1px solid {{ incidentBorder }}; background:{{ incidentBg }}; display:flex; align-items:center; justify-content:center; gap:9px; cursor:pointer;">
+        <span style="width:8px; height:8px; border-radius:50%; background:{{ incidentDot }};"></span>
+        <span style="font:800 12px 'Figtree'; letter-spacing:.05em; color:{{ incidentFg }};">{{ incidentText }}</span>
+      </button>
+    </div><div style="flex:none; padding:12px 16px 18px; background:var(--surface, #fffaf2); border-top:1px solid var(--line, #ece0cf);">
+      <button onClick="{{ tryFinish }}" style="width:100%; height:54px; border-radius:16px; border:none; cursor:pointer; background:var(--primary, #0f766e); color:#fff; font:800 15px 'Figtree'; letter-spacing:.04em;">FINISH SHIFT</button>
+    </div>
+
+    <!-- QUICK-LOG SHEET -->
+    <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeSheet }}" style="position:absolute; inset:0; background:rgba(30,22,12,.42); display:flex; flex-direction:column; justify-content:flex-end;">
+        <div style="background:var(--surface, #fffaf2); border-radius:28px 28px 0 0; padding:10px 20px 24px; box-shadow:0 -10px 40px rgba(0,0,0,.25);">
+          <div style="width:42px; height:5px; border-radius:3px; background:#e0d3bf; margin:0 auto 16px;"></div>
+          <div style="display:flex; align-items:center; gap:13px;">
+            <span style="width:54px; height:54px; flex:none; display:flex; align-items:center; justify-content:center;">{{ sheetIconEl }}</span>
+            <div>
+              <div style="font:800 19px 'Bricolage Grotesque'; color:var(--ink, #3a3128);">{{ sheetTitle }}</div>
+              <div style="font:500 12px 'Figtree'; color:var(--muted, #8a7a66);">Logging for John · just now</div>
+            </div>
+          </div>
+          <div style="font:700 11px 'Figtree'; letter-spacing:.06em; color:var(--muted, #8a7a66); margin:18px 0 9px;">QUICK OPTIONS</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <sc-for list="{{ sheetOptions }}" as="o" hint-placeholder-count="4">
+              <span style="padding:9px 15px; border-radius:999px; background:var(--canvas, #f3ebdd); border:1px solid var(--line, #ece0cf); font:600 13px 'Figtree'; color:var(--ink, #3a3128);">{{ o }}</span>
+            </sc-for>
+          </div>
+          <div style="margin-top:16px; height:60px; border-radius:16px; border:1px solid var(--line, #ece0cf); background:#fff; display:flex; align-items:center; padding:0 16px; font:500 13px 'Figtree'; color:#b0a085;">Add a note (optional)…</div>
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <button onClick="{{ closeSheet }}" style="flex:none; width:110px; height:52px; border-radius:16px; border:1px solid #e3d6c1; background:#fff; color:var(--muted, #8a7a66); font:700 14px 'Figtree'; cursor:pointer;">Cancel</button>
+            <button onClick="{{ closeSheet }}" style="flex:1; height:52px; border-radius:16px; border:none; background:var(--primary, #0f766e); color:#fff; font:800 14px 'Figtree'; cursor:pointer; box-shadow:0 8px 18px rgba(15,118,110,.32);">Save log</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 420, &quot;height&quot;: 920}}">
+class Component extends DCLogic {
+  state = { view: "capture", sheet: null, incidentLogged: false, recording: false, scheme: null };
+
+  schemes() {
+    return {
+      warm_m1: { label: "Sage & Clay",        bg: "#f3ebdd", surface: "#fffaf2", primary: "#0f766e", accent: "#df5b40", chipBg: "#fffaf3", dark: false },
+      warm_m2: { label: "Olive & Rust",       bg: "#efe6d5", surface: "#fdf8ec", primary: "#6f7536", accent: "#c2562f", chipBg: "#fdf8ee", dark: false },
+      warm_f1: { label: "Blush & Plum",       bg: "#f6ece6", surface: "#fff7f3", primary: "#884a63", accent: "#d76a6a", chipBg: "#fff7f4", dark: false },
+      warm_f2: { label: "Peach & Rose",       bg: "#f8ede4", surface: "#fff8f3", primary: "#b25b73", accent: "#e8956f", chipBg: "#fff8f4", dark: false },
+      cool_m1: { label: "Slate & Steel",      bg: "#e8edf1", surface: "#f8fafc", primary: "#2b5a7e", accent: "#3a8fb7", chipBg: "#f8fbfd", dark: false },
+      cool_m2: { label: "Navy & Teal",        bg: "#e6ebf1", surface: "#f6f9fc", primary: "#1f3a5f", accent: "#2f9296", chipBg: "#f6fafc", dark: false },
+      cool_f1: { label: "Lilac & Sky",        bg: "#ececf4", surface: "#f9f8fd", primary: "#6a5d9e", accent: "#5ba0d0", chipBg: "#f9f8fd", dark: false },
+      cool_f2: { label: "Mint & Periwinkle",  bg: "#e7f0ee", surface: "#f5fbf9", primary: "#3f9d8b", accent: "#7b8fd4", chipBg: "#f6fcfa", dark: false },
+      elec_m1: { label: "Cobalt & Lime",      bg: "#0f1422", surface: "#1a2336", primary: "#3b82f6", accent: "#a3e635", chipBg: "#232e44", dark: true },
+      elec_m2: { label: "Indigo & Cyan",      bg: "#14122b", surface: "#211f3d", primary: "#7c7ef5", accent: "#22d3ee", chipBg: "#2b2950", dark: true },
+      elec_f1: { label: "Magenta & Violet",   bg: "#1b1030", surface: "#2a1a45", primary: "#d946ef", accent: "#a78bfa", chipBg: "#352252", dark: true },
+      elec_f2: { label: "Coral & Hot Pink",   bg: "#fdeef2", surface: "#ffffff", primary: "#ec4899", accent: "#f43f5e", chipBg: "#fff5f8", dark: false },
+      cls_m1:  { label: "Oxford & Claret",    bg: "#ecebe7", surface: "#fafaf8", primary: "#1f3a5f", accent: "#8c2f39", chipBg: "#fafaf8", dark: false },
+      cls_m2:  { label: "Charcoal & Brass",   bg: "#eceae6", surface: "#faf9f6", primary: "#33373b", accent: "#b08433", chipBg: "#faf9f6", dark: false },
+      cls_f1:  { label: "Ivory & Rose Gold",  bg: "#f3efe9", surface: "#fffdf9", primary: "#6b4f5b", accent: "#c08a72", chipBg: "#fffdf9", dark: false },
+      cls_f2:  { label: "Dove & Mauve",       bg: "#efecee", surface: "#fbfafb", primary: "#5d4a59", accent: "#a87f93", chipBg: "#fbfafb", dark: false },
+    };
+  }
+
+  cats() {
+    return [
+      { key: "food",  label: "Food",       icon: "🍽️", tint: "#fdecc8", options: ["Full meal", "Half eaten", "Refused", "Snack"] },
+      { key: "drink", label: "Drink",      icon: "💧", tint: "#d3eeec", options: ["Water", "Juice", "Tea/Coffee", "Refused"] },
+      { key: "hyg",   label: "Hygiene",    icon: "🧼", tint: "#ece1f5", options: ["Shower", "Wash", "Teeth", "Dressed"] },
+      { key: "act",   label: "Activity",   icon: "🏃", tint: "#d8efdb", options: ["Walk", "Outing", "Exercise", "Social"] },
+      { key: "toilet",label: "Toilet",     icon: "🚻", tint: "#d3eeea", options: ["Continent", "Assisted", "Accident", "Declined"] },
+      { key: "med",   label: "Medication", icon: "💊", tint: "#f7dce8", options: ["Given", "Refused", "Self-admin", "PRN"] },
+    ];
+  }
+
+  mix(a, b, t) {
+    const p = (h) => { h = h.replace("#",""); if (h.length===3) h = h.split("").map(c=>c+c).join(""); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; };
+    const A = p(a), B = p(b);
+    const m = A.map((x,i) => Math.round(x + (B[i]-x)*t));
+    return "#" + m.map(x => x.toString(16).padStart(2,"0")).join("");
+  }
+
+  paperIcon(key, size) {
+    const A = "M28 5C40 5 51 11 50 26C49 40 45 51 27 51C12 51 6 40 7 26C8 13 16 5 28 5Z";
+    const B = "M27 5C41 4 52 12 50 27C49 41 43 52 26 51C12 50 5 41 7 25C9 12 17 6 27 5Z";
+    const C = "M28 4C41 5 51 12 51 27C51 41 44 52 27 51C13 50 5 40 6 26C7 12 17 4 28 4Z";
+    const d = {
+      food:  { b:A, f:"#f6d99a", s:"#8a5a18", g:'<path d="M6 3v7a2 2 0 0 0 4 0V3"></path><path d="M8 10v11"></path><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"></path>' },
+      drink: { b:B, f:"#a9ddd7", s:"#0e5e58", g:'<path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"></path><path d="M6.4 9h11.2"></path>' },
+      hyg:   { b:A, f:"#cdd6f0", s:"#4d5b9e", g:'<path d="M12 3s6 6 6 11a6 6 0 0 1-12 0c0-5 6-11 6-11z"></path>' },
+      act:   { b:C, f:"#aedcb6", s:"#256b3f", g:'<circle cx="13" cy="4.5" r="1.5"></circle><path d="M12 9l-2.5 4 3 2.5L11 21"></path><path d="M12 9l3.5 1.5L18 9"></path><path d="M12 9l-4 1"></path>' },
+      toilet:{ b:B, f:"#b9e0da", s:"#14756a", g:'<path d="M6 3v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"></path><path d="M9 17v3"></path><path d="M15 17v3"></path>' },
+      med:   { b:A, f:"#f3c2d8", s:"#962f63", g:'<rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"></rect><line x1="9" y1="9" x2="15" y2="15"></line>' },
+    }[key];
+    if (!d) return null;
+    const inner = '<path d="' + d.b + '" fill="' + d.f + '" filter="url(#paperSh)"></path><g transform="translate(16,16)" fill="none" stroke="' + d.s + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' + d.g + '</g>';
+    return React.createElement("svg", { width: size, height: size, viewBox: "0 0 56 56", style: { overflow: "visible" }, dangerouslySetInnerHTML: { __html: inner } });
+  }
+
+  renderVals() {
+    const isCapture = this.state.view === "capture";
+    const isTimeline = this.state.view === "timeline";
+    const isVoice = this.state.view === "voice";
+    const rec = this.state.recording;
+    const sheetCat = this.cats().find((c) => c.key === this.state.sheet);
+    const tabShadow = "0 1px 3px rgba(40,30,18,.14)";
+
+    const logs = [
+      { key: "drink", label: "Drink — Water",        time: "20:31", detail: "Full glass, independent" },
+      { key: "med",   label: "Medication — Given",   time: "20:00", detail: "Evening dose, witnessed" },
+      { key: "food",  label: "Food — Full meal",     time: "18:45", detail: "Dinner, ate well" },
+      { key: "act",   label: "Activity — Walk",      time: "17:10", detail: "20 min in the garden" },
+      { key: "hyg",   label: "Hygiene — Shower",     time: "16:20", detail: "Assisted, no concerns" },
+    ].map((l) => { const c = this.cats().find((x) => x.key === l.key); return { ...l, icon: c.icon, tint: c.tint, iconEl: this.paperIcon(l.key, 36) }; });
+
+    const S = this.schemes();
+    const order = Object.keys(S);
+    const active = this.state.scheme && S[this.state.scheme] ? this.state.scheme : "warm_m1";
+    const p = S[active];
+    const d = p.dark;
+    const swatches = order.map((k) => ({
+      key: k, label: S[k].label, surface: S[k].surface, primary: S[k].primary, accent: S[k].accent,
+      ring: k === active ? "3px solid " + S[k].primary : "2px solid rgba(0,0,0,.10)",
+      onPick: () => this.setState({ scheme: k }),
+    }));
+
+    return {
+      schemeName: p.label,
+      swatches,
+      canvas: p.bg, surface: p.surface, surface2: p.chipBg, primary: p.primary, accent: p.accent,
+      ink: d ? "#f3eee6" : "#3a3128",
+      line: d ? "rgba(255,255,255,.12)" : "#ece0cf",
+      muted: d ? "rgba(243,238,230,.62)" : "#8a7a66",
+      accentSoft: this.mix(p.accent, p.surface, 0.86),
+      accentLine: this.mix(p.accent, p.surface, 0.70),
+      accentText: d ? this.mix(p.accent, "#ffffff", 0.30) : this.mix(p.accent, "#000000", 0.28),
+      avatarBg:   this.mix(p.primary, p.surface, 0.80),
+      statusBg:   this.mix(p.primary, p.surface, 0.86),
+      statusLine: this.mix(p.primary, p.surface, 0.72),
+      statusDot:  d ? this.mix(p.primary, "#ffffff", 0.30) : p.primary,
+      statusFg:   d ? this.mix(p.primary, "#ffffff", 0.40) : this.mix(p.primary, "#000000", 0.15),
+
+      callOnCall: () => {},
+      contacts: [
+        { role: "Coordinator", name: "S. Hale",  initials: "SH", tint: "#dbe7e4", fg: "var(--primary, #0f766e)", onCall: () => {} },
+        { role: "Next of kin", name: "M. Doe",   initials: "MD", tint: "#f1e2d6", fg: "#b06a4a", onCall: () => {} },
+        { role: "GP",          name: "Dr Park",  initials: "GP", tint: "#e6e0ee", fg: "#6b5b95", onCall: () => {} },
+      ],
+
+      isCapture, isTimeline, isVoice,
+      showCapture: () => this.setState({ view: "capture", recording: false }),
+      showTimeline: () => this.setState({ view: "timeline", recording: false }),
+      showVoice: () => this.setState({ view: "voice" }),
+      captureTabBg: isCapture ? "var(--primary, #0f766e)" : "transparent",
+      captureTabFg: isCapture ? "#fff" : "var(--muted, #8a7a66)",
+      captureTabShadow: isCapture ? tabShadow : "none",
+      timelineTabBg: isTimeline ? "var(--primary, #0f766e)" : "transparent",
+      timelineTabFg: isTimeline ? "#fff" : "var(--muted, #8a7a66)",
+      timelineTabShadow: isTimeline ? tabShadow : "none",
+      micTabBg: isVoice ? "var(--primary, #0f766e)" : "transparent",
+      micStroke: isVoice ? "#fff" : "#9b8a72",
+      micTabShadow: isVoice ? tabShadow : "none",
+
+      micHint: isCapture ? "Tap a category to log — or tap the mic for a voice note" : "",
+      micHintColor: "var(--muted, #8a7a66)",
+
+      toggleRec: () => this.setState((s) => ({ recording: !s.recording })),
+      recBtnBg: rec ? "#b23a28" : "var(--accent, #df5b40)",
+      recBtnShadow: rec ? "0 0 0 10px rgba(223,91,64,.16)" : "0 12px 24px rgba(223,91,64,.40)",
+      recTitle: rec ? "Recording…" : "Tap to record",
+      recSub: rec ? "0:08 · tap to stop" : "Speak naturally — we’ll transcribe it",
+      recSubColor: rec ? "#c2563f" : "var(--muted, #8a7a66)",
+
+      tapFood:   () => this.setState({ sheet: "food" }),
+      tapDrink:  () => this.setState({ sheet: "drink" }),
+      tapHyg:    () => this.setState({ sheet: "hyg" }),
+      tapAct:    () => this.setState({ sheet: "act" }),
+      tapToilet: () => this.setState({ sheet: "toilet" }),
+      tapMed:    () => this.setState({ sheet: "med" }),
+      logs,
+
+      openIncident: () => this.setState({ incidentLogged: true }),
+      incidentText: this.state.incidentLogged ? "INCIDENT LOGGED ✓" : "REPORT AN INCIDENT",
+      incidentBg: this.state.incidentLogged ? "#eef6f1" : "#f9f1ef",
+      incidentBorder: this.state.incidentLogged ? "var(--status-line, #d2e7dd)" : "#ecd9d2",
+      incidentDot: this.state.incidentLogged ? "var(--status-dot, #34a07f)" : "#d2a596",
+      incidentFg: this.state.incidentLogged ? "var(--status-fg, #2f7d63)" : "#ad9087",
+
+      tryFinish: () => {},
+
+      sheetOpen: !!sheetCat,
+      closeSheet: () => this.setState({ sheet: null }),
+      sheetTitle: sheetCat ? sheetCat.label : "",
+      sheetIcon: sheetCat ? sheetCat.icon : "",
+      sheetTint: sheetCat ? sheetCat.tint : "#eee",
+      sheetIconEl: sheetCat ? this.paperIcon(sheetCat.key, 50) : null,
+      sheetOptions: sheetCat ? sheetCat.options : [],
+    };
+  }
+}
+</script>
+</body>
+</html>
