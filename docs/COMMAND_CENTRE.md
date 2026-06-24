@@ -6,7 +6,7 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/phase-e-auth` → open **PR #2**
-- **Last updated:** 2026-06-23 (end of Phase F build session)
+- **Last updated:** 2026-06-24 (RLS live + app-layer tenant isolation)
 
 ---
 
@@ -18,7 +18,7 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 | **Just finished** | **Phase F — all slices code-complete** (health, Stripe billing, observability/email, photos→Storage) + tests + CI + a security fix |
 | **Verified** | `tsc` ✓ · `lint` ✓ · `npm test` (25/25) ✓ · `build` ✓ — all **headless** (no live DB/keys in the sandbox) |
 | **Next up** | Laptop: apply DB (migrate + RLS/auth SQL), wire integration keys, deploy, smoke-test. See `docs/PHASE_F.md` + `docs/PRODUCTION_CUTOVER.md` |
-| **Gate status** | Pre-real-user gate NOT fully met — RLS live-apply, rate limiting, privacy policy, landing page still outstanding |
+| **Gate status** | Pre-real-user gate NOT fully met — RLS **live-applied + verified** ✓; rate limiting (needs Upstash keys), privacy policy (final copy/legal), right-to-erasure still outstanding |
 
 ---
 
