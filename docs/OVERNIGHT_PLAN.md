@@ -47,7 +47,14 @@ file and are **not** applied; if blocked, note the blocker here and move on.
       index, LearnedOption-specific RLS so globals are world-readable) — **NOT applied**.
       Code degrades gracefully under the current global-unique schema (create race is
       caught)._
-- [ ] **5. Enterprise privacy draft** → `/privacy` (marked draft).
+- [x] **5. Enterprise privacy draft** → `/privacy` (marked draft). _No separate draft
+      doc existed, so authored a 13-section enterprise-grade privacy policy in
+      `src/app/(public)/privacy/page.tsx`: processor/controller roles, collection, AI
+      de-identification, sub-processors, AU data residency / cross-border, security,
+      retention & deletion, data-subject rights + right-to-erasure, OAIC Notifiable Data
+      Breaches, children/vulnerable persons. Clearly marked **Draft — not in effect**
+      (banner + title + metadata), styled in Sage & Clay. Placeholders (entity, contact,
+      retention periods, sub-processor list) flagged for legal review._
 - [ ] **6. Extend `recordAudit()`** to roster / report actions.
 
 ## Notes & blockers
