@@ -50,7 +50,7 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 - [~] Rate limiting + hard spend cap — **throttle scaffolded** (`src/lib/rate-limit.ts`, Upstash REST, on `/api/generate-note`, fail-open, inert without keys). Needs Upstash keys live; hard spend cap still provider-side (AI Studio budget)
 - [x] Graceful LLM fallback + output validation (Phase C, Rule 11)
 - [x] `/api/health` (Phase F — **done**)
-- [~] Privacy policy — **placeholder route live** (`/privacy`); final copy + legal review (Privacy Act / NDIS) pending
+- [~] Privacy policy — **enterprise draft live** (`/privacy`, 13 sections, marked draft/not-in-effect); legal review (Privacy Act / NDIS) + placeholder fill (entity, contact, sub-processors, retention) pending
 - [x] Landing page + waitlist — **public marketing page live at `/`** (dashboard moved to `/dashboard`; signed-in users auto-redirect there) **with working waitlist capture** (`WaitlistSignup` table, `joinWaitlist` action, deny-by-default RLS). Placeholder copy/branding still to refine
 - [ ] `anonymiseUser()` right-to-erasure (needs full NDIS Participant fields first)
 
