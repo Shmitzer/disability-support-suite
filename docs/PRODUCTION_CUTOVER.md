@@ -81,6 +81,15 @@ psql "$DIRECT_URL" -f prisma/sql/search_vector.sql
 
 ## Phase E — Supabase Auth + RLS
 
+### E0. Restore API-role grants (live) — REQUIRED after any `--force-reset`
+`prisma db push --force-reset` / `migrate reset` drop & recreate schema `public`,
+which strips the grants Supabase gives `anon`/`authenticated`/`service_role`. Skip
+this and the Data API + auth fail with *"permission denied for schema public"*.
+```bash
+psql "$DIRECT_URL" -f prisma/sql/grant_api_roles.sql   # BEFORE auth_hook.sql
+```
+RLS is unaffected — this only restores schema/table access so RLS can run on top.
+
 ### E1. JWT org claim (live)
 Install the **Custom Access Token hook** that looks up the user's `organisationId`
 from `Worker` and injects it as a **top-level, signed `organisationId` claim**
