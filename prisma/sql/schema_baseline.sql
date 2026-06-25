@@ -31,6 +31,7 @@ CREATE TABLE "Organisation" (
     "stripeCustomerId" TEXT,
     "subscriptionStatus" TEXT,
     "autoSuggestCap" INTEGER NOT NULL DEFAULT 3,
+    "cairaEnabled" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

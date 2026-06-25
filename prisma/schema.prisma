@@ -46,6 +46,10 @@ model Organisation {
   // Max AUTOMATIC AI entry-prompt suggestions per shift (admin-tunable). Manual taps
   // are never capped. See src/lib/org-settings.ts + the auto-suggest in ShiftTracker.
   autoSuggestCap     Int      @default(3)
+  // Whether the Caira character system (nav logo, assistant + recording overlays,
+  // character-driven empty/loading/error states) is shown for this org's users.
+  // Admin-tunable; defaults on. See src/lib/org-settings.ts + the root layout gate.
+  cairaEnabled       Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @default(now()) @updatedAt
 }

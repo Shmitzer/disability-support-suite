@@ -5,6 +5,8 @@ import "@/components/caira/caira.css";
 import { APP_NAME } from "@/lib/brand";
 import { sectorLabels } from "@/lib/sector-config";
 import { PostHogInit } from "@/components/PostHogInit";
+import { getCurrentUser } from "@/lib/session";
+import { getOrgCairaEnabled } from "@/lib/org-settings";
 import { CairaProvider } from "@/components/caira/CairaContext";
 import CairaBar from "@/components/caira/CairaBar";
 import CairaAIOverlay from "@/components/caira/CairaAIOverlay";
@@ -32,23 +34,29 @@ export const metadata: Metadata = {
 
 // Root layout: html/body/fonts only. The authenticated chrome (nav, sign-out)
 // lives in (protected)/layout.tsx; the login screen lives in (public).
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The Caira character system is an org-wide setting (admins can switch it off for
+  // all their users). getCurrentUser() is cache()d, so this is deduped with the
+  // protected layout. Unknown org (e.g. pre-auth) falls back to the default (on).
+  const user = await getCurrentUser();
+  const cairaEnabled = await getOrgCairaEnabled(user?.organisationId);
+
   return (
     <html
       lang="en"
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col pt-[58px]">
+      <body className={`flex min-h-full flex-col ${cairaEnabled ? "pt-[58px]" : ""}`}>
         <PostHogInit />
-        <CairaProvider>
-          <CairaBar />
+        <CairaProvider enabled={cairaEnabled}>
+          {cairaEnabled && <CairaBar />}
           {children}
-          <CairaAIOverlay />
-          <CairaRecordingOverlay />
+          {cairaEnabled && <CairaAIOverlay />}
+          {cairaEnabled && <CairaRecordingOverlay />}
         </CairaProvider>
       </body>
     </html>

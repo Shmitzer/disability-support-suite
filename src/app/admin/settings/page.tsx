@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { APP_NAME } from "@/lib/brand";
 import { getCurrentUser } from "@/lib/session";
 import { can, Capability } from "@/lib/rbac";
-import { getOrgAutoSuggestCap } from "@/lib/org-settings";
+import { getOrgAutoSuggestCap, getOrgCairaEnabled } from "@/lib/org-settings";
 import { OrgSettingsForm } from "@/components/OrgSettingsForm";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,10 @@ export default async function AdminSettingsPage() {
   if (!worker) notFound();
   if (!can(worker.role, Capability.OrgSettingsManage)) notFound();
 
-  const autoSuggestCap = await getOrgAutoSuggestCap(worker.organisationId);
+  const [autoSuggestCap, cairaEnabled] = await Promise.all([
+    getOrgAutoSuggestCap(worker.organisationId),
+    getOrgCairaEnabled(worker.organisationId),
+  ]);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-6 py-10">
@@ -28,7 +31,7 @@ export default async function AdminSettingsPage() {
           ← Dashboard
         </Link>
       </div>
-      <OrgSettingsForm initialCap={autoSuggestCap} />
+      <OrgSettingsForm initialCap={autoSuggestCap} initialCairaEnabled={cairaEnabled} />
     </main>
   );
 }
