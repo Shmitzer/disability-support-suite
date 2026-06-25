@@ -158,13 +158,20 @@ export function ShiftTracker({
     finalRef.current = "";
 
     recognition.onresult = (event) => {
+      // Rebuild from the WHOLE results list every event — never append. With
+      // continuous=true, Chrome re-reports already-final results across events, so
+      // incremental appending duplicates them ("testing testing testing…"). The
+      // results list is authoritative; recomputing each time is dedupe-by-design.
+      let finalText = "";
       let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i];
-        if (result.isFinal) finalRef.current += result[0].transcript;
-        else interim += result[0].transcript;
+        const transcript = result[0].transcript;
+        if (result.isFinal) finalText += transcript;
+        else interim += transcript;
       }
-      setVoiceNote(baseRef.current + finalRef.current + interim);
+      finalRef.current = finalText;
+      setVoiceNote(joinTranscript(baseRef.current, finalText + interim));
     };
     recognition.onerror = (event) => {
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
@@ -175,7 +182,7 @@ export function ShiftTracker({
       // other errors (e.g. "aborted", "network") fall through to onend
     };
     recognition.onend = () => {
-      const text = (baseRef.current + finalRef.current).trim();
+      const text = joinTranscript(baseRef.current, finalRef.current).trim();
       setVoiceNote(text);
       if (text) lsSet(voiceBackupKey, text);
       recognitionRef.current = null;
@@ -519,6 +526,13 @@ function hasTile(key: string): boolean {
 function nowHHMM(): string {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+// Join the pre-existing note text with freshly transcribed text, collapsing the
+// run of spaces this can create at the seam (and between speech segments) so words
+// never run together or get double-spaced.
+function joinTranscript(base: string, body: string): string {
+  return `${base}${body}`.replace(/[ \t]{2,}/g, " ");
 }
 
 // Save button: disabled while the action is mid-flight so a double-tap can't log twice.
