@@ -8,27 +8,35 @@
 import { AmountPicker } from "@/components/AmountPicker";
 import { OptionPicker } from "@/components/OptionPicker";
 import { findCategory, type DetailGroup, type LogAmount } from "@/lib/log-categories";
+import { isNeedGroupVisible, type CareProfile } from "@/lib/care-needs";
 
 export function DetailFields({
   category,
   learnedOptions,
   values,
   onGroupChange,
+  supportNeeds,
 }: {
   category: string;
   learnedOptions: Record<string, string[]>;
   values: Record<string, string[]>;
   onGroupChange: (key: string, vals: string[]) => void;
+  // The participant's support-need flags — filters need-gated (`needWhen`) groups.
+  // Omitted/null = show all (legacy / unconfigured).
+  supportNeeds?: string[] | null;
 }) {
   const cat = findCategory(category);
+  const profile: CareProfile = supportNeeds ? { conditions: [], supportNeeds } : null;
 
   // Revamped categories use option groups (single/multi pickers) + optional amount
   // + optional free-text fields. A self-learning group (`learn`) pulls its options
   // from the DB; group values are held by the parent so `showWhen` can react.
   if (cat?.groups) {
+    // Drop need-gated groups the participant's profile doesn't enable.
+    const groups = cat.groups.filter((g) => isNeedGroupVisible(g, profile));
     return (
       <GroupFields
-        groups={cat.groups}
+        groups={groups}
         amount={cat.amount}
         textFields={cat.textFields}
         learnedOptions={learnedOptions}

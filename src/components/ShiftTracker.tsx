@@ -44,13 +44,22 @@ export function ShiftTracker({
   shiftId,
   learnedOptions,
   timeline,
+  visibleKeys,
+  supportNeeds,
 }: {
   shiftId: string;
   // Approved options for each self-learning group (e.g. { drink: [...] }).
   learnedOptions: Record<string, string[]>;
   // The shift history, rendered into the Timeline tab.
   timeline?: ReactNode;
+  // Category keys this participant's care profile enables. Omitted = show all
+  // (legacy / unconfigured). The tile grid is TILE_KEYS ∩ visibleKeys.
+  visibleKeys?: string[];
+  // The participant's support-need flags, for filtering need-gated sub-groups.
+  supportNeeds?: string[] | null;
 }) {
+  // Tiles to show: the curated tile order, narrowed to what the profile enables.
+  const tiles = visibleKeys ? TILE_KEYS.filter((k) => visibleKeys.includes(k)) : TILE_KEYS;
   const [view, setView] = useState<View>("capture");
   // Which category's detail panel is open (null = the tile grid).
   const [selected, setSelected] = useState<string | null>(null);
@@ -380,7 +389,7 @@ export function ShiftTracker({
               Tap a category to log — or tap the mic for a voice note
             </p>
             <div className="grid grid-cols-3 gap-2.5">
-              {TILE_KEYS.map((key) => {
+              {tiles.map((key) => {
                 const c = findCategory(key);
                 if (!c) return null;
                 return (
@@ -441,6 +450,7 @@ export function ShiftTracker({
               learnedOptions={learnedOptions}
               values={groupValues}
               onGroupChange={(k, v) => setGroupValues((s) => ({ ...s, [k]: v }))}
+              supportNeeds={supportNeeds}
             />
 
             <label className="text-sm font-medium text-foreground">

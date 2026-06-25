@@ -23,6 +23,8 @@ import { ShiftTimeline } from "@/components/ShiftTimeline";
 import { ReportPanel } from "@/components/ReportPanel";
 import { buildShiftSourceLog } from "@/lib/report";
 import { getApprovedOptions } from "@/lib/learned-options";
+import { getCareProfile } from "@/lib/care-profile";
+import { visibleCategoryKeys } from "@/lib/care-needs";
 import { LOG_CATEGORIES } from "@/lib/log-categories";
 import { signStoredPhotos } from "@/lib/storage";
 
@@ -79,6 +81,12 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
     const approved = await getApprovedOptions(g.key, worker.organisationId);
     learnedOptions[g.key] = approved.length > 0 ? approved : g.options;
   }
+
+  // Participant-tailored chips: resolve which capture categories this participant's
+  // care profile enables (null profile / unapplied table → all categories).
+  const careProfile = await getCareProfile(shift.participantId);
+  const visibleKeys = visibleCategoryKeys(careProfile);
+  const supportNeeds = careProfile?.supportNeeds ?? null;
 
   // The live timeline (clock on/off milestones + logged entries). Rendered inside the
   // tracker's Timeline tab while logging, or on its own once the shift is finished.
@@ -164,7 +172,13 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
       {/* Capture: the Caira tracker (Mic/Capture/Timeline) — only while the shift is
           running and it's yours. The Timeline tab renders the live shift history. */}
       {canLog ? (
-        <ShiftTracker shiftId={shift.id} learnedOptions={learnedOptions} timeline={timelineEl} />
+        <ShiftTracker
+          shiftId={shift.id}
+          learnedOptions={learnedOptions}
+          timeline={timelineEl}
+          visibleKeys={visibleKeys}
+          supportNeeds={supportNeeds}
+        />
       ) : (
         <>
           <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-muted">
