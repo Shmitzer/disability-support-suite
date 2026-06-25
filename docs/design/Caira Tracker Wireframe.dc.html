@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body { margin:0; background:#dfe2e6; font-family:'Figtree',sans-serif; }
+::-webkit-scrollbar { width:0; height:0; }
+.lbl { font:700 9px 'Figtree'; letter-spacing:.10em; color:#9aa1ab; }
+.box { background:#eef0f2; border:1.5px solid #dde1e6; border-radius:14px; }
+.bar { background:#e4e7ea; border-radius:6px; }
+</style>
+</helmet>
+<div style="min-height:100vh; display:flex; justify-content:center; align-items:flex-start; gap:46px; padding:34px 20px 56px;">
+
+  <!-- PHONE -->
+  <div style="width:330px; height:712px; background:#fff; border-radius:42px; border:2px solid #c2c7ce; overflow:hidden; display:flex; flex-direction:column; position:relative; box-shadow:0 16px 40px rgba(40,44,52,.12); flex:none;">
+
+    <!-- status -->
+    <div style="height:30px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 24px;"><div class="bar" style="width:34px; height:8px;"></div><div class="bar" style="width:44px; height:8px;"></div></div>
+
+    <!-- app bar: LOGO + soft on-call -->
+    <div style="height:46px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid #f1f3f5;">
+      <span style="display:flex; align-items:center; gap:8px;">
+        <span style="width:26px; height:26px; border-radius:8px; background:#cfd8d4; display:flex; align-items:center; justify-content:center;"><span style="width:11px; height:11px; border-radius:50% 50% 50% 2px; background:#8fa39b; transform:rotate(45deg);"></span></span>
+        <span style="font:800 15px 'Figtree'; color:#aab0b8; letter-spacing:-.01em;">caira</span>
+      </span>
+      <span style="height:30px; padding:0 10px 0 9px; border-radius:999px; background:#f3eee7; border:1px solid #ece4d8; display:flex; align-items:center; gap:7px;">
+        <span style="width:18px; height:18px; border-radius:50%; background:#e3d6c8; display:flex; align-items:center; justify-content:center;"><span style="width:6px; height:6px; border-radius:50%; background:#bfa491;"></span></span>
+        <span class="lbl" style="color:#a59683;">CALL ON-CALL</span>
+      </span>
+    </div>
+
+    <!-- PARTICIPANT — generous portrait + identity -->
+    <div style="padding:14px 16px 4px; flex:none;">
+      <div style="background:#f6f7f8; border:1.5px solid #e9ecef; border-radius:18px; padding:14px; display:flex; align-items:center; gap:14px;">
+        <div style="width:74px; height:74px; border-radius:18px; background:#e4e7ea; border:1.5px solid #d6dadf; flex:none;"></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+          <div class="bar" style="width:96px; height:14px; background:#d6dadf;"></div>
+          <div class="bar" style="width:130px; height:8px; opacity:.8;"></div>
+          <div style="display:inline-flex; align-items:center; gap:6px; margin-top:2px;"><span style="width:7px; height:7px; border-radius:50%; background:#9fc2ae;"></span><span class="lbl">ON SHIFT · 07:31</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEY CONTACTS near portrait -->
+    <div style="padding:8px 16px 2px; flex:none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;"><span class="lbl">KEY CONTACTS</span></div>
+      <div style="display:flex; gap:8px;">
+        <div style="flex:1; height:54px; border-radius:13px; background:#f6f7f8; border:1.5px solid #e9ecef; display:flex; align-items:center; gap:8px; padding:0 10px;">
+          <span style="width:30px; height:30px; border-radius:50%; background:#e4e7ea; flex:none;"></span>
+          <span style="display:flex; flex-direction:column; gap:4px;"><span class="lbl" style="color:#8a919b;">COORD.</span><span class="bar" style="width:34px; height:6px;"></span></span>
+          <span style="margin-left:auto; width:24px; height:24px; border-radius:8px; background:#e6ddd2; flex:none;"></span>
+        </div>
+        <div style="flex:1; height:54px; border-radius:13px; background:#f6f7f8; border:1.5px solid #e9ecef; display:flex; align-items:center; gap:8px; padding:0 10px;">
+          <span style="width:30px; height:30px; border-radius:50%; background:#e4e7ea; flex:none;"></span>
+          <span style="display:flex; flex-direction:column; gap:4px;"><span class="lbl" style="color:#8a919b;">NOK</span><span class="bar" style="width:30px; height:6px;"></span></span>
+          <span style="margin-left:auto; width:24px; height:24px; border-radius:8px; background:#e6ddd2; flex:none;"></span>
+        </div>
+        <div style="width:50px; height:54px; border-radius:13px; background:#f6f7f8; border:1.5px solid #e9ecef; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;">
+          <span class="lbl" style="color:#8a919b;">GP</span><span style="width:24px; height:24px; border-radius:8px; background:#e6ddd2;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- body -->
+    <div style="flex:1; padding:12px 14px 0; display:flex; flex-direction:column; min-height:0;">
+      <!-- toggle: MIC · CAPTURE · TIMELINE -->
+      <div style="display:grid; grid-template-columns:46px 1fr 1fr; gap:4px; padding:4px; background:#eef0f2; border-radius:13px; flex:none;">
+        <div style="height:30px; border-radius:9px; border:1.5px dashed #b9bfc7; display:flex; align-items:center; justify-content:center;"><div style="width:10px; height:14px; border-radius:5px; background:#aeb4bd;"></div></div>
+        <div style="height:30px; border-radius:9px; background:#c4c9d0; display:flex; align-items:center; justify-content:center;" class="lbl">CAPTURE</div>
+        <div style="height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center;" class="lbl">TIMELINE</div>
+      </div>
+
+      <!-- categories: compact fixed-height chips -->
+      <div style="margin-top:11px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; flex:none;">
+        <div class="box" style="height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;"><span style="width:30px; height:30px; border-radius:50%; background:#e0e3e7;"></span><span class="bar" style="width:30px; height:6px;"></span></div>
+        <div class="box" style="height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;"><span style="width:30px; height:30px; border-radius:50%; background:#e0e3e7;"></span><span class="bar" style="width:30px; height:6px;"></span></div>
+        <div class="box" style="height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;"><span style="width:30px; height:30px; border-radius:50%; background:#e0e3e7;"></span><span class="bar" style="width:30px; height:6px;"></span></div>
+        <div class="box" style="height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;"><span style="width:30px; height:30px; border-radius:50%; background:#e0e3e7;"></span><span class="bar" style="width:30px; height:6px;"></span></div>
+        <div class="box" style="height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;"><span style="width:30px; height:30px; border-radius:50%; background:#e0e3e7;"></span><span class="bar" style="width:30px; height:6px;"></span></div>
+        <div class="box" style="height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;"><span style="width:30px; height:30px; border-radius:50%; background:#e0e3e7;"></span><span class="bar" style="width:30px; height:6px;"></span></div>
+      </div>
+    </div>
+
+    <!-- footer: incident sits low, clear of the chips -->
+    <div style="flex:none; padding:11px 14px 16px; border-top:1px solid #f1f3f5; display:flex; flex-direction:column; gap:9px;">
+      <!-- incident: quiet bar, moved down to avoid accidental chip taps -->
+      <div style="height:44px; flex:none; border-radius:14px; border:1.5px solid #e7d2cc; background:#f9f1ef; display:flex; align-items:center; gap:10px; padding:0 15px;">
+        <span style="width:8px; height:8px; border-radius:50%; background:#d2a596;"></span>
+        <span class="lbl" style="color:#ad9087;">REPORT AN INCIDENT</span>
+      </div>
+      <div style="height:50px; border-radius:15px; background:#e4e7ea; display:flex; align-items:center; justify-content:center;" class="lbl">FINISH SHIFT</div>
+    </div>
+  </div>
+
+  <!-- notes -->
+  <div style="width:264px; padding-top:6px;">
+    <div style="font:800 15px 'Figtree'; color:#2b2f36; margin-bottom:14px;">This pass</div>
+    <div style="display:flex; flex-direction:column; gap:15px;">
+      <div><div style="font:700 10px 'Figtree'; letter-spacing:.06em; color:#8fa39b;">LOGO</div><div style="font:500 12.5px 'Figtree'; color:#6b7280; line-height:1.5; margin-top:4px;">Caira mark + wordmark sits top-left in a slim app bar; on-call call pill on the right.</div></div>
+      <div><div style="font:700 10px 'Figtree'; letter-spacing:.06em; color:#9aa1ab;">PORTRAIT</div><div style="font:500 12.5px 'Figtree'; color:#6b7280; line-height:1.5; margin-top:4px;">Bigger participant card — large portrait + name + live shift status, so it's instantly clear who you're with.</div></div>
+      <div><div style="font:700 10px 'Figtree'; letter-spacing:.06em; color:#9aa1ab;">CONTACTS</div><div style="font:500 12.5px 'Figtree'; color:#6b7280; line-height:1.5; margin-top:4px;">Key people (Coordinator, Next-of-kin, GP) as one-tap call chips right below the portrait.</div></div>
+      <div><div style="font:700 10px 'Figtree'; letter-spacing:.06em; color:#9aa1ab;">CHIPS</div><div style="font:500 12.5px 'Figtree'; color:#6b7280; line-height:1.5; margin-top:4px;">Categories back to compact fixed-height tiles (icon + label) — no more tall stretch, still big tap targets.</div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

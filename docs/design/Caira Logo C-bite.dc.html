@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; font-family:'Figtree',sans-serif; }
+.card { background:#fff; border:1px solid #e7e9ed; border-radius:22px; box-shadow:0 8px 28px rgba(30,34,42,.07); padding:24px; display:flex; flex-direction:column; }
+.nm { font:800 17px 'Bricolage Grotesque'; color:#23272e; }
+.rat { font:600 12px 'Figtree'; color:#8a909a; margin-top:4px; line-height:1.5; min-height:38px; }
+.tile { width:100px; height:100px; border-radius:25px; display:flex; align-items:center; justify-content:center; }
+.lock { display:flex; align-items:center; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid #f0f1f4; }
+.word { font:800 26px 'Bricolage Grotesque'; color:#0f766e; letter-spacing:-.01em; }
+svg { display:block; overflow:visible; }
+</style>
+</helmet>
+
+<div style="position:absolute; left:60px; top:26px; width:1100px;">
+  <div data-drags-parent="1" style="font:800 16px 'Figtree'; color:#3a3128;">CAIRA · SOLID HEART, “C” BITE</div>
+  <div data-drags-parent="1" style="font:600 13px 'Figtree'; color:#9aa1ab; margin-top:4px;">A solid heart with a small “C” taken out as negative space. Four positions / sizes of the bite.</div>
+</div>
+
+<!-- 1 -->
+<div style="position:absolute; left:60px; top:104px; width:300px;">
+  <div data-drags-parent="1" class="card">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="tile" style="background:#eef5f3;"><svg width="70" height="70" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><path d="M26 21 A6 6 0 1 0 26 31" fill="none" stroke="#eef5f3" stroke-width="3" stroke-linecap="round"></path></svg></div>
+      <div class="tile" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="44" height="44" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#fff"></path><path d="M26 21 A6 6 0 1 0 26 31" fill="none" stroke="#0f766e" stroke-width="3" stroke-linecap="round"></path></svg></div>
+    </div>
+    <div class="nm" style="margin-top:16px;">1 · Tiny bite</div>
+    <div class="rat">A small C nipped into the upper-left lobe — subtle, you read “heart” first.</div>
+    <div class="lock"><svg width="32" height="32" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><path d="M26 21 A6 6 0 1 0 26 31" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"></path></svg><span class="word">Caira</span></div>
+  </div>
+</div>
+
+<!-- 2 -->
+<div style="position:absolute; left:400px; top:104px; width:300px;">
+  <div data-drags-parent="1" class="card">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="tile" style="background:#eef5f3;"><svg width="70" height="70" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><path d="M28 19 A8 8 0 1 0 28 33" fill="none" stroke="#eef5f3" stroke-width="3.6" stroke-linecap="round"></path></svg></div>
+      <div class="tile" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="44" height="44" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#fff"></path><path d="M28 19 A8 8 0 1 0 28 33" fill="none" stroke="#0f766e" stroke-width="3.6" stroke-linecap="round"></path></svg></div>
+    </div>
+    <div class="nm" style="margin-top:16px;">2 · Clear C</div>
+    <div class="rat">A larger C in the left lobe — the initial is unmistakable, still clearly a heart.</div>
+    <div class="lock"><svg width="32" height="32" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><path d="M28 19 A8 8 0 1 0 28 33" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"></path></svg><span class="word">Caira</span></div>
+  </div>
+</div>
+
+<!-- 3 -->
+<div style="position:absolute; left:740px; top:104px; width:300px;">
+  <div data-drags-parent="1" class="card">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="tile" style="background:#eef5f3;"><svg width="70" height="70" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><path d="M30 24 A7.5 7.5 0 1 0 24 36" fill="none" stroke="#eef5f3" stroke-width="3.6" stroke-linecap="round"></path></svg></div>
+      <div class="tile" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="44" height="44" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#fff"></path><path d="M30 24 A7.5 7.5 0 1 0 24 36" fill="none" stroke="#0f766e" stroke-width="3.6" stroke-linecap="round"></path></svg></div>
+    </div>
+    <div class="nm" style="margin-top:16px;">3 · Centred C</div>
+    <div class="rat">The C sits low and central, tilted to follow the heart — reads as one fused glyph.</div>
+    <div class="lock"><svg width="32" height="32" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><path d="M30 24 A7.5 7.5 0 1 0 24 36" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"></path></svg><span class="word">Caira</span></div>
+  </div>
+</div>
+
+<!-- 4 -->
+<div style="position:absolute; left:1080px; top:104px; width:300px;">
+  <div data-drags-parent="1" class="card">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="tile" style="background:#eef5f3;"><svg width="70" height="70" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><path d="M26 21 A6 6 0 1 0 26 31" fill="none" stroke="#eef5f3" stroke-width="3" stroke-linecap="round"></path><path d="M26 21 A6 6 0 1 0 26 31" fill="none" stroke="#df5b40" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 30" stroke-dashoffset="0" opacity="0"></path></svg></div>
+      <div class="tile" style="background:#fdf6ef; width:64px; height:64px; border-radius:17px;"><svg width="44" height="44" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><circle cx="20" cy="26" r="3" fill="#df5b40"></circle><path d="M26 21 A6 6 0 1 0 26 31" fill="none" stroke="#fdf6ef" stroke-width="3" stroke-linecap="round"></path></svg></div>
+    </div>
+    <div class="nm" style="margin-top:16px;">4 · Bite + spark</div>
+    <div class="rat">Tiny-bite heart, with a small clay dot tucked inside the C — a person held within.</div>
+    <div class="lock"><svg width="32" height="32" viewBox="0 0 64 64"><path d="M32 47 C14 36 10 23 20 17 C26 13.5 31 17 32 21 C33 17 38 13.5 44 17 C54 23 50 36 32 47 Z" fill="#0f766e"></path><circle cx="20" cy="26" r="3" fill="#df5b40"></circle><path d="M26 21 A6 6 0 1 0 26 31" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"></path></svg><span class="word">Caira</span></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

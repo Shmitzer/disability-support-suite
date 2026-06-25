@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+.card { background:#fff; border:1px solid #e7e9ed; border-radius:20px; box-shadow:0 6px 22px rgba(30,34,42,.06); }
+.h { font:800 17px 'Bricolage Grotesque',sans-serif; color:#23272e; }
+.sub { font:500 12px 'Figtree',sans-serif; color:#8a909a; }
+.cap { font:600 11px 'Figtree',sans-serif; color:#5b626c; }
+.cell { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.grid { display:grid; grid-template-columns:repeat(6, 1fr); gap:18px 10px; }
+svg { display:block; }
+</style>
+</helmet>
+
+<!-- ============ STYLE COMPARISON ============ -->
+<div style="position:absolute; left:60px; top:64px; width:760px; font-family:'Figtree',sans-serif;">
+  <div data-drags-parent="1" style="margin-bottom:6px;" class="h">Icon styles · same four icons, four treatments</div>
+  <div data-drags-parent="1" class="sub" style="margin-bottom:20px;">Food · Drink · Medication · Activity — pick the family that feels right, then we apply it across the set.</div>
+
+  <div style="display:flex; flex-direction:column; gap:16px;">
+
+    <!-- S1 LINE -->
+    <div class="card" style="padding:18px 20px; display:flex; align-items:center; gap:24px;">
+      <div style="width:150px; flex:none;"><div class="cap" style="font-weight:800; color:#23272e;">1 · Soft line</div><div class="sub" style="margin-top:3px;">Rounded strokes, airy. Calm + modern.</div></div>
+      <div style="display:flex; gap:30px; align-items:center;">
+        <div style="width:46px; height:46px; display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3a3128" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></svg></div>
+        <div style="width:46px; height:46px; display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3a3128" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></svg></div>
+        <div style="width:46px; height:46px; display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3a3128" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+        <div style="width:46px; height:46px; display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3a3128" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.8"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></svg></div>
+      </div>
+    </div>
+
+    <!-- S2 SOFT TINTED -->
+    <div class="card" style="padding:18px 20px; display:flex; align-items:center; gap:24px;">
+      <div style="width:150px; flex:none;"><div class="cap" style="font-weight:800; color:#23272e;">2 · Tinted soft <span style="color:#0f766e;">●</span></div><div class="sub" style="margin-top:3px;">Line on a coloured pillow. Current Caira look.</div></div>
+      <div style="display:flex; gap:30px; align-items:center;">
+        <div style="width:46px; height:46px; border-radius:50%; background:#fdecc8; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b07d2a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></svg></div>
+        <div style="width:46px; height:46px; border-radius:50%; background:#d3eeec; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15807a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></svg></div>
+        <div style="width:46px; height:46px; border-radius:50%; background:#f7dce8; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b2407a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+        <div style="width:46px; height:46px; border-radius:50%; background:#d8efdb; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2f7d4f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.8"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></svg></div>
+      </div>
+    </div>
+
+    <!-- S3 SOLID BADGE -->
+    <div class="card" style="padding:18px 20px; display:flex; align-items:center; gap:24px;">
+      <div style="width:150px; flex:none;"><div class="cap" style="font-weight:800; color:#23272e;">3 · Solid badge</div><div class="sub" style="margin-top:3px;">White glyph on full colour. Punchy, high-contrast.</div></div>
+      <div style="display:flex; gap:30px; align-items:center;">
+        <div style="width:46px; height:46px; border-radius:14px; background:#e0982f; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></svg></div>
+        <div style="width:46px; height:46px; border-radius:14px; background:#15807a; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></svg></div>
+        <div style="width:46px; height:46px; border-radius:14px; background:#c44d86; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+        <div style="width:46px; height:46px; border-radius:14px; background:#2f7d4f; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.8"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></svg></div>
+      </div>
+    </div>
+
+    <!-- S4 DUOTONE -->
+    <div class="card" style="padding:18px 20px; display:flex; align-items:center; gap:24px;">
+      <div style="width:150px; flex:none;"><div class="cap" style="font-weight:800; color:#23272e;">4 · Duotone fill</div><div class="sub" style="margin-top:3px;">Filled silhouette + accent. Friendly, chunky.</div></div>
+      <div style="display:flex; gap:30px; align-items:center;">
+        <div style="width:46px; height:46px; display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M6 3v7a2 2 0 0 0 4 0V3" fill="none" stroke="#d99a3a" stroke-width="2.4" stroke-linecap="round"/><rect x="7" y="9" width="2" height="12" rx="1" fill="#3a3128"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3" fill="none" stroke="#3a3128" stroke-width="2.4" stroke-linecap="round"/><rect x="15" y="11" width="2" height="10" rx="1" fill="#3a3128"/></svg></div>
+        <div style="width:46px; height:46px; display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z" fill="#bfe6e2"/><path d="M6.4 9h11.2" fill="none" stroke="#15807a" stroke-width="2"/><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z" fill="none" stroke="#15807a" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+        <div style="width:46px; height:46px; display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)" fill="#f3c9dd"/><path d="M12 5.5 5.5 12" stroke="#c44d86" stroke-width="7" stroke-linecap="round" opacity=".0"/><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)" fill="none" stroke="#c44d86" stroke-width="1.8"/><line x1="9" y1="9" x2="15" y2="15" stroke="#c44d86" stroke-width="1.8"/></svg></div>
+        <div style="width:46px; height:46px; display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24"><circle cx="13" cy="4.5" r="2.3" fill="#3a7d57"/><path d="M12 9l-2.5 4 3 2.5L11 21" fill="none" stroke="#3a7d57" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9l3.5 1.5L18 9" fill="none" stroke="#9ccaae" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9l-4 1" fill="none" stroke="#9ccaae" stroke-width="2.4" stroke-linecap="round"/></svg></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ ICON LIBRARY (RANGE) ============ -->
+<div style="position:absolute; left:880px; top:64px; width:520px; font-family:'Figtree',sans-serif;">
+  <div data-drags-parent="1" style="margin-bottom:6px;" class="h">Icon library · the broader range</div>
+  <div data-drags-parent="1" class="sub" style="margin-bottom:20px;">Beyond the current six — extra concepts for when chips change. Shown in style 2.</div>
+  <div class="card" style="padding:26px 22px;">
+    <div class="grid">
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#fdecc8; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b07d2a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></svg></div><span class="cap">Food</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#d3eeec; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15807a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></svg></div><span class="cap">Drink</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#e3e7f5; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4d5b9e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6 6 11a6 6 0 0 1-12 0c0-5 6-11 6-11z"/></svg></div><span class="cap">Hygiene</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#d8efdb; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2f7d4f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.8"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></svg></div><span class="cap">Activity</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#d3eeea; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#157a6e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M9 17v3"/><path d="M15 17v3"/></svg></div><span class="cap">Toilet</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#f7dce8; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b2407a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><span class="cap">Medication</span></div>
+
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#e6e2f0; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6b5b95" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13A8 8 0 1 1 11 4a6 6 0 0 0 9 9z"/></svg></div><span class="cap">Sleep</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#fde9cf; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#c97a2a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4 4 0 0 0 7 0"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></svg></div><span class="cap">Mood</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#fbdcd4; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#c2563f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.4-9.2-9A5.2 5.2 0 0 1 12 6.5 5.2 5.2 0 0 1 21.2 12c-2.2 4.6-9.2 9-9.2 9z"/></svg></div><span class="cap">Pain</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#dceae0; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3a7d57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg></div><span class="cap">Vitals</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#d6e7f2; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3a6f93" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg></div><span class="cap">Appointment</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#e3eddb; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5a7a36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M16.5 6.5H10a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H6.5"/></svg></div><span class="cap">Finance</span></div>
+
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#dde7e9; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4a7480" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l2-5h10l2 5"/><path d="M5 11h14v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><circle cx="8" cy="14" r="1"/><circle cx="16" cy="14" r="1"/></svg></div><span class="cap">Transport</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#f0e3d4; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a8743a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6"/><path d="M17.5 20a5.5 5.5 0 0 0-3-4.9"/></svg></div><span class="cap">Social</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#e7e2dc; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6b6157" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/></svg></div><span class="cap">Note</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#dfe7ee; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#456585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M4 9h3l1.5-2.5a9 9 0 0 1 7 0L20 9h0"/><path d="M4 9v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/></svg></div><span class="cap">Behaviour</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#f7e3dd; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#c2563f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 16.5H2.5L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><span class="cap">Incident</span></div>
+      <div class="cell"><div style="width:50px; height:50px; border-radius:50%; background:#dbe7e3; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#157a6e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div><span class="cap">Voice</span></div>
+    </div>
+  </div>
+  <div data-drags-parent="1" class="sub" style="margin-top:14px; line-height:1.6;">Tell me which style (1–4) and I'll redraw every icon in it. Swapping, adding or renaming concepts is easy from here.</div>
+</div>
+</x-dc>
+</body>
+</html>

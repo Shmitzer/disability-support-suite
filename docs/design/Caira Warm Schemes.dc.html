@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body { margin:0; background:#e8e9ec; font-family:'Figtree',sans-serif; }
+</style>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-wrap:wrap; gap:42px; justify-content:center; align-items:flex-start; padding:34px 20px 56px;">
+
+  <div style="width:392px; background:#ffffff; border-radius:22px; box-shadow:0 10px 30px rgba(30,30,40,.08); padding:24px 22px; display:flex; flex-direction:column; gap:20px;">
+    <div>
+      <div style="font:800 18px 'Figtree'; color:#1f2937;">Choose a palette</div>
+      <div style="font:500 12px 'Figtree'; color:#8b93a1; margin-top:3px;">16 presets across four families · tap to preview live</div>
+    </div>
+    <sc-for list="{{ families }}" as="f" hint-placeholder-count="4">
+      <div style="display:flex; flex-direction:column; gap:11px;">
+        <div style="display:flex; align-items:baseline; gap:8px;">
+          <span style="font:800 11px 'Figtree'; letter-spacing:.10em; color:#374151;">{{ f.name }}</span>
+          <span style="font:500 10px 'Figtree'; color:#9aa1ad;">{{ f.note }}</span>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px;">
+          <sc-for list="{{ f.items }}" as="s" hint-placeholder-count="4">
+            <button onClick="{{ s.onPick }}" style="display:flex; flex-direction:column; align-items:center; gap:6px; background:none; border:none; cursor:pointer; padding:3px 2px;">
+              <span style="width:46px; height:46px; border-radius:50%; background:{{ s.surface }}; border:{{ s.ring }}; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,.10);">
+                <span style="width:17px; height:17px; border-radius:50%; background:{{ s.primary }};"></span>
+                <span style="width:17px; height:17px; border-radius:50%; background:{{ s.accent }}; margin-left:-5px;"></span>
+              </span>
+              <span style="display:flex; align-items:center; gap:3px;">
+                <span style="font:700 8px 'Figtree'; color:#aab0bb;">{{ s.tag }}</span>
+                <span style="font:600 9px 'Figtree'; color:#404a59; text-align:center; line-height:1.15;">{{ s.label }}</span>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex; flex-direction:column; align-items:center; gap:13px;">
+    <div style="font:700 12px 'Figtree'; letter-spacing:.04em; color:#5b6472;">{{ familyName }} · <span style="color:#1f2937;">{{ schemeName }}</span></div>
+    <div style="width:330px; height:660px; background:{{ bg }}; border-radius:42px; border:10px solid #221d17; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 30px 60px rgba(40,30,18,.22);">
+      <div style="background:{{ surface }}; padding:20px 18px 18px; display:flex; flex-direction:column; align-items:center; position:relative; border-bottom:1px solid {{ line }};">
+        <div style="position:absolute; left:16px; top:18px; width:32px; height:32px; border-radius:10px; background:{{ backBtn }};"></div>
+        <div style="position:absolute; right:16px; top:16px; width:48px; height:48px; border-radius:50%; background:{{ accent }}; box-shadow:0 6px 14px rgba(0,0,0,.18);"></div>
+        <div style="width:56px; height:56px; border-radius:50%; background:{{ bar11 }}; box-shadow:0 0 0 2px {{ primary }};"></div>
+        <div style="margin-top:13px; width:92px; height:12px; border-radius:6px; background:{{ bar22 }};"></div>
+        <div style="margin-top:9px; width:138px; height:8px; border-radius:5px; background:{{ bar11 }};"></div>
+        <div style="margin-top:12px; width:160px; height:20px; border-radius:999px; background:{{ pill }};"></div>
+      </div>
+      <div style="padding:15px; display:flex; flex-direction:column; gap:11px; flex:1;">
+        <div style="display:flex; gap:4px; padding:4px; background:{{ track }}; border-radius:13px;">
+          <div style="flex:1; height:32px; border-radius:10px; background:{{ primary }};"></div>
+          <div style="flex:1; height:32px; border-radius:10px;"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px;">
+          <sc-for list="{{ chips }}" as="c" hint-placeholder-count="6">
+            <div style="height:66px; border-radius:17px; background:{{ chipBg }}; border:1px solid {{ line }}; display:flex; align-items:center; justify-content:center;">
+              <span style="width:28px; height:28px; border-radius:50%; background:{{ primary }}; opacity:.85;"></span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="height:46px; border-radius:17px; border:2px solid #d9533a; background:{{ incidentBg }};"></div>
+        <div style="display:flex; justify-content:center;">
+          <div style="width:54px; height:54px; border-radius:50%; background:{{ accent }}; box-shadow:0 8px 18px rgba(0,0,0,.18);"></div>
+        </div>
+        <div style="height:44px; border-radius:15px; background:{{ finishBar }}; margin-top:auto;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 820, &quot;height&quot;: 760}, &quot;scheme&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;warm_m1&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;warm_m1&quot;, &quot;warm_m2&quot;, &quot;warm_f1&quot;, &quot;warm_f2&quot;, &quot;cool_m1&quot;, &quot;cool_m2&quot;, &quot;cool_f1&quot;, &quot;cool_f2&quot;, &quot;elec_m1&quot;, &quot;elec_m2&quot;, &quot;elec_f1&quot;, &quot;elec_f2&quot;, &quot;cls_m1&quot;, &quot;cls_m2&quot;, &quot;cls_f1&quot;, &quot;cls_f2&quot;]}}">
+class Component extends DCLogic {
+  state = { scheme: null };
+
+  renderVals() {
+    const defs = {
+      // WARM
+      warm_m1: { fam: "Warm", g: "M", label: "Sage & Clay",        bg: "#f3ebdd", surface: "#fffaf2", primary: "#0f766e", accent: "#df5b40", chipBg: "#fffaf3", dark: false },
+      warm_m2: { fam: "Warm", g: "M", label: "Olive & Rust",       bg: "#efe6d5", surface: "#fdf8ec", primary: "#6f7536", accent: "#c2562f", chipBg: "#fdf8ee", dark: false },
+      warm_f1: { fam: "Warm", g: "F", label: "Blush & Plum",       bg: "#f6ece6", surface: "#fff7f3", primary: "#884a63", accent: "#d76a6a", chipBg: "#fff7f4", dark: false },
+      warm_f2: { fam: "Warm", g: "F", label: "Peach & Rose",       bg: "#f8ede4", surface: "#fff8f3", primary: "#b25b73", accent: "#e8956f", chipBg: "#fff8f4", dark: false },
+      // COOL
+      cool_m1: { fam: "Cool", g: "M", label: "Slate & Steel",      bg: "#e8edf1", surface: "#f8fafc", primary: "#2b5a7e", accent: "#3a8fb7", chipBg: "#f8fbfd", dark: false },
+      cool_m2: { fam: "Cool", g: "M", label: "Navy & Teal",        bg: "#e6ebf1", surface: "#f6f9fc", primary: "#1f3a5f", accent: "#2f9296", chipBg: "#f6fafc", dark: false },
+      cool_f1: { fam: "Cool", g: "F", label: "Lilac & Sky",        bg: "#ececf4", surface: "#f9f8fd", primary: "#6a5d9e", accent: "#5ba0d0", chipBg: "#f9f8fd", dark: false },
+      cool_f2: { fam: "Cool", g: "F", label: "Mint & Periwinkle",  bg: "#e7f0ee", surface: "#f5fbf9", primary: "#3f9d8b", accent: "#7b8fd4", chipBg: "#f6fcfa", dark: false },
+      // ELECTRIC
+      elec_m1: { fam: "Electric", g: "M", label: "Cobalt & Lime",  bg: "#0f1422", surface: "#1a2336", primary: "#3b82f6", accent: "#a3e635", chipBg: "#232e44", dark: true },
+      elec_m2: { fam: "Electric", g: "M", label: "Indigo & Cyan",  bg: "#14122b", surface: "#211f3d", primary: "#7c7ef5", accent: "#22d3ee", chipBg: "#2b2950", dark: true },
+      elec_f1: { fam: "Electric", g: "F", label: "Magenta & Violet", bg: "#1b1030", surface: "#2a1a45", primary: "#d946ef", accent: "#a78bfa", chipBg: "#352252", dark: true },
+      elec_f2: { fam: "Electric", g: "F", label: "Coral & Hot Pink", bg: "#fdeef2", surface: "#ffffff", primary: "#ec4899", accent: "#f43f5e", chipBg: "#fff5f8", dark: false },
+      // CLASSIC
+      cls_m1:  { fam: "Classic", g: "M", label: "Oxford & Claret", bg: "#ecebe7", surface: "#fafaf8", primary: "#1f3a5f", accent: "#8c2f39", chipBg: "#fafaf8", dark: false },
+      cls_m2:  { fam: "Classic", g: "M", label: "Charcoal & Brass",bg: "#eceae6", surface: "#faf9f6", primary: "#33373b", accent: "#b08433", chipBg: "#faf9f6", dark: false },
+      cls_f1:  { fam: "Classic", g: "F", label: "Ivory & Rose Gold",bg: "#f3efe9", surface: "#fffdf9", primary: "#6b4f5b", accent: "#c08a72", chipBg: "#fffdf9", dark: false },
+      cls_f2:  { fam: "Classic", g: "F", label: "Dove & Mauve",    bg: "#efecee", surface: "#fbfafb", primary: "#5d4a59", accent: "#a87f93", chipBg: "#fbfafb", dark: false },
+    };
+    const order = Object.keys(defs);
+    const active = this.state.scheme && defs[this.state.scheme] ? this.state.scheme : (defs[this.props.scheme] ? this.props.scheme : "warm_m1");
+    const p = defs[active];
+    const d = p.dark;
+
+    const swatchOf = (k) => ({
+      key: k, label: defs[k].label, tag: defs[k].g === "M" ? "♂" : "♀",
+      surface: defs[k].surface, primary: defs[k].primary, accent: defs[k].accent,
+      ring: k === active ? "3px solid " + defs[k].primary : "3px solid rgba(0,0,0,.10)",
+      onPick: () => this.setState({ scheme: k }),
+    });
+
+    const famNotes = { Warm: "earthy · grounded", Cool: "calm · clear", Electric: "vivid · high-energy", Classic: "timeless · restrained" };
+    const famOrder = ["Warm", "Cool", "Electric", "Classic"];
+    const families = famOrder.map((fam) => ({
+      name: fam.toUpperCase(),
+      note: "2 masc · 2 fem · " + famNotes[fam],
+      items: order.filter((k) => defs[k].fam === fam).map(swatchOf),
+    }));
+
+    return {
+      bg: p.bg, surface: p.surface, primary: p.primary, accent: p.accent, chipBg: p.chipBg,
+      schemeName: p.label, familyName: p.fam,
+      bar22: d ? "rgba(255,255,255,.32)" : "rgba(0,0,0,.22)",
+      bar11: d ? "rgba(255,255,255,.16)" : "rgba(0,0,0,.11)",
+      pill:  d ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.05)",
+      line:  d ? "rgba(255,255,255,.10)" : "rgba(0,0,0,.07)",
+      track: d ? "rgba(255,255,255,.10)" : "rgba(0,0,0,.05)",
+      backBtn: d ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.06)",
+      finishBar: d ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.10)",
+      incidentBg: d ? "rgba(217,83,58,.20)" : "#fbeee9",
+      families,
+      chips: [0, 1, 2, 3, 4, 5],
+    };
+  }
+}
+</script>
+</body>
+</html>
