@@ -13,7 +13,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser, getCurrentSector } from "@/lib/session";
-import { isRosteringRole } from "@/lib/enums";
+import { can, Capability } from "@/lib/rbac";
 import { sectorLabels } from "@/lib/sector-config";
 import { prisma } from "@/lib/prisma";
 import { tenantScope } from "@/lib/tenant";
@@ -23,6 +23,9 @@ import { ShiftTimeline } from "@/components/ShiftTimeline";
 import { ReportPanel } from "@/components/ReportPanel";
 import { buildShiftSourceLog } from "@/lib/report";
 import { getApprovedOptions } from "@/lib/learned-options";
+import { getCareProfile } from "@/lib/care-profile";
+import { visibleCategoryKeys } from "@/lib/care-needs";
+import { getOrgAutoSuggestCap } from "@/lib/org-settings";
 import { LOG_CATEGORIES } from "@/lib/log-categories";
 import { signStoredPhotos } from "@/lib/storage";
 
@@ -53,7 +56,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   // You can view a shift if it's yours, or you're rostering staff. Otherwise it's
   // not your business to see.
   const isOwner = shift.allocatedToId === worker.id;
-  if (!isOwner && !isRosteringRole(worker.role)) notFound();
+  if (!isOwner && !can(worker.role, Capability.ShiftReadOrg)) notFound();
 
   // Logging is allowed only on your own shift, and only while it's running.
   const canLog = isOwner && shift.status === "IN_PROGRESS";
@@ -76,9 +79,17 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   const learnedGroups = LOG_CATEGORIES.flatMap((c) => c.groups ?? []).filter((g) => g.learn);
   const learnedOptions: Record<string, string[]> = {};
   for (const g of learnedGroups) {
-    const approved = await getApprovedOptions(g.key);
+    const approved = await getApprovedOptions(g.key, worker.organisationId);
     learnedOptions[g.key] = approved.length > 0 ? approved : g.options;
   }
+
+  // Participant-tailored chips: resolve which capture categories this participant's
+  // care profile enables (null profile / unapplied table → all categories).
+  const careProfile = await getCareProfile(shift.participantId);
+  const visibleKeys = visibleCategoryKeys(careProfile);
+  const supportNeeds = careProfile?.supportNeeds ?? null;
+  // Org-tunable cap on automatic AI suggestions per shift (default 3).
+  const autoSuggestCap = await getOrgAutoSuggestCap(worker.organisationId);
 
   // The live timeline (clock on/off milestones + logged entries). Rendered inside the
   // tracker's Timeline tab while logging, or on its own once the shift is finished.
@@ -164,7 +175,15 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
       {/* Capture: the Caira tracker (Mic/Capture/Timeline) — only while the shift is
           running and it's yours. The Timeline tab renders the live shift history. */}
       {canLog ? (
-        <ShiftTracker shiftId={shift.id} learnedOptions={learnedOptions} timeline={timelineEl} />
+        <ShiftTracker
+          shiftId={shift.id}
+          learnedOptions={learnedOptions}
+          timeline={timelineEl}
+          visibleKeys={visibleKeys}
+          supportNeeds={supportNeeds}
+          shiftStartISO={shift.clockOnAt?.toISOString() ?? null}
+          autoSuggestCap={autoSuggestCap}
+        />
       ) : (
         <>
           <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-muted">

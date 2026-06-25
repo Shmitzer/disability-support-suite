@@ -16,6 +16,7 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { DEV_AUTH } from "@/lib/dev-auth";
+import { isEmailAllowed } from "@/lib/allowlist";
 import { Role, SectorMode } from "@/lib/enums";
 
 // The dev role-switch cookie: the worker id to act as (DEV_AUTH only).
@@ -61,6 +62,10 @@ export const getCurrentUser = cache(async () => {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+
+  // Allowlist gate (defence in depth alongside the proxy): a non-approved email gets
+  // no Worker row and no data. No-op unless AUTH_ALLOWLIST is set.
+  if (!isEmailAllowed(user.email)) return null;
 
   const existing = await prisma.worker.findUnique({
     where: { supabaseUserId: user.id },

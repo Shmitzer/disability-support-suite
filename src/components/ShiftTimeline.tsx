@@ -21,6 +21,7 @@ type Entry = {
   notes: string;
   photos: string | null;
   timestamp: Date;
+  derivedFromId?: string | null; // provenance: extracted from a note → "from note" badge
 };
 
 type Item =

@@ -165,6 +165,38 @@ set `DEV_AUTH=1` in `.env`, then `npx tsx prisma/seed.ts`.
 
 ---
 
+## Schema additions since the baseline — APPLY THESE NOW (existing DB)
+
+These additive migrations were added **after** the live DB was first stood up, so an
+existing database doesn't have them yet. A **fresh** apply of `schema_baseline.sql`
+already includes them — this list is for the **current live DB**. All are additive
+and **idempotent** (`IF NOT EXISTS` / guarded), so they're safe to re-run, cause no
+data loss, and are **not** `prisma db push` / `--force-reset`.
+
+Apply in this order (Supabase SQL Editor: paste each file's contents and Run; or
+`psql "$DIRECT_URL" -f <file>`). Then locally run `npx prisma generate`.
+
+> ⚠️ **Order matters for the two RLS-touching files** (`learned_options_per_org.sql`,
+> `rbac_grants.sql`): run them *after* `rls_policies.sql` (Phase E2), because they
+> drop/replace or add policies the base RLS created. The other two are independent.
+
+| # | File | What it adds | Urgency |
+|---|------|--------------|---------|
+| 1 | `prisma/sql/note_extraction.sql` | `LogEntry.derivedFromId` (+ index) — links AI-extracted entries to their source note | **REQUIRED before deploying this branch** — Prisma now selects this column on every `LogEntry` read (the shift timeline), so without it the shift page errors `P2022`. |
+| 2 | `prisma/sql/audit_hash_chain.sql` | `AuditLog.seq` / `prevHash` / `hash` — tamper-evident hash chain | **Before deploy.** `recordAudit()` writes these; it degrades to a logged error if absent, so the chain silently won't persist until applied. |
+| 3 | `prisma/sql/learned_options_per_org.sql` | per-org unique on `LearnedOption` (COALESCE), read index, LearnedOption-specific RLS (global seeds world-readable) | When per-org custom options / global-seed visibility are needed. Run after `rls_policies.sql`. |
+| 4 | `prisma/sql/rbac_grants.sql` | `Membership`, `ParticipantAccessGrant`, `Consent` tables (+ their RLS) | When wiring the participant-grant access model (external carers/guardians). Run after `rls_policies.sql`. Code (`resolvePrincipal`) tolerates their absence until then. |
+| 5 | `prisma/sql/participant_care_profile.sql` | `ParticipantCareProfile` table (condition tags + support-need flags that tailor capture chips) | Needed for per-participant chip tailoring + the care-profile editor. `getCareProfile` tolerates its absence (→ full grid), so not required to run, but apply before using the feature. Run after `rls_policies.sql` for the RLS snippet. |
+| 6 | `prisma/sql/org_auto_suggest_cap.sql` | `Organisation.autoSuggestCap` column (admin-tunable cap on automatic AI suggestions per shift) | Additive column, default 3. `getOrgAutoSuggestCap` tolerates its absence (→ default 3), so not required to run; apply before the `/admin/settings` control can persist changes. |
+
+After applying #1 and #2 the app is correct for this branch's deploy; #3 and #4 can
+follow when their features are switched on.
+
+Re-verify after applying: `npm run verify:rls` (RLS still green) and load a shift's
+timeline (confirms the `LogEntry.derivedFromId` read path works).
+
+---
+
 ## Phase F (pointer)
 Once D & E are in: `/api/health` for UptimeRobot, move photos to Supabase Storage as
 **relative paths** (Rule 3), Stripe + Stripe Tax (webhooks → AuditLog, Rule 9),

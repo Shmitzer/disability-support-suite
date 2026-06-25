@@ -22,6 +22,10 @@ import {
   validDetailsFor,
 } from "@/lib/log-categories";
 import { getApprovedOptions, recordCustomOption } from "@/lib/learned-options";
+import { extractLogItems, suggestEntryQuestions } from "@/lib/ai";
+import { mapExtractedToEntries, parseTimeOnDate, buildDetailFromGroups } from "@/lib/note-extraction";
+import { getCareProfile } from "@/lib/care-profile";
+import { visibleCategoryKeys } from "@/lib/care-needs";
 import { storageConfigured, uploadDataUrl } from "@/lib/storage";
 import { planPhotoUpdate } from "@/lib/photos";
 import { revalidatePath } from "next/cache";
@@ -51,7 +55,7 @@ export async function addLogEntry(formData: FormData) {
   // Structured detail: the picked options + amount + free-text fields, rebuilt on
   // the server (never trust the browser's text). Self-learning groups spell-match
   // and learn typed "Other" values.
-  const detail = await buildDetail(category, formData);
+  const detail = await buildDetail(category, formData, worker.organisationId);
 
   const shift = await prisma.shift.findUnique({ where: { id: shiftId } });
   // Must be this worker's own shift, and currently being worked.
@@ -182,7 +186,11 @@ function entryTimestamp(raw: FormDataEntryValue | null, base: Date = new Date())
 //   • a fixed group — picks validated against its options; a free-text "Other" (if
 //     allowed, e.g. duration "45 min") is taken as typed.
 // Categories not yet revamped fall back to the flat `details` list.
-async function buildDetail(category: string, formData: FormData): Promise<string> {
+async function buildDetail(
+  category: string,
+  formData: FormData,
+  organisationId: string | null,
+): Promise<string> {
   const cat = findCategory(category);
   const parts: string[] = [];
 
@@ -201,10 +209,10 @@ async function buildDetail(category: string, formData: FormData): Promise<string
       if (g.learn) {
         // Self-learning list (kind = the group key).
         if (custom) {
-          const name = await recordCustomOption(g.key, custom);
+          const name = await recordCustomOption(g.key, custom, organisationId);
           vals = name ? [name] : [];
         } else {
-          const approved = await getApprovedOptions(g.key);
+          const approved = await getApprovedOptions(g.key, organisationId);
           vals = formData.getAll(g.key).map((v) => String(v)).filter((v) => approved.includes(v));
         }
       } else {
@@ -277,7 +285,7 @@ export async function updateLogEntry(formData: FormData) {
 
   // If the worker re-picked the detail ("Change"), rebuild it; otherwise keep the
   // existing detail (editing just the note/time must not wipe it).
-  const rebuilt = await buildDetail(entry.category, formData);
+  const rebuilt = await buildDetail(entry.category, formData, worker.organisationId);
   const detail = rebuilt !== "" ? rebuilt : entry.detail;
 
   // The edit form submits the full photo set: existing photos (kept) + any new ones.
@@ -299,4 +307,233 @@ export async function updateLogEntry(formData: FormData) {
   });
 
   revalidatePath(`/shift/${entry.shiftId}`);
+}
+
+// =====================================================================
+// Note → structured log entries (extract → review → confirm)
+// =====================================================================
+// A free-text note (e.g. a dictated narrative) is parsed into categorised entries
+// that map onto the capture chips. The flow is two-step so the worker reviews the
+// result before anything is saved (Rule 11): extractNotePreview() reads-only and
+// returns drafts; commitExtractedEntries() writes the (possibly edited) entries
+// plus the original note as their linked parent.
+
+// One proposed entry, as shown in the review UI. `time` is "HH:MM" (editable);
+// `detail` is the assembled chip-detail string (shown read-only).
+export type NoteEntryDraft = {
+  category: string;
+  detail: string | null;
+  notes: string;
+  time: string;
+  timeEstimated: boolean; // true = model guessed the time; flag it for confirmation
+};
+
+// Suggest a few human, entry-specific clarifying questions for the thing the worker is
+// currently logging (e.g. an Activity shopping trip → "Did Sam buy anything?"). Read-
+// only; never writes. The worker answers in their note — the AI only prompts.
+export async function getEntryQuestions(
+  shiftId: string,
+  category: string,
+  groups: Record<string, string[]> | undefined,
+  note: string,
+): Promise<{ questions: string[]; error?: string }> {
+  // Rebuild the detail from the picked groups on the server (never trust the browser).
+  return entryQuestions(shiftId, category, buildDetailFromGroups(category, groups), note);
+}
+
+// Same, but for the voice-review path where we already have the assembled detail string
+// (the extracted draft) rather than the raw group picks.
+export async function getDraftQuestions(
+  shiftId: string,
+  category: string,
+  detail: string | null,
+  note: string,
+): Promise<{ questions: string[]; error?: string }> {
+  return entryQuestions(shiftId, category, detail, note);
+}
+
+// Shared core: validate the caller owns this active shift, then ask the AI for human,
+// entry-specific clarifying prompts. Suggestions are a nicety — failures return [].
+async function entryQuestions(
+  shiftId: string,
+  category: string,
+  detail: string | null,
+  note: string,
+): Promise<{ questions: string[]; error?: string }> {
+  const worker = await getCurrentWorker();
+  if (!worker || !shiftId) return { questions: [], error: "Not signed in." };
+  if (!isLogCategory(category)) return { questions: [] };
+
+  const shift = await prisma.shift.findUnique({
+    where: { id: shiftId },
+    include: { participant: true },
+  });
+  if (!shift || shift.allocatedToId !== worker.id || shift.status !== "IN_PROGRESS") {
+    return { questions: [], error: "This isn't an active shift you can log to." };
+  }
+
+  try {
+    const questions = await suggestEntryQuestions({
+      label: findCategory(category)?.label ?? category,
+      detail,
+      note: typeof note === "string" ? note : "",
+      participantName: shift.participant.name,
+    });
+    return { questions };
+  } catch (err) {
+    console.error("entryQuestions failed:", err);
+    return { questions: [] };
+  }
+}
+
+// Read-only: parse the note into draft entries for review. Never writes.
+export async function extractNotePreview(
+  shiftId: string,
+  noteText: string,
+): Promise<{ items: NoteEntryDraft[]; error?: string }> {
+  const worker = await getCurrentWorker();
+  if (!worker || !shiftId || !noteText.trim()) return { items: [], error: "Nothing to analyse." };
+
+  const shift = await prisma.shift.findUnique({
+    where: { id: shiftId },
+    include: { participant: true, allocatedTo: true },
+  });
+  if (!shift || shift.allocatedToId !== worker.id || shift.status !== "IN_PROGRESS") {
+    return { items: [], error: "This isn't an active shift you can log to." };
+  }
+
+  const base = shift.clockOnAt ?? new Date();
+  const people = [shift.participant.name, shift.allocatedTo?.name].filter(
+    (n): n is string => !!n,
+  );
+  // Scope extraction to the chips this participant's care profile enables.
+  const profile = await getCareProfile(shift.participantId);
+  const allowedKeys = visibleCategoryKeys(profile);
+
+  try {
+    const raw = await extractLogItems(noteText, hhmm(base), people, allowedKeys);
+    const mapped = mapExtractedToEntries(raw, base);
+    return {
+      items: mapped.map((m) => ({
+        category: m.category,
+        detail: m.detail,
+        notes: m.notes,
+        time: hhmm(m.timestamp),
+        timeEstimated: m.timeEstimated,
+      })),
+    };
+  } catch (err) {
+    console.error("extractNotePreview failed:", err);
+    return { items: [], error: "Couldn't analyse the note just now — save it as a single note instead." };
+  }
+}
+
+// Create the confirmed entries + keep the original narrative as their parent Note.
+export async function commitExtractedEntries(
+  shiftId: string,
+  parentText: string,
+  items: NoteEntryDraft[],
+): Promise<{ created: number; error?: string }> {
+  const worker = await getCurrentWorker();
+  if (!worker || !shiftId) return { created: 0, error: "Not signed in." };
+
+  const shift = await prisma.shift.findUnique({ where: { id: shiftId } });
+  if (!shift || shift.allocatedToId !== worker.id || shift.status !== "IN_PROGRESS") {
+    return { created: 0, error: "This isn't an active shift you can log to." };
+  }
+
+  // Trust nothing from the client: keep only entries in a real category.
+  const valid = (Array.isArray(items) ? items : []).filter(
+    (it) => it && typeof it.category === "string" && isLogCategory(it.category),
+  );
+  if (valid.length === 0) return { created: 0, error: "No entries to create." };
+
+  const base = shift.clockOnAt ?? new Date();
+  const batch = crypto.randomUUID();
+
+  // 1) Keep the original narrative as the parent Note (provenance).
+  let parentId: string | null = null;
+  if (parentText.trim()) {
+    const parent = await prisma.logEntry.create({
+      data: {
+        shiftId,
+        category: "Note",
+        detail: null,
+        notes: parentText.trim(),
+        timestamp: base,
+        idempotencyKey: `${batch}:note`,
+        ...tenantOwner(worker),
+      },
+    });
+    parentId = parent.id;
+  }
+
+  // 2) The extracted entries, linked to the parent where the column exists.
+  let created = 0;
+  for (const [i, it] of valid.entries()) {
+    await createDerivedEntry({
+      shiftId,
+      category: it.category,
+      detail: it.detail ? String(it.detail) : null,
+      notes: typeof it.notes === "string" ? it.notes.trim() : "",
+      timestamp: parseTimeOnDate(it.time, base),
+      idempotencyKey: `${batch}:${i}`,
+      derivedFromId: parentId,
+      owner: tenantOwner(worker),
+    });
+    created++;
+  }
+
+  revalidatePath(`/shift/${shiftId}`);
+  return { created };
+}
+
+// Create one extracted entry, setting derivedFromId when that column is live. If the
+// migration (prisma/sql/note_extraction.sql) hasn't been applied yet, Prisma raises
+// P2022 ("column does not exist") — we retry without the link so extraction still
+// works pre-migration. A duplicate idempotencyKey (P2002) is a safe no-op.
+async function createDerivedEntry(d: {
+  shiftId: string;
+  category: string;
+  detail: string | null;
+  notes: string;
+  timestamp: Date;
+  idempotencyKey: string;
+  derivedFromId: string | null;
+  owner: ReturnType<typeof tenantOwner>;
+}): Promise<void> {
+  const core = {
+    shiftId: d.shiftId,
+    category: d.category,
+    detail: d.detail,
+    notes: d.notes,
+    timestamp: d.timestamp,
+    idempotencyKey: d.idempotencyKey,
+    ...d.owner,
+  };
+  try {
+    await prisma.logEntry.create({ data: { ...core, derivedFromId: d.derivedFromId } });
+  } catch (err) {
+    if (isUnknownColumn(err)) {
+      try {
+        await prisma.logEntry.create({ data: core }); // pre-migration: create unlinked
+      } catch (err2) {
+        if (!isUniqueViolation(err2)) throw err2;
+      }
+    } else if (!isUniqueViolation(err)) {
+      throw err;
+    }
+  }
+}
+
+// Prisma P2022 = a column referenced in the query doesn't exist in the database.
+function isUnknownColumn(err: unknown): boolean {
+  return (
+    typeof err === "object" && err !== null && (err as { code?: string }).code === "P2022"
+  );
+}
+
+// "HH:MM" (24h) for a Date — matches the time format the extractor returns/edits.
+function hhmm(d: Date): string {
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }

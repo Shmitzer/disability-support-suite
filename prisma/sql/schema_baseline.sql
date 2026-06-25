@@ -30,6 +30,7 @@ CREATE TABLE "Organisation" (
     "sectorMode" "SectorMode" NOT NULL DEFAULT 'NDIS',
     "stripeCustomerId" TEXT,
     "subscriptionStatus" TEXT,
+    "autoSuggestCap" INTEGER NOT NULL DEFAULT 3,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -144,6 +145,7 @@ CREATE TABLE "LogEntry" (
     "photos" TEXT,
     "timestamp" TIMESTAMP(3) NOT NULL,
     "idempotencyKey" TEXT,
+    "derivedFromId" TEXT, -- source Note for AI-extracted entries (prisma/sql/note_extraction.sql)
     "userId" TEXT NOT NULL,
     "organisationId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -151,6 +153,9 @@ CREATE TABLE "LogEntry" (
 
     CONSTRAINT "LogEntry_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE INDEX "LogEntry_derivedFromId_idx" ON "LogEntry"("derivedFromId");
 
 -- CreateTable
 CREATE TABLE "ShiftReport" (
@@ -225,9 +230,19 @@ CREATE TABLE "AuditLog" (
     "targetId" TEXT NOT NULL,
     "detail" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Tamper-evidence hash chain (see src/lib/audit.ts; prisma/sql/audit_hash_chain.sql).
+    "seq" BIGSERIAL,
+    "prevHash" TEXT,
+    "hash" TEXT,
 
     CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AuditLog_seq_key" ON "AuditLog"("seq");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_organisationId_seq_idx" ON "AuditLog"("organisationId", "seq");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Worker_supabaseUserId_key" ON "Worker"("supabaseUserId");
@@ -302,3 +317,247 @@ CREATE TABLE "WaitlistSignup" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "WaitlistSignup_email_key" ON "WaitlistSignup"("email");
+
+
+-- CreateTable: RBAC frame — Membership / ParticipantAccessGrant / Consent
+-- (see schema.prisma + prisma/sql/rbac_grants.sql). Authorization = org-membership
+-- roles ∪ active participant grants (+ platform override), resolved in src/lib/access.ts.
+CREATE TABLE "Membership" (
+    "id" TEXT NOT NULL,
+    "workerId" TEXT NOT NULL,
+    "organisationId" TEXT NOT NULL,
+    "role" "Role" NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "invitedById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Membership_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Membership_workerId_organisationId_role_key" ON "Membership"("workerId", "organisationId", "role");
+CREATE INDEX "Membership_workerId_status_idx" ON "Membership"("workerId", "status");
+CREATE INDEX "Membership_organisationId_status_idx" ON "Membership"("organisationId", "status");
+
+CREATE TABLE "ParticipantAccessGrant" (
+    "id" TEXT NOT NULL,
+    "principalId" TEXT NOT NULL,
+    "participantId" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "grantedById" TEXT,
+    "consentId" TEXT,
+    "startsAt" TIMESTAMP(3),
+    "expiresAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ParticipantAccessGrant_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "ParticipantAccessGrant_principalId_status_idx" ON "ParticipantAccessGrant"("principalId", "status");
+CREATE INDEX "ParticipantAccessGrant_participantId_status_idx" ON "ParticipantAccessGrant"("participantId", "status");
+
+CREATE TABLE "Consent" (
+    "id" TEXT NOT NULL,
+    "participantId" TEXT NOT NULL,
+    "scope" TEXT NOT NULL,
+    "grantedToPrincipalId" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'GRANTED',
+    "method" TEXT,
+    "capturedById" TEXT,
+    "organisationId" TEXT,
+    "grantedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "withdrawnAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Consent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "Consent_participantId_scope_status_idx" ON "Consent"("participantId", "scope", "status");
+
+
+-- CreateTable: ParticipantCareProfile — condition tags + support-need flags that
+-- tailor capture chips (see src/lib/care-needs.ts; prisma/sql/participant_care_profile.sql)
+CREATE TABLE "ParticipantCareProfile" (
+    "id" TEXT NOT NULL,
+    "participantId" TEXT NOT NULL,
+    "conditions" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+    "supportNeeds" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+    "needConfig" JSONB,
+    "organisationId" TEXT,
+    "updatedById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ParticipantCareProfile_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ParticipantCareProfile_participantId_key" ON "ParticipantCareProfile"("participantId");
+CREATE INDEX "ParticipantCareProfile_organisationId_idx" ON "ParticipantCareProfile"("organisationId");
+
+
+-- CreateTable: Caira assistant context store + history (see prisma/sql/assistant.sql)
+CREATE TABLE "AssistantContext" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "source" TEXT NOT NULL,
+    "title" TEXT,
+    "content" TEXT NOT NULL,
+    "participantId" TEXT,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AssistantContext_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "AssistantContext_userId_idx" ON "AssistantContext"("userId");
+CREATE INDEX "AssistantContext_participantId_idx" ON "AssistantContext"("participantId");
+
+CREATE TABLE "AssistantMessage" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "role" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AssistantMessage_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "AssistantMessage_userId_createdAt_idx" ON "AssistantMessage"("userId", "createdAt");
+
+
+-- CreateTable: Document — stored files feeding the assistant + participant record (prisma/sql/documents.sql)
+CREATE TABLE "Document" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "participantId" TEXT,
+    "source" TEXT NOT NULL,
+    "title" TEXT,
+    "mimeType" TEXT,
+    "filePath" TEXT,
+    "extractedText" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Document_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "Document_userId_idx" ON "Document"("userId");
+CREATE INDEX "Document_participantId_idx" ON "Document"("participantId");
+
+
+-- CreateTable: #1 task/ADL checklist (prisma/sql/care_tasks.sql)
+CREATE TABLE "CareTask" (
+    "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "organisationId" TEXT,
+    "title" TEXT NOT NULL, "category" TEXT, "sortOrder" INTEGER NOT NULL DEFAULT 100,
+    "active" BOOLEAN NOT NULL DEFAULT true, "createdById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "CareTask_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "CareTask_participantId_active_idx" ON "CareTask"("participantId","active");
+
+CREATE TABLE "ShiftTaskCompletion" (
+    "id" TEXT NOT NULL, "shiftId" TEXT NOT NULL, "careTaskId" TEXT NOT NULL,
+    "status" TEXT NOT NULL, "note" TEXT, "completedById" TEXT, "organisationId" TEXT,
+    "completedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ShiftTaskCompletion_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "ShiftTaskCompletion_shiftId_careTaskId_key" ON "ShiftTaskCompletion"("shiftId","careTaskId");
+CREATE INDEX "ShiftTaskCompletion_shiftId_idx" ON "ShiftTaskCompletion"("shiftId");
+
+-- CreateTable: #2 incident register (prisma/sql/incidents.sql)
+CREATE TABLE "Incident" (
+    "id" TEXT NOT NULL, "participantId" TEXT, "shiftId" TEXT, "reportedById" TEXT,
+    "organisationId" TEXT, "occurredAt" TIMESTAMP(3) NOT NULL, "type" TEXT NOT NULL,
+    "severity" TEXT NOT NULL, "description" TEXT NOT NULL, "immediateAction" TEXT,
+    "notified" JSONB, "followUp" TEXT, "reportable" BOOLEAN NOT NULL DEFAULT false,
+    "status" TEXT NOT NULL DEFAULT 'OPEN', "reviewedById" TEXT, "reviewedAt" TIMESTAMP(3),
+    "reviewNotes" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Incident_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "Incident_organisationId_status_idx" ON "Incident"("organisationId","status");
+CREATE INDEX "Incident_participantId_idx" ON "Incident"("participantId");
+
+-- CreateTable: #7 worker credentials (prisma/sql/credentials.sql)
+CREATE TABLE "WorkerCredential" (
+    "id" TEXT NOT NULL, "workerId" TEXT NOT NULL, "organisationId" TEXT,
+    "type" TEXT NOT NULL, "name" TEXT, "issuedAt" TIMESTAMP(3), "expiresAt" TIMESTAMP(3),
+    "evidenceDocumentId" TEXT, "createdById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "WorkerCredential_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "WorkerCredential_workerId_idx" ON "WorkerCredential"("workerId");
+CREATE INDEX "WorkerCredential_organisationId_expiresAt_idx" ON "WorkerCredential"("organisationId","expiresAt");
+
+CREATE TABLE "Notification" (
+  "id" TEXT NOT NULL, "userId" TEXT NOT NULL, "organisationId" TEXT, "type" TEXT NOT NULL,
+  "title" TEXT NOT NULL, "body" TEXT, "link" TEXT, "entityType" TEXT, "entityId" TEXT,
+  "readAt" TIMESTAMP(3), "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Notification_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "Notification_userId_readAt_idx" ON "Notification" ("userId","readAt");
+
+CREATE TABLE "Medication" (
+  "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "organisationId" TEXT, "name" TEXT NOT NULL,
+  "dose" TEXT, "route" TEXT, "frequency" TEXT, "scheduleTimes" JSONB, "prn" BOOLEAN NOT NULL DEFAULT false,
+  "prnProtocol" TEXT, "active" BOOLEAN NOT NULL DEFAULT true, "notes" TEXT, "createdById" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Medication_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "Medication_participantId_active_idx" ON "Medication" ("participantId","active");
+
+CREATE TABLE "MedicationAdministration" (
+  "id" TEXT NOT NULL, "medicationId" TEXT NOT NULL, "participantId" TEXT NOT NULL, "shiftId" TEXT,
+  "organisationId" TEXT, "status" TEXT NOT NULL, "scheduledAt" TIMESTAMP(3),
+  "administeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "administeredById" TEXT,
+  "witnessedById" TEXT, "dose" TEXT, "note" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "MedicationAdministration_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "MedicationAdministration_participantId_administeredAt_idx" ON "MedicationAdministration" ("participantId","administeredAt");
+CREATE INDEX "MedicationAdministration_medicationId_idx" ON "MedicationAdministration" ("medicationId");
+
+CREATE TABLE "VisitVerification" (
+  "id" TEXT NOT NULL, "shiftId" TEXT NOT NULL, "organisationId" TEXT, "event" TEXT NOT NULL,
+  "lat" DOUBLE PRECISION, "lng" DOUBLE PRECISION, "accuracy" DOUBLE PRECISION,
+  "method" TEXT NOT NULL DEFAULT 'gps', "capturedById" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "VisitVerification_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "VisitVerification_shiftId_idx" ON "VisitVerification" ("shiftId");
+
+CREATE TABLE "ParticipantBudget" (
+  "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "organisationId" TEXT, "category" TEXT NOT NULL,
+  "allocatedCents" INTEGER NOT NULL DEFAULT 0, "periodStart" TIMESTAMP(3), "periodEnd" TIMESTAMP(3),
+  "notes" TEXT, "createdById" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ParticipantBudget_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "ParticipantBudget_participantId_idx" ON "ParticipantBudget" ("participantId");
+
+CREATE TABLE "BillableItem" (
+  "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "shiftId" TEXT, "organisationId" TEXT,
+  "category" TEXT, "lineItemCode" TEXT, "description" TEXT NOT NULL, "quantity" INTEGER NOT NULL DEFAULT 1,
+  "unitPriceCents" INTEGER NOT NULL DEFAULT 0, "amountCents" INTEGER NOT NULL DEFAULT 0,
+  "date" TIMESTAMP(3) NOT NULL, "status" TEXT NOT NULL DEFAULT 'DRAFT', "claimRef" TEXT, "createdById" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "BillableItem_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "BillableItem_participantId_status_idx" ON "BillableItem" ("participantId","status");
+CREATE INDEX "BillableItem_organisationId_status_idx" ON "BillableItem" ("organisationId","status");
+
+CREATE TABLE "Message" (
+  "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "organisationId" TEXT, "senderId" TEXT,
+  "body" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Message_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "Message_participantId_createdAt_idx" ON "Message" ("participantId","createdAt");
+
+CREATE TABLE "ShiftHandover" (
+  "id" TEXT NOT NULL, "shiftId" TEXT NOT NULL, "participantId" TEXT, "organisationId" TEXT,
+  "fromWorkerId" TEXT, "toWorkerId" TEXT, "body" TEXT NOT NULL, "acknowledgedAt" TIMESTAMP(3),
+  "acknowledgedById" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ShiftHandover_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "ShiftHandover_shiftId_idx" ON "ShiftHandover" ("shiftId");
+CREATE INDEX "ShiftHandover_participantId_createdAt_idx" ON "ShiftHandover" ("participantId","createdAt");
+

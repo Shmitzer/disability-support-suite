@@ -43,6 +43,9 @@ model Organisation {
   sectorMode         SectorMode @default(NDIS)
   stripeCustomerId   String?
   subscriptionStatus String?
+  // Max AUTOMATIC AI entry-prompt suggestions per shift (admin-tunable). Manual taps
+  // are never capped. See src/lib/org-settings.ts + the auto-suggest in ShiftTracker.
+  autoSuggestCap     Int      @default(3)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @default(now()) @updatedAt
 }
@@ -195,10 +198,19 @@ model LogEntry {
   photos         String? // JSON array of small image data URLs (DEV/DUMMY photos only until Phase 5)
   timestamp      DateTime // when the event happened (not when it was logged)
   idempotencyKey String? @unique // client-generated; prevents duplicate entries on mobile (Rule 12)
+  // When an entry was AI-extracted from a free-text Note, this links it back to that
+  // source Note (also a LogEntry, category="Note") for provenance/audit. Null for
+  // entries captured directly via the chips. Nullable so it doesn't disturb existing
+  // rows; the column lands via prisma/sql/note_extraction.sql (NOT auto-applied) —
+  // the extraction writer (log-actions.ts) sets it when present and degrades
+  // gracefully (entries created unlinked) until that migration is applied.
+  derivedFromId  String?
   userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([derivedFromId])
 }
 
 // An AI-generated progress report for one completed shift (task 1g).
@@ -289,6 +301,387 @@ model AuditLog {
   targetId       String
   detail         Json? // extra context
   createdAt      DateTime @default(now())
+
+  // Tamper-evidence (hash chain). Each row commits to the row before it within its
+  // chain (one chain per organisationId; null-org = the platform/system chain), so
+  // any after-the-fact edit or deletion breaks the chain and is detectable. `seq`
+  // is the strict append order; `prevHash` is the prior row's `hash` (null at the
+  // genesis of a chain); `hash` = sha256(prevHash + canonical(payload)). Nullable
+  // so rows written before the live migration (prisma/sql/audit_hash_chain.sql)
+  // don't break — see src/lib/audit.ts. Verified by verifyAuditChain().
+  seq            BigInt   @unique @default(autoincrement())
+  prevHash       String?
+  hash           String?
+
+  @@index([organisationId, seq])
+}
+
+// ===========================================================================
+// RBAC FRAME — Membership, ParticipantAccessGrant, Consent
+// ===========================================================================
+// The authorization model is the UNION of (a) org-membership roles and (b)
+// active participant-scoped grants, resolved by src/lib/access.ts → can(). These
+// three tables back that. NOT YET WIRED into the request path (the existing gates
+// still read Worker.role); they're the frame the enterprise 32-role / 6-surface
+// model and external-carer access slot into. Schema is checked-in SQL applied by
+// hand — see prisma/sql/rbac_grants.sql (NOT auto-applied).
+
+// A principal's role WITHIN an organisation. Generalises the single Worker.role +
+// organisationId into a many-to-many so one person can hold roles in several orgs
+// (and several roles in one). `role` is an org Role (see enum Role).
+model Membership {
+  id             String   @id @default(cuid())
+  workerId       String // the principal (Worker.id)
+  organisationId String // the org this role is held in
+  role           Role // org role within this org
+  status         String   @default("ACTIVE") // ACTIVE | SUSPENDED | REVOKED
+  invitedById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@unique([workerId, organisationId, role])
+  @@index([workerId, status])
+  @@index([organisationId, status])
+}
+
+// A participant-SCOPED grant of access to a principal who is NOT (necessarily)
+// org staff — e.g. an external family carer or a legal guardian. `role` is a
+// GrantRole (see GRANT_ROLE_CAPABILITIES), and its capabilities apply ONLY to
+// this one participant. A grant is "active" when status = ACTIVE and now is within
+// [startsAt, expiresAt] (null bounds = open-ended). Consent backs the grant.
+model ParticipantAccessGrant {
+  id             String    @id @default(cuid())
+  principalId    String // who receives the access (Worker.id)
+  participantId  String // the single participant the access is for
+  role           String // grant role, e.g. "family_carer_clinical" | "participant_guardian"
+  organisationId String? // the participant's org context (for tenant scoping)
+  status         String    @default("ACTIVE") // ACTIVE | REVOKED
+  grantedById    String? // who granted it (audit)
+  consentId      String? // the Consent record that authorises this grant
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  @@index([principalId, status])
+  @@index([participantId, status])
+}
+
+// A consent record about a participant — the lawful basis that backs external
+// access and sensitive processing (Privacy Act / NDIS). Append-style: a withdrawal
+// sets status = WITHDRAWN + withdrawnAt rather than deleting, so the consent
+// history is auditable.
+model Consent {
+  id                   String    @id @default(cuid())
+  participantId        String // who the consent is about
+  scope                String // e.g. "external_carer_access" | "ai_processing" | "data_sharing"
+  grantedToPrincipalId String? // the principal the consent covers, if specific
+  status               String    @default("GRANTED") // GRANTED | WITHDRAWN
+  method               String? // how it was captured (e.g. "guardian_signed", "verbal_recorded")
+  capturedById         String? // the staff member who recorded it
+  organisationId       String?
+  grantedAt            DateTime  @default(now())
+  withdrawnAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @default(now()) @updatedAt
+
+  @@index([participantId, scope, status])
+}
+
+// Per-participant care profile (see src/lib/care-needs.ts + docs/design/
+// participant-care-profile.md). `conditions` are curated condition tags that SEED
+// `supportNeeds` (the resolved functional support-need flags — the source of truth that
+// switches capture chips on). `needConfig` holds per-flag config (e.g. IDDSI levels,
+// repositioning interval). 1:1 with Participant (kept as a scalar id, like the other
+// lightweight relations). NOT yet wired into the request path — see prisma/sql/
+// participant_care_profile.sql (NOT auto-applied).
+model ParticipantCareProfile {
+  id             String   @id @default(cuid())
+  participantId  String   @unique
+  conditions     String[] // curated condition tags
+  supportNeeds   String[] // resolved support-need flags (source of truth)
+  needConfig     Json? // per-flag config (IDDSI levels, reposition interval, …)
+  organisationId String?
+  updatedById    String? // who last edited it (audit)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([organisationId])
+}
+
+// Caira assistant — per-user AI context store (see src/lib/assistant-* + docs/
+// caira-assistant.md). Each row is a retrievable snippet the user's assistant may draw
+// on. `source` says where it came from; `participantId` (when set) scopes a snippet to
+// one person so retrieval can drop it if the user no longer has access. NOT auto-applied
+// (prisma/sql/assistant.sql).
+model AssistantContext {
+  id             String   @id @default(cuid())
+  userId         String // owner — whose assistant this feeds
+  organisationId String?
+  source         String // "upload" | "note" | "learned" | "profile" | "manual"
+  title          String?
+  content        String // the retrievable text
+  participantId  String? // set when the snippet is about a specific participant
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([participantId])
+}
+
+// A stored document/file that feeds the assistant + the participant record. Covers
+// provider-attached docs, worker/manager/admin note attachments, third-party uploads,
+// personal uploads, and photographed docs (OCR'd to text). `filePath` is a Supabase
+// Storage RELATIVE path (Rule 3). `extractedText` is the basis for assistant context;
+// on ingest it's chunked into AssistantContext rows. See src/lib/document-actions.ts.
+// NOT auto-applied (prisma/sql/documents.sql).
+model Document {
+  id             String   @id @default(cuid())
+  userId         String // who added it (owner)
+  organisationId String?
+  participantId  String? // about a participant (scopes who can see it)
+  source         String // provider_attached | worker_attachment | third_party_upload | personal_upload | photo_capture
+  title          String?
+  mimeType       String?
+  filePath       String? // Supabase Storage relative path (Rule 3); null if text-only
+  extractedText  String? // typed/OCR'd text — the basis for assistant context
+  status         String   @default("PENDING") // PENDING | READY | INGESTED | FAILED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([participantId])
+}
+
+// Assistant conversation history (also the raw material for "learn as they use it").
+model AssistantMessage {
+  id             String   @id @default(cuid())
+  userId         String
+  organisationId String?
+  role           String // "user" | "assistant"
+  content        String
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// #1 Care task / ADL checklist — the plan of tasks for a participant, ticked off per
+// shift. See src/lib/care-task-actions.ts. NOT auto-applied (prisma/sql/care_tasks.sql).
+model CareTask {
+  id             String   @id @default(cuid())
+  participantId  String
+  organisationId String?
+  title          String
+  category       String? // e.g. ADL | domestic | community | health
+  sortOrder      Int      @default(100)
+  active         Boolean  @default(true)
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([participantId, active])
+}
+
+model ShiftTaskCompletion {
+  id             String   @id @default(cuid())
+  shiftId        String
+  careTaskId     String
+  status         String // DONE | SKIPPED
+  note           String?
+  completedById  String?
+  organisationId String?
+  completedAt    DateTime @default(now())
+
+  @@unique([shiftId, careTaskId])
+  @@index([shiftId])
+}
+
+// #2 Incident register — first-class incidents with mandatory fields + reportable
+// workflow. See src/lib/incident-actions.ts. NOT auto-applied (prisma/sql/incidents.sql).
+model Incident {
+  id              String    @id @default(cuid())
+  participantId   String?
+  shiftId         String?
+  reportedById    String?
+  organisationId  String?
+  occurredAt      DateTime
+  type            String // physical | behavioural | environmental | medical | other
+  severity        String // low | medium | high | critical
+  description     String
+  immediateAction String?
+  notified        Json? // { participant, guardian, supervisor, commission }
+  followUp        String?
+  reportable      Boolean   @default(false)
+  status          String    @default("OPEN") // OPEN | UNDER_REVIEW | CLOSED
+  reviewedById    String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  @@index([organisationId, status])
+  @@index([participantId])
+}
+
+// #7 Worker credentials / training (expiry tracking; also gates high-intensity
+// competency — see src/lib/credentials.ts). NOT auto-applied (prisma/sql/credentials.sql).
+model WorkerCredential {
+  id                 String    @id @default(cuid())
+  workerId           String
+  organisationId     String?
+  type               String // first_aid | ndis_worker_screening | <competency keys> | …
+  name               String?
+  issuedAt           DateTime?
+  expiresAt          DateTime?
+  evidenceDocumentId String?
+  createdById        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now()) @updatedAt
+
+  @@index([workerId])
+  @@index([organisationId, expiresAt])
+}
+
+// #5 In-app notifications (recipient-scoped). See src/lib/notifications.ts.
+model Notification {
+  id             String    @id @default(cuid())
+  userId         String // recipient
+  organisationId String?
+  type           String // shift | meds_due | incident | approval | credential_expiry | general
+  title          String
+  body           String?
+  link           String?
+  entityType     String?
+  entityId       String?
+  readAt          DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId, readAt])
+}
+
+// #6 Medication chart (per participant) + eMAR administration events.
+model Medication {
+  id             String   @id @default(cuid())
+  participantId  String
+  organisationId String?
+  name           String
+  dose           String?
+  route          String?
+  frequency      String?
+  scheduleTimes  Json? // e.g. ["08:00","20:00"]
+  prn            Boolean  @default(false)
+  prnProtocol    String?
+  active         Boolean  @default(true)
+  notes          String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([participantId, active])
+}
+
+model MedicationAdministration {
+  id               String    @id @default(cuid())
+  medicationId     String
+  participantId    String
+  shiftId          String?
+  organisationId   String?
+  status           String // GIVEN | WITHHELD | REFUSED | PRN_GIVEN
+  scheduledAt      DateTime?
+  administeredAt   DateTime  @default(now())
+  administeredById String?
+  witnessedById    String?
+  dose             String?
+  note             String?
+  createdAt        DateTime  @default(now())
+
+  @@index([participantId, administeredAt])
+  @@index([medicationId])
+}
+
+// #11 EVV / visit verification — geo + method captured at clock on/off (AU light).
+model VisitVerification {
+  id             String   @id @default(cuid())
+  shiftId        String
+  organisationId String?
+  event          String // CLOCK_ON | CLOCK_OFF
+  lat            Float?
+  lng            Float?
+  accuracy       Float?
+  method         String   @default("gps") // gps | manual
+  capturedById   String?
+  createdAt      DateTime @default(now())
+
+  @@index([shiftId])
+}
+
+// #8 NDIS plan budget per category + #13 billable line items / claims. Money in
+// integer cents. See src/lib/billing-claims.ts (+ actions).
+model ParticipantBudget {
+  id             String    @id @default(cuid())
+  participantId  String
+  organisationId String?
+  category       String // e.g. core_daily_activities | capacity_building | capital
+  allocatedCents Int       @default(0)
+  periodStart    DateTime?
+  periodEnd      DateTime?
+  notes          String?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  @@index([participantId])
+}
+
+model BillableItem {
+  id             String   @id @default(cuid())
+  participantId  String
+  shiftId        String?
+  organisationId String?
+  category       String? // maps to a budget category
+  lineItemCode   String? // NDIS price-guide item number
+  description    String
+  quantity       Int      @default(1)
+  unitPriceCents Int      @default(0)
+  amountCents    Int      @default(0)
+  date           DateTime
+  status         String   @default("DRAFT") // DRAFT | CLAIMED | PAID | REJECTED
+  claimRef       String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([participantId, status])
+  @@index([organisationId, status])
+}
+
+// #12 Care-team messaging (per participant) + shift handover.
+model Message {
+  id             String   @id @default(cuid())
+  participantId  String // scopes the thread to a participant's care team
+  organisationId String?
+  senderId       String?
+  body           String
+  createdAt      DateTime @default(now())
+
+  @@index([participantId, createdAt])
+}
+
+model ShiftHandover {
+  id             String    @id @default(cuid())
+  shiftId        String
+  participantId  String?
+  organisationId String?
+  fromWorkerId   String?
+  toWorkerId     String?
+  body           String
+  acknowledgedAt DateTime?
+  acknowledgedById String?
+  createdAt      DateTime  @default(now())
+
+  @@index([shiftId])
+  @@index([participantId, createdAt])
 }
 
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a

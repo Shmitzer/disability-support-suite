@@ -15,7 +15,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { getCurrentPrincipal } from "@/lib/access";
+import { can, Capability } from "@/lib/rbac";
 import { tenantOwner } from "@/lib/tenant";
+import { recordAudit } from "@/lib/audit";
+import { notify } from "@/lib/notifications";
 import { buildShiftSourceLog } from "@/lib/report";
 import {
   generateShiftReport,
@@ -233,6 +237,17 @@ export async function approveReport(formData: FormData) {
     data: { status: "APPROVED", approvedAt: new Date() },
   });
 
+  // Approving a report locks the final note — a compliance-significant event, so
+  // record it on the cross-app audit trail (Rule 9).
+  await recordAudit({
+    action: "REPORT_APPROVED",
+    targetType: "ShiftReport",
+    targetId: report.id,
+    actorId: shift.allocatedToId,
+    organisationId: shift.organisationId,
+    detail: { shiftId },
+  });
+
   revalidatePath(`/shift/${shiftId}`);
 }
 
@@ -247,5 +262,117 @@ export async function reopenReport(formData: FormData) {
     data: { status: "DRAFT", approvedAt: null },
   });
 
+  // Unlocking an approved note is equally audit-worthy.
+  await recordAudit({
+    action: "REPORT_REOPENED",
+    targetType: "ShiftReport",
+    targetId: report.id,
+    actorId: shift.allocatedToId,
+    organisationId: shift.organisationId,
+    detail: { shiftId },
+  });
+
   revalidatePath(`/shift/${shiftId}`);
+}
+
+// --- Supervisor sign-off (a SECOND person approves a worker's note) ----------
+//
+// Distinct from the worker self-finalise above: capability-gated (NoteApprove) and
+// org-scoped, records WHO approved (approvedBy = supervisor) for the practice-standard
+// trail. cd provides the approve/reopen controls on a coordinator review screen.
+
+async function loadReportForOrgApproval(reportId: string) {
+  if (!reportId) return null;
+  return prisma.shiftReport.findUnique({
+    where: { id: reportId },
+    select: { id: true, shiftId: true, status: true, organisationId: true },
+  });
+}
+
+async function authorizeApproval(organisationId: string | null) {
+  const worker = await getCurrentWorker();
+  if (!worker) return null;
+  const principal = await getCurrentPrincipal();
+  if (!principal || !can(principal, Capability.NoteApprove, { organisationId })) return null;
+  return worker;
+}
+
+export async function supervisorApproveReport(formData: FormData): Promise<ReportState> {
+  const reportId = String(formData.get("reportId") ?? "");
+  const notes = String(formData.get("approvalNotes") ?? "").trim() || null;
+  const report = await loadReportForOrgApproval(reportId);
+  if (!report) return { error: "Report not found." };
+
+  const supervisor = await authorizeApproval(report.organisationId);
+  if (!supervisor) return { error: "You don't have permission to approve notes." };
+
+  await prisma.shiftReport.update({
+    where: { id: report.id },
+    data: { status: "APPROVED", approvedAt: new Date(), approvedBy: supervisor.id, approvalNotes: notes },
+  });
+  const shift = await prisma.shift.findUnique({
+    where: { id: report.shiftId },
+    select: { allocatedToId: true },
+  });
+  if (shift?.allocatedToId) {
+    await notify({
+      userId: shift.allocatedToId,
+      organisationId: report.organisationId,
+      type: "approval",
+      title: "Your shift note was approved",
+      link: `/shift/${report.shiftId}`,
+      entityType: "ShiftReport",
+      entityId: report.id,
+    });
+  }
+  await recordAudit({
+    action: "REPORT_APPROVED",
+    targetType: "ShiftReport",
+    targetId: report.id,
+    actorId: supervisor.id,
+    organisationId: report.organisationId,
+    detail: { reportId: report.id, shiftId: report.shiftId, supervisor: true },
+  });
+  revalidatePath(`/shift/${report.shiftId}`);
+  return { info: "Note approved." };
+}
+
+export async function supervisorReopenReport(formData: FormData): Promise<ReportState> {
+  const reportId = String(formData.get("reportId") ?? "");
+  const notes = String(formData.get("approvalNotes") ?? "").trim() || null;
+  const report = await loadReportForOrgApproval(reportId);
+  if (!report) return { error: "Report not found." };
+
+  const supervisor = await authorizeApproval(report.organisationId);
+  if (!supervisor) return { error: "You don't have permission to reopen notes." };
+
+  await prisma.shiftReport.update({
+    where: { id: report.id },
+    data: { status: "DRAFT", approvedAt: null, approvedBy: null, approvalNotes: notes },
+  });
+  const shift = await prisma.shift.findUnique({
+    where: { id: report.shiftId },
+    select: { allocatedToId: true },
+  });
+  if (shift?.allocatedToId) {
+    await notify({
+      userId: shift.allocatedToId,
+      organisationId: report.organisationId,
+      type: "approval",
+      title: "Your shift note was reopened",
+      link: `/shift/${report.shiftId}`,
+      entityType: "ShiftReport",
+      entityId: report.id,
+    });
+  }
+  await recordAudit({
+    action: "REPORT_REOPENED",
+    targetType: "ShiftReport",
+    targetId: report.id,
+    actorId: supervisor.id,
+    organisationId: report.organisationId,
+    detail: { reportId: report.id, shiftId: report.shiftId, supervisor: true },
+  });
+  revalidatePath(`/shift/${report.shiftId}`);
+  return { info: "Note reopened." };
 }

@@ -14,6 +14,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { DEV_AUTH } from "@/lib/dev-auth";
+import { allowlistActive, isEmailAllowed } from "@/lib/allowlist";
 
 // Paths reachable without a session. Everything else requires login.
 // "/" is the public marketing landing and /privacy is the public policy page;
@@ -66,6 +67,20 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicPath(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Allowlist gate (soft release): a signed-in user whose email isn't approved is
+  // bounced to /auth/denied (a public page) for everything except public paths.
+  // No-op unless AUTH_ALLOWLIST is set.
+  if (
+    user &&
+    allowlistActive() &&
+    !isEmailAllowed(user.email) &&
+    !isPublicPath(request.nextUrl.pathname)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/denied";
     return NextResponse.redirect(url);
   }
 

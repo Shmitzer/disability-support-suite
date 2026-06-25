@@ -8,13 +8,14 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
 import { tenantOwner, tenantScope } from "@/lib/tenant";
-import { isRosteringRole } from "@/lib/enums";
+import { can, Capability } from "@/lib/rbac";
+import { recordAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 
-// Confirm the person doing this is rostering staff. Returns the worker, or null.
+// Confirm the caller may manage the roster. Returns the worker, or null.
 async function requireRostering() {
   const worker = await getCurrentWorker();
-  return isRosteringRole(worker?.role) ? worker : null;
+  return can(worker?.role, Capability.RosterManage) ? worker : null;
 }
 
 // Create a new shift as a DRAFT (not yet allocated or offered).
@@ -41,7 +42,7 @@ export async function createShift(formData: FormData) {
   });
   if (!participant) return;
 
-  await prisma.shift.create({
+  const created = await prisma.shift.create({
     data: {
       status: "DRAFT",
       participantId,
@@ -52,6 +53,16 @@ export async function createShift(formData: FormData) {
       ...tenantOwner(manager),
       events: { create: { type: "CREATED", actorId: manager.id, ...tenantOwner(manager) } },
     },
+  });
+
+  // Cross-app audit trail (Rule 9) alongside the per-shift ShiftEvent above.
+  await recordAudit({
+    action: "SHIFT_CREATED",
+    targetType: "Shift",
+    targetId: created.id,
+    actorId: manager.id,
+    organisationId: manager.organisationId,
+    detail: { participantId, scheduledStart, scheduledEnd },
   });
 
   revalidatePath("/");
@@ -98,6 +109,15 @@ export async function allocateShift(formData: FormData) {
     },
   });
 
+  await recordAudit({
+    action: "SHIFT_ALLOCATED",
+    targetType: "Shift",
+    targetId: shiftId,
+    actorId: manager.id,
+    organisationId: manager.organisationId,
+    detail: { workerId },
+  });
+
   revalidatePath("/");
 }
 
@@ -130,6 +150,15 @@ export async function offerShift(formData: FormData) {
     },
   });
 
+  await recordAudit({
+    action: "SHIFT_OFFERED",
+    targetType: "Shift",
+    targetId: shiftId,
+    actorId: manager.id,
+    organisationId: manager.organisationId,
+    detail: { participantId: shift.participantId },
+  });
+
   revalidatePath("/");
 }
 
@@ -156,6 +185,15 @@ export async function cancelShift(formData: FormData) {
         create: { type: "CANCELLED", actorId: manager.id, detail: reason, ...tenantOwner(manager) },
       },
     },
+  });
+
+  await recordAudit({
+    action: "SHIFT_CANCELLED",
+    targetType: "Shift",
+    targetId: shiftId,
+    actorId: manager.id,
+    organisationId: manager.organisationId,
+    detail: { reason },
   });
 
   revalidatePath("/");

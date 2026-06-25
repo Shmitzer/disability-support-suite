@@ -7,6 +7,10 @@
 // This is a plain data module: no "use client" / "use server", so both sides can
 // import it. Keep it free of anything server-only (no database, no cookies).
 
+// Type-only import: care-needs.ts imports LOG_CATEGORIES at runtime, so importing a
+// value from it here would be a cycle. The type is erased at build (no cycle).
+import type { SupportNeed } from "@/lib/care-needs";
+
 // A predefined amount the worker can pick instead of typing (e.g. "Can — 375 mL").
 // `ml` is the value stored; `label` is what's shown in the dropdown / sheet.
 export type AmountPreset = {
@@ -48,6 +52,10 @@ export type DetailGroup = {
   // Only show this group when another group's value is one of `in` (e.g. show the
   // Bristol scale only when the toilet type is Bowel or Both).
   showWhen?: { group: string; in: string[] };
+  // Only show this group when the PARTICIPANT'S care profile has this support-need
+  // flag set (e.g. an IDDSI fluid-level group only when `dysphagia` is on). Sibling
+  // of showWhen, keyed on the profile rather than another group. See care-needs.ts.
+  needWhen?: SupportNeed;
 };
 
 export type LogCategory = {
@@ -67,6 +75,13 @@ export type LogCategory = {
   requireNoteWhen?: { group: string; in: string[] };
   // Example/prompt text shown in the free-text note box, tailored to this category.
   notePlaceholder?: string;
+  // Participant-tailoring (see care-needs.ts + docs/design/participant-care-profile.md):
+  //   alwaysOn — universal; shown for every participant (the baseline set).
+  //   need     — shown only when the participant's care profile has this flag set.
+  // A category with neither is treated as need-less (always shown today). Phase 1
+  // marks the current categories alwaysOn; need-gated categories arrive in Phase 4.
+  alwaysOn?: boolean;
+  need?: SupportNeed;
 };
 
 // The order here is the order the chips appear on screen. Detail chips are kept
@@ -76,6 +91,7 @@ export type LogCategory = {
 export const LOG_CATEGORIES: LogCategory[] = [
   {
     key: "Meal",
+    alwaysOn: true,
     label: "Food",
     emoji: "🍽️",
     notePlaceholder: "e.g. what they ate, appetite, any help needed",
@@ -93,10 +109,33 @@ export const LOG_CATEGORIES: LogCategory[] = [
         mode: "single",
         options: ["All", "Most", "About half", "A little", "None"],
       },
+      // Standard assistance scale (shared with Hygiene/Toilet) — meal assistance is
+      // clinically relevant (choking/dysphagia, mealtime management plans).
+      {
+        key: "assist",
+        label: "assistance",
+        mode: "single",
+        options: ["Independent", "Prompted", "Assisted", "Full assistance"],
+      },
+      // Precise IDDSI food texture — only for participants flagged with dysphagia.
+      {
+        key: "iddsiFood",
+        label: "IDDSI food level",
+        mode: "single",
+        options: [
+          "Level 3 Liquidised",
+          "Level 4 Pureed",
+          "Level 5 Minced & moist",
+          "Level 6 Soft & bite-sized",
+          "Level 7 Regular",
+        ],
+        needWhen: "dysphagia",
+      },
     ],
   },
   {
     key: "Fluids",
+    alwaysOn: true,
     label: "Drink",
     emoji: "💧",
     notePlaceholder: "e.g. encouraged fluids, sips vs full glass",
@@ -110,6 +149,28 @@ export const LOG_CATEGORIES: LogCategory[] = [
         options: ["Water", "Tea", "Coffee", "Juice"],
         allowOther: true,
         learn: true,
+      },
+      // Consistency — thickened fluids are an aspiration/dysphagia safety flag and
+      // must be recordable. Fixed vocabulary (no learning).
+      {
+        key: "consistency",
+        label: "consistency",
+        mode: "single",
+        options: ["Thin", "Thickened"],
+      },
+      // Precise IDDSI fluid level — only for participants flagged with dysphagia.
+      {
+        key: "iddsiFluid",
+        label: "IDDSI fluid level",
+        mode: "single",
+        options: [
+          "Level 0 Thin",
+          "Level 1 Slightly thick",
+          "Level 2 Mildly thick",
+          "Level 3 Moderately thick",
+          "Level 4 Extremely thick",
+        ],
+        needWhen: "dysphagia",
       },
     ],
     amount: {
@@ -130,6 +191,7 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   {
     key: "Activity",
+    alwaysOn: true,
     label: "Activity",
     emoji: "🏃",
     notePlaceholder: "e.g. what they did, where, who was there",
@@ -157,19 +219,59 @@ export const LOG_CATEGORIES: LogCategory[] = [
         key: "duration",
         label: "duration",
         mode: "single",
-        options: ["<5 min", "5 min", "10 min", "30 min", "1 hr"],
+        options: ["<5 min", "5 min", "10 min", "15 min", "30 min", "45 min", "1 hr", "2 hr"],
         allowOther: true,
+      },
+      // Engagement/participation — what turns an activity entry into useful NDIS
+      // goal/progress evidence rather than just "did X". Observational, not a mood.
+      {
+        key: "engagement",
+        label: "engagement",
+        mode: "single",
+        options: ["Engaged", "Participated with support", "Reluctant", "Declined"],
+      },
+    ],
+  },
+  {
+    key: "Sleep",
+    alwaysOn: true,
+    label: "Sleep",
+    emoji: "😴",
+    notePlaceholder: "e.g. settled 10pm, brief wake at 2am, checked every 30 min",
+    // State at this check (single) + optional overnight observations (multi). No
+    // learning — sleep uses a fixed vocabulary. Common on SIL / overnight shifts.
+    groups: [
+      {
+        key: "state",
+        label: "state",
+        mode: "single",
+        options: ["Settled", "Asleep", "Awake", "Restless", "Up"],
+      },
+      {
+        key: "obs",
+        label: "observations",
+        mode: "multi",
+        options: [
+          "Repositioned",
+          "Continence check",
+          "Settled with support",
+          "Up to toilet",
+          "Distressed – see note",
+        ],
       },
     ],
   },
   {
     key: "Toileting",
+    alwaysOn: true,
     label: "Toilet",
     emoji: "🚻",
     notePlaceholder: "e.g. any pain, blood, or concerns",
-    // Type (single) → Bristol scale only for Bowel/Both → observation toggles (multi).
-    // Captures the bowel data (type + Bristol + timestamp) the future anti-impaction
-    // plan needs. No learning — toileting is a fixed clinical vocabulary.
+    // Type (single) → Bristol scale only for Bowel/Both → assistance level (single,
+    // standard scale) + observations (MULTI — a session can be several events at once,
+    // e.g. "Needed assistance" AND "Continence aid changed"). Captures the bowel data
+    // (type + Bristol + timestamp) the future anti-impaction plan needs. No learning —
+    // toileting is a fixed clinical vocabulary.
     groups: [
       { key: "type", label: "type", mode: "single", options: ["Urine", "Bowel", "Both"] },
       {
@@ -187,16 +289,24 @@ export const LOG_CATEGORIES: LogCategory[] = [
         ],
         showWhen: { group: "type", in: ["Bowel", "Both"] },
       },
+      // The standard assistance scale (shared with Hygiene/Food) — single-select.
+      {
+        key: "assist",
+        label: "assistance",
+        mode: "single",
+        options: ["Independent", "Prompted", "Assisted", "Full assistance"],
+      },
+      // Observations are EVENTS, so multi-select (they co-occur with assistance and
+      // each other). Split out of the old single-select group that mixed the two.
       {
         key: "obs",
         label: "observations",
-        mode: "single",
+        mode: "multi",
         options: [
-          "Independent",
-          "Needed assistance",
           "Accident / incontinence",
           "Continence aid changed",
           "Catheter care",
+          "Pad check – dry",
           "Concern – see note",
         ],
       },
@@ -204,10 +314,13 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   {
     key: "Hygiene",
+    alwaysOn: true,
     label: "Hygiene",
     emoji: "🧼",
     notePlaceholder: "e.g. how they managed, any skin concerns",
-    // Tasks done (multi — a session is often several) + the assistance level (single).
+    // Tasks done (multi — a session is often several) + assistance level (single) +
+    // skin-integrity observations (multi). Skin checks are a key safeguarding /
+    // pressure-care compliance item — anything but "Skin intact" should prompt a note.
     groups: [
       {
         key: "tasks",
@@ -231,10 +344,24 @@ export const LOG_CATEGORIES: LogCategory[] = [
         mode: "single",
         options: ["Independent", "Prompted", "Assisted", "Full assistance"],
       },
+      {
+        key: "skin",
+        label: "skin check",
+        mode: "multi",
+        options: [
+          "Skin intact",
+          "Redness",
+          "Bruise",
+          "Skin tear",
+          "Rash",
+          "Pressure area – see note",
+        ],
+      },
     ],
   },
   {
     key: "Meds",
+    alwaysOn: true,
     label: "Medication",
     emoji: "💊",
     notePlaceholder: "e.g. reason if PRN or refused, any effects",
@@ -246,15 +373,137 @@ export const LOG_CATEGORIES: LogCategory[] = [
         mode: "single",
         options: ["Given", "Witnessed", "Self-administered", "PRN", "Refused", "Missed"],
       },
+      // PRN follow-up: recording a PRN dose without its effect is a known audit gap.
+      // Only shown when the status is PRN.
+      {
+        key: "prnEffect",
+        label: "PRN effect",
+        mode: "single",
+        options: ["Effective", "Partial", "No effect", "Too soon to tell"],
+        showWhen: { group: "status", in: ["PRN"] },
+      },
     ],
     textFields: [{ key: "dose", label: "Dose", placeholder: "e.g. 1 tablet, 5 mg" }],
     requireNoteWhen: { group: "status", in: ["PRN", "Refused"] },
   },
+  // --- Need-gated categories (shown only when the participant's care profile has the
+  // matching support-need flag — see care-needs.ts). ---
+  {
+    key: "Behaviour",
+    need: "behaviour_support_plan",
+    label: "Behaviour",
+    emoji: "🧩",
+    requireNote: true, // the note carries the antecedent → behaviour → consequence
+    notePlaceholder: "Factual: what happened before, the behaviour, and what followed",
+    groups: [
+      {
+        key: "behaviour",
+        label: "behaviour",
+        mode: "multi",
+        options: [
+          "Verbal",
+          "Physical aggression",
+          "Property damage",
+          "Self-injurious",
+          "Absconding",
+          "Non-engagement",
+          "Distress",
+          "Other",
+        ],
+      },
+      {
+        key: "strategy",
+        label: "strategy used",
+        mode: "single",
+        options: [
+          "Redirection",
+          "Offered choice",
+          "Quiet space",
+          "Reassurance",
+          "De-escalation",
+          "PRN medication",
+          "Followed BSP",
+        ],
+      },
+      // Restrictive practices — only when the participant is flagged for them. Each use
+      // is compliance-recorded (and may be a reportable incident).
+      {
+        key: "restrictive",
+        label: "restrictive practice used",
+        mode: "multi",
+        options: [
+          "Physical restraint",
+          "Environmental restraint",
+          "Seclusion",
+          "Chemical restraint",
+          "Mechanical restraint",
+        ],
+        needWhen: "restrictive_practices",
+      },
+    ],
+  },
+  {
+    key: "Seizure",
+    need: "seizures",
+    label: "Seizure",
+    emoji: "⚡",
+    notePlaceholder: "e.g. warning signs, what was seen, recovery",
+    groups: [
+      {
+        key: "type",
+        label: "type",
+        mode: "single",
+        options: ["Tonic-clonic", "Absence", "Focal", "Myoclonic", "Atonic", "Unknown"],
+      },
+      {
+        key: "duration",
+        label: "duration",
+        mode: "single",
+        options: ["<1 min", "1–2 min", "2–5 min", ">5 min"],
+        allowOther: true,
+      },
+      {
+        key: "obs",
+        label: "observations",
+        mode: "multi",
+        options: ["Injury", "Incontinence", "Colour change", "Post-ictal sleep", "Recovered fully"],
+      },
+      {
+        key: "response",
+        label: "response",
+        mode: "single",
+        options: ["Monitored", "Rescue medication given", "Ambulance called"],
+      },
+    ],
+    requireNoteWhen: { group: "response", in: ["Rescue medication given", "Ambulance called"] },
+  },
+  {
+    key: "Repositioning",
+    need: "pressure_care",
+    label: "Reposition",
+    emoji: "🔄",
+    notePlaceholder: "e.g. position changed, skin at pressure points",
+    groups: [
+      {
+        key: "position",
+        label: "position",
+        mode: "single",
+        options: ["Left side", "Right side", "Back", "Chair", "Standing", "Walked"],
+      },
+      {
+        key: "skin",
+        label: "skin at pressure points",
+        mode: "multi",
+        options: ["Skin intact", "Redness", "Pressure area – see note"],
+      },
+    ],
+  },
   // A free-text catch-all for anything the specific chips don't cover. The note
   // IS the entry, so it's required.
-  { key: "Note", label: "Note", emoji: "📝", requireNote: true },
+  { key: "Note", label: "Note", emoji: "📝", requireNote: true, alwaysOn: true },
   {
     key: "Incident",
+    alwaysOn: true,
     label: "Incident",
     emoji: "⚠️",
     notePlaceholder: "e.g. what happened, who was involved, action taken",

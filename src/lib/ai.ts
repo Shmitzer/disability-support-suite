@@ -7,6 +7,7 @@
 
 import { DETAIL_LEVEL, GLOSSARY } from "@/lib/note-config";
 import { scrubPII } from "@/lib/pii";
+import { extractionCatalogue, type ExtractedItem } from "@/lib/note-extraction";
 
 // Instructions that tell the AI HOW to write the note. This is the "system prompt".
 const SYSTEM_PROMPT = `You are an assistant for Disability Support Workers (DSWs) in New South Wales, Australia.
@@ -212,6 +213,182 @@ export async function generateClarifyingQuestions(
   return [];
 }
 
+// The system prompt for ENTRY-LEVEL clarifying questions (asked while the worker is
+// logging a single thing, e.g. an Activity "shopping trip"). The point is to nudge the
+// worker — in a warm, human, specific way — to capture the detail that's actually
+// missing for THIS entry, instead of a generic "what outcomes were achieved".
+const ENTRY_QUESTIONS_SYSTEM_PROMPT = `A Disability Support Worker is logging ONE entry during a shift. Help them capture it well by suggesting a few short, friendly, SPECIFIC questions they could answer in their note.
+
+You are given the category, any structured details already picked, the participant's name, and the note so far (which may be empty).
+
+Write 2-3 questions that sound like a warm colleague asking — natural and specific to what's being logged. Use the participant's first name where it reads naturally. Examples for a shopping outing: "Did {name} buy anything while you were out?", "How did the shopping trip go?", "Was there anything {name} needed a hand with at the shops?".
+
+Rules:
+- Be SPECIFIC to the category and details given — never generic like "what outcomes were achieved".
+- Ask only about things the worker could directly observe or that the participant actually said or did. NEVER ask them to guess, interpret, or infer anyone's feelings, mood, or thoughts.
+- Don't ask about detail that's already clearly captured in the note.
+- Keep each question to one short sentence.
+- If nothing useful is missing, return an empty list.
+- Return ONLY a JSON array of question strings. No other text.`;
+
+// Suggest a few human, entry-specific clarifying questions for the thing being logged.
+// Returns at most 3 plain strings (empty if nothing useful is missing or on error).
+export async function suggestEntryQuestions(input: {
+  label: string; // the category's human label, e.g. "Activity"
+  detail?: string | null; // assembled picks, e.g. "Community access · Outing"
+  note?: string; // the worker's note so far (may be empty)
+  participantName?: string;
+}): Promise<string[]> {
+  const people = input.participantName ? [input.participantName] : [];
+  const prompt = [
+    `Category: ${input.label}`,
+    input.detail ? `Details picked: ${input.detail}` : null,
+    `Participant: ${input.participantName ?? "the participant"}`,
+    `Note so far: ${input.note?.trim() ? input.note.trim() : "(empty)"}`,
+    `Suggest the questions now.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  // Scrub PII before sending (Rule 2); restore the name in each returned question.
+  const { text, restore } = scrubPII(prompt, people);
+  let raw: string;
+  try {
+    raw = await callGemini(ENTRY_QUESTIONS_SYSTEM_PROMPT, text, {
+      responseMimeType: "application/json",
+    });
+  } catch {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((q): q is string => typeof q === "string" && q.trim().length > 0)
+        .map((q) => restore(q).trim())
+        .slice(0, 3);
+    }
+  } catch {
+    // Not clean JSON → treat as "no questions".
+  }
+  return [];
+}
+
+// --- Note → structured log entries (extraction) -----------------------------
+//
+// Turn a free-text shift note into a list of categorised log items mapped EXACTLY
+// onto the capture chips. The category catalogue is generated from LOG_CATEGORIES
+// (note-extraction.ts) so the prompt can't drift from the real chips. The model
+// resolves relative times ("then", "after", "about 7:30") into absolute HH:MM,
+// anchored to the note's start time. Mapping/validation of the result is pure (see
+// mapExtractedToEntries); this function only does the model call + PII handling.
+const EXTRACT_SYSTEM_PROMPT = `You convert a disability support worker's free-text shift note into a list of structured log entries.
+
+Return ONLY a JSON array. Each element has this shape:
+{ "category": <one category key below>, "time": "HH:MM" (24-hour), "timeEstimated": <true|false>, "note": <short factual observation in the worker's words>, "groups": { <groupKey>: [<option>, ...] }, "amountMl": <number, ONLY for Fluids> }
+
+Categories and their allowed groups/options — use these EXACTLY; never invent a category, group, or option:
+{{CATALOGUE}}
+
+Rules:
+- Map each distinct activity to the SINGLE best-fitting category. If something fits no category, omit it (it stays in the original note).
+- Use ONLY the listed option values for a group. For a group marked "or free text", you may use a short free-text value if none fit.
+- TIME: the note's start time is given. Resolve every relative reference into an absolute "HH:MM" in chronological order, never going backwards. If a time isn't stated, estimate a sensible time after the previous item.
+- timeEstimated: set TRUE when you inferred/guessed the time (it was not clearly stated in the note), FALSE when the note stated the time explicitly (e.g. "at 2pm", "around 14:30"). This tells the worker which times to double-check.
+- Keep "note" brief and factual — no opinions, no clinical judgements, no invented detail.
+- Output ONLY the JSON array. No preamble, no code fences.`;
+
+export async function extractLogItems(
+  noteText: string,
+  startTime: string,
+  people: string[] = [],
+  allowedKeys?: string[],
+): Promise<ExtractedItem[]> {
+  const system = EXTRACT_SYSTEM_PROMPT.replace("{{CATALOGUE}}", extractionCatalogue(allowedKeys));
+  // Scrub PII before the note leaves the app (Rule 2); restore in returned strings.
+  const { text, restore } = scrubPII(`Note start time: ${startTime}\n\nNote:\n${noteText}`, people);
+  const raw = await callGemini(system, text, { responseMimeType: "application/json" });
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (x): x is { category: string } & Record<string, unknown> =>
+          !!x && typeof x === "object" && typeof (x as { category?: unknown }).category === "string",
+      )
+      .map((x) => ({
+        category: x.category,
+        time: typeof x.time === "string" ? x.time : "",
+        // Default to estimated when the model omits the flag — safer to prompt a check
+        // than to silently present a guessed time as confirmed.
+        timeEstimated: x.timeEstimated !== false,
+        note: typeof x.note === "string" ? restore(x.note) : "",
+        groups: sanitiseGroups(x.groups, restore),
+        amountMl: typeof x.amountMl === "number" ? x.amountMl : undefined,
+      }));
+  } catch {
+    // Model didn't return clean JSON — treat as "nothing extracted".
+    return [];
+  }
+}
+
+// Coerce the model's `groups` object into Record<string, string[]>, restoring any
+// scrubbed names in free-text values (fixed options carry no tokens, so it's a no-op
+// for them).
+function sanitiseGroups(
+  groups: unknown,
+  restore: (s: string) => string,
+): Record<string, string[]> | undefined {
+  if (!groups || typeof groups !== "object") return undefined;
+  const out: Record<string, string[]> = {};
+  for (const [key, value] of Object.entries(groups as Record<string, unknown>)) {
+    if (Array.isArray(value)) {
+      out[key] = value.filter((s): s is string => typeof s === "string").map((s) => restore(s));
+    }
+  }
+  return out;
+}
+
+// --- Caira assistant ("your friend") -----------------------------------------
+//
+// A warm, plain-English assistant answering NDIS / participant / company / general
+// questions. Person- and org-specific facts come ONLY from the retrieved context
+// (the user's context store, scoped to what they may see — see assistant-actions.ts);
+// the model must not invent them. PII is scrubbed before the call and restored after
+// (Rule 2). Designed for voice in / voice out (STT via transcribeAudio; TTS is the
+// browser's SpeechSynthesis, wired in the UI by cd).
+const CAIRA_SYSTEM_PROMPT = `You are Caira — a warm, calm, plain-English assistant for Australian disability support workers, the participants they support, and their families. You answer questions about the NDIS, the people the user supports, the organisation, and general topics, like a knowledgeable friend.
+
+Rules:
+- For anything about a specific person, the organisation, or the user's own situation, use ONLY the CONTEXT provided below. If the answer isn't in the context, say you don't have that information — never guess or invent details about a person.
+- General NDIS / how-things-work questions can use your general knowledge, kept accurate and plain.
+- Do NOT give medical, clinical, legal, or financial advice as fact. Suggest who to check with (e.g. the coordinator, a health professional) when relevant.
+- Be concise and spoken-friendly: short sentences, no markdown, no lists of symbols — this answer may be read aloud.
+- Australian English, warm and respectful. Never infer or assert how someone feels.`;
+
+// Answer a question as Caira, grounded in the supplied context snippets.
+export async function askCaira(input: {
+  question: string;
+  context?: string[]; // retrieved context snippets the user is permitted to see
+  people?: string[]; // names to scrub before the call (participants/workers)
+}): Promise<string> {
+  const ctx = (input.context ?? []).filter(Boolean);
+  const userPrompt = [
+    ctx.length ? `CONTEXT (use only this for person/org-specific facts):\n${ctx.join("\n---\n")}` : "CONTEXT: (none provided)",
+    `\nQUESTION: ${input.question}`,
+    `\nAnswer now, spoken-friendly.`,
+  ].join("\n");
+
+  const { text, restore } = scrubPII(userPrompt, input.people ?? []);
+  let raw: string;
+  try {
+    raw = await callGemini(CAIRA_SYSTEM_PROMPT, text);
+  } catch {
+    return "Sorry, I can't answer that right now. Please try again in a moment.";
+  }
+  return restore(raw).trim();
+}
+
 // The one function that actually calls Gemini. All note features share it so the
 // request shape, error handling, and model choice live in a single place.
 // `extraConfig` lets a caller add generationConfig options (e.g. JSON output).
@@ -219,6 +396,18 @@ async function callGemini(
   systemPrompt: string,
   userPrompt: string,
   extraConfig: Record<string, unknown> = {},
+): Promise<string> {
+  return geminiGenerate(systemPrompt, [{ text: userPrompt }], { extraConfig });
+}
+
+// Core Gemini call shared by the text features (callGemini) and audio transcription
+// (transcribeAudio). Takes the raw `parts` array so a caller can mix text +
+// inlineData (audio). `allowEmpty` lets transcription return "" for silence instead
+// of treating an empty response as an error.
+async function geminiGenerate(
+  systemPrompt: string,
+  parts: unknown[],
+  opts: { extraConfig?: Record<string, unknown>; allowEmpty?: boolean } = {},
 ): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
@@ -235,8 +424,8 @@ async function callGemini(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: systemPrompt }] },
-    contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-    generationConfig: { temperature: 0.4, ...extraConfig },
+    contents: [{ role: "user", parts }],
+    generationConfig: { temperature: 0.4, ...(opts.extraConfig ?? {}) },
   });
 
   const MAX_ATTEMPTS = 4;
@@ -265,11 +454,86 @@ async function callGemini(
       ?.map((p: { text?: string }) => p.text ?? "")
       .join("") ?? "";
 
-  if (!text.trim()) {
+  if (!text.trim() && !opts.allowEmpty) {
     throw new Error("The AI returned an empty response. Please try again.");
   }
 
   return text.trim();
+}
+
+// Is an AI provider configured? Lets API routes degrade gracefully (e.g. tell the
+// worker transcription is unavailable) instead of throwing when no key is set.
+export function aiConfigured(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY);
+}
+
+// --- Voice transcription ----------------------------------------------------
+//
+// Turn a recording of a worker's spoken shift note into text, which they then
+// review/edit before saving (the typed note stays the source of truth — Rule 11).
+//
+// ⚠️ PII / Rule 2 caveat: we scrub TEXT before sending it to the model, but audio
+// can't be scrubbed first — the recording (which may name people) goes to the AI
+// provider to be transcribed. That's an unavoidable cross-border disclosure for any
+// cloud transcription; it's gated behind GEMINI_API_KEY and the worker choosing to
+// record. Note GENERATION still scrubs the transcript downstream. Revisit with a
+// DPA / on-device transcription before real participant data (see Drive
+// "cross-border data disclosure").
+const TRANSCRIBE_SYSTEM_PROMPT = `You transcribe an audio recording of a disability support worker's spoken shift note.
+Rules:
+- Output ONLY the verbatim transcript as plain text. No preamble, no speaker labels, no timestamps, no commentary.
+- Use Australian English spelling. Add sensible punctuation and capitalisation.
+- Do NOT summarise, correct, or add anything that was not said.
+- If the audio is silent or unintelligible, output nothing at all.`;
+
+export async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
+  const parts = [
+    { text: "Transcribe the following audio recording." },
+    { inlineData: { mimeType, data: audioBase64 } },
+  ];
+  const raw = await geminiGenerate(TRANSCRIBE_SYSTEM_PROMPT, parts, {
+    extraConfig: { temperature: 0 },
+    allowEmpty: true,
+  });
+  return cleanTranscript(raw);
+}
+
+// --- Document OCR (photo → text) --------------------------------------------
+//
+// Extract the text from a photographed document so it can be saved/formatted and fed
+// into the assistant context store. Same Rule 2 caveat as audio: an image can't be
+// scrubbed before sending, so a photographed document (which may name people) goes to
+// the AI provider. Gated behind GEMINI_API_KEY + the user choosing to capture it.
+const OCR_SYSTEM_PROMPT = `You extract the text from a photographed document.
+- Output the document's text faithfully, preserving line breaks and obvious structure (headings, lists, tables as plain text).
+- Do NOT summarise, translate, correct, or add anything that is not in the image.
+- Australian English. If the image has no legible text, output nothing at all.`;
+
+export async function extractTextFromImage(imageBase64: string, mimeType: string): Promise<string> {
+  const parts = [
+    { text: "Extract all text from the following document image." },
+    { inlineData: { mimeType, data: imageBase64 } },
+  ];
+  const raw = await geminiGenerate(OCR_SYSTEM_PROMPT, parts, {
+    extraConfig: { temperature: 0 },
+    allowEmpty: true,
+  });
+  return raw.trim();
+}
+
+// Strip the boilerplate models sometimes wrap a transcript in ("Sure, here's the
+// transcript:", surrounding quotes) so we store just the spoken words. Pure —
+// unit-tested.
+export function cleanTranscript(raw: string): string {
+  let t = raw.trim();
+  t = t.replace(
+    /^(sure[,.!]?\s*)?(here(?:'s| is)\s+)?(the\s+)?(verbatim\s+)?transcript\s*[:\-—]\s*/i,
+    "",
+  );
+  if (t.length >= 2 && t.startsWith('"') && t.endsWith('"')) {
+    t = t.slice(1, -1).trim();
+  }
+  return t;
 }
 
 // The model name (so we can record which model produced a saved report).

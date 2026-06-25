@@ -1,6 +1,6 @@
 // Layout for every authenticated page. Shows the signed-in identity + a sign-out
-// control (or, under DEV_AUTH, the dev role-switch), and carries the BottomNav
-// (only authenticated pages get the app chrome).
+// control (or, under DEV_AUTH, the dev role-switch). Only authenticated pages get
+// the app chrome.
 
 import { redirect } from "next/navigation";
 import { getCurrentUser, listWorkers } from "@/lib/session";
@@ -8,7 +8,6 @@ import { DEV_AUTH } from "@/lib/dev-auth";
 import { signOut } from "@/lib/auth-actions";
 import { roleLabel } from "@/lib/enums";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
-import { BottomNav } from "@/components/BottomNav";
 
 export default async function ProtectedLayout({
   children,
@@ -49,12 +48,9 @@ export default async function ProtectedLayout({
         )}
       </header>
 
-      {/* Bottom padding leaves room for the fixed BottomNav. */}
-      <div className="flex flex-1 flex-col pb-[calc(env(safe-area-inset-bottom)+4.5rem)]">
+      <div className="flex flex-1 flex-col pb-[env(safe-area-inset-bottom)]">
         {children}
       </div>
-
-      <BottomNav />
     </>
   );
 }

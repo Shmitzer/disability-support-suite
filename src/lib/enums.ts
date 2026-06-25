@@ -5,6 +5,8 @@
 // so permission gates can be widened progressively (the spec's "implement gates
 // as each role becomes active") without hunting string literals across the app.
 
+import { can, Capability } from "@/lib/rbac";
+
 export const Role = {
   SOLO_WORKER: "SOLO_WORKER", // independent support worker, no org
   WORKER: "WORKER", // worker within an organisation
@@ -24,16 +26,19 @@ export const SectorMode = {
 } as const;
 export type SectorMode = (typeof SectorMode)[keyof typeof SectorMode];
 
-// Can this role roster/manage (see all shifts, approve clock amendments, etc.)?
-// The legacy "ROSTERING" role maps to ADMIN. This is the one place to widen who
-// counts as a manager later (e.g. fold in SUPERVISOR / SUPERADMIN).
+// Legacy role predicates — now thin wrappers over the capability layer (rbac.ts)
+// so all authorization flows through one policy map. Prefer `can(role, Capability.X)`
+// directly in new code; these remain for `roleLabel` and coarse "is a manager /
+// is a worker" UI checks. Behaviour is identical to the old hardcoded checks
+// (ADMIN manages; WORKER/SOLO_WORKER work) because that's how ROLE_CAPABILITIES
+// is seeded.
 export function isRosteringRole(role: string | null | undefined): boolean {
-  return role === Role.ADMIN;
+  return can(role, Capability.RosterManage);
 }
 
 // Front-line worker who actually works shifts (SOLO_WORKER and WORKER both do).
 export function isWorkerRole(role: string | null | undefined): boolean {
-  return role === Role.WORKER || role === Role.SOLO_WORKER;
+  return can(role, Capability.ShiftWork);
 }
 
 // Human-readable label for the dev role-switcher and similar UI.
