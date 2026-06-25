@@ -17,6 +17,23 @@ import { prisma } from "@/lib/prisma";
 import { recordAudit } from "@/lib/audit";
 import { can, type Capability, type Principal, type Resource } from "@/lib/rbac";
 import { Role } from "@/lib/enums";
+import { getCurrentUser } from "@/lib/session";
+
+// The Principal for the currently signed-in worker (org memberships ∪ active
+// participant grants). null when not signed in. This is what makes participant
+// GRANTS actually enforce — call sites do `can(await getCurrentPrincipal(), cap,
+// { participantId })` for participant-scoped access instead of an org-role check.
+export async function getCurrentPrincipal(now: Date = new Date()): Promise<Principal | null> {
+  const worker = await getCurrentUser();
+  if (!worker) return null;
+  return resolvePrincipal(worker.id, now);
+}
+
+// Convenience: does the current principal hold `capability` for `resource`?
+export async function currentCan(capability: Capability, resource?: Resource): Promise<boolean> {
+  const principal = await getCurrentPrincipal();
+  return !!principal && can(principal, capability, resource);
+}
 
 // Is a grant row currently in force at time `now`?
 export function isGrantActive(
