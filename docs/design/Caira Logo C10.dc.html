@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; font-family:'Figtree',sans-serif; }
+.board { background:#fff; border:1px solid #e7e9ed; border-radius:24px; box-shadow:0 8px 28px rgba(30,34,42,.07); padding:28px; }
+.grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:18px; }
+.cell { display:flex; flex-direction:column; align-items:center; gap:9px; }
+.tile { width:128px; height:128px; border-radius:28px; background:#eef5f3; display:flex; align-items:center; justify-content:center; }
+.lab { font:700 11px 'Figtree'; color:#5b626c; }
+.cap { font:500 10px 'Figtree'; color:#9aa1ab; }
+svg { display:block; overflow:visible; }
+</style>
+</helmet>
+
+<div style="position:absolute; left:60px; top:26px; width:1180px;">
+  <div data-drags-parent="1" style="font:800 16px 'Figtree'; color:#3a3128;">CAIRA · FULL HEART + “C”, 10 STUDIES</div>
+  <div data-drags-parent="1" style="font:600 13px 'Figtree'; color:#9aa1ab; margin-top:4px;">Solid heart with a bold C carved into the left lobe (opening right). Varying weight, size and angle.</div>
+</div>
+
+<div style="position:absolute; left:60px; top:96px; width:1180px;">
+  <div data-drags-parent="1" class="board">
+    <div class="grid">
+      <!-- 1 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#eef5f3" stroke-width="4" stroke-linecap="round"></path></svg></div><span class="lab">1</span><span class="cap">thin · 0°</span></div>
+      <!-- 2 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#eef5f3" stroke-width="5.5" stroke-linecap="round"></path></svg></div><span class="lab">2</span><span class="cap">medium · 0°</span></div>
+      <!-- 3 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#eef5f3" stroke-width="7" stroke-linecap="round"></path></svg></div><span class="lab">3</span><span class="cap">bold · 0°</span></div>
+      <!-- 4 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#eef5f3" stroke-width="5.5" stroke-linecap="round" transform="rotate(-18 21 27)"></path></svg></div><span class="lab">4</span><span class="cap">medium · tilt up</span></div>
+      <!-- 5 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#eef5f3" stroke-width="5.5" stroke-linecap="round" transform="rotate(20 21 27)"></path></svg></div><span class="lab">5</span><span class="cap">medium · tilt down</span></div>
+      <!-- 6 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M31 16 A11 11 0 1 0 31 38" fill="none" stroke="#eef5f3" stroke-width="5.5" stroke-linecap="round"></path></svg></div><span class="lab">6</span><span class="cap">large C</span></div>
+      <!-- 7 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M28 20.5 A7 7 0 1 0 28 33.5" fill="none" stroke="#eef5f3" stroke-width="5" stroke-linecap="round"></path></svg></div><span class="lab">7</span><span class="cap">small C</span></div>
+      <!-- 8 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M30 16.5 A10 10 0 1 0 30 36.5" fill="none" stroke="#eef5f3" stroke-width="8" stroke-linecap="round"></path></svg></div><span class="lab">8</span><span class="cap">chunky · large</span></div>
+      <!-- 9 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#eef5f3" stroke-width="4" stroke-linecap="round" transform="rotate(-12 21 27)"></path></svg></div><span class="lab">9</span><span class="cap">thin · tilt up</span></div>
+      <!-- 10 -->
+      <div class="cell"><div class="tile"><svg width="92" height="92" viewBox="0 0 64 64"><path d="M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z" fill="#0f766e"></path><path d="M29.5 18.5 A9 9 0 1 0 29.5 35.5" fill="none" stroke="#eef5f3" stroke-width="6.5" stroke-linecap="round" transform="rotate(28 21 27)"></path></svg></div><span class="lab">10</span><span class="cap">bold · tail down</span></div>
+    </div>
+  </div>
+</div>
+
+<div style="position:absolute; left:60px; top:430px; width:1180px;">
+  <div data-drags-parent="1" style="font:600 12px 'Figtree'; color:#9aa1ab;">Tell me a number (or “bolder”, “bigger”, “tilt the opening more”) and I’ll refine, then add the wordmark + app-icon lockups.</div>
+</div>
+</x-dc>
+</body>
+</html>

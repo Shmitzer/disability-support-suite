@@ -41,6 +41,19 @@ INSERT INTO public."Participant"(id, name, "userId", "organisationId") VALUES
   ('verify_pB',    'Bob (org B)',        'ffffffff-0000-0000-0000-0000000000b9', 'verify_orgB'),
   ('verify_pSolo', 'Solo (owner = A)',   :'uidA',                                 NULL);
 
+-- v2 fixtures: an ORG-ONLY table (Incident) and an OWNER-FALLBACK table
+-- (Notification), one row per org, to assert the v2 policies isolate tenants.
+INSERT INTO public."Incident"(id, "occurredAt", type, severity, description, "organisationId") VALUES
+  ('verify_incA', now(), 'other', 'low', 'org A incident', 'verify_orgA'),
+  ('verify_incB', now(), 'other', 'low', 'org B incident', 'verify_orgB');
+
+-- Notification: org A's row is owned by a DIFFERENT user (so org-claim visibility
+-- is what surfaces it); the solo row is owned by user A with no org.
+INSERT INTO public."Notification"(id, "userId", "organisationId", type, title) VALUES
+  ('verify_noteA',    'ffffffff-0000-0000-0000-0000000000a9', 'verify_orgA', 'general', 'org A note'),
+  ('verify_noteB',    'ffffffff-0000-0000-0000-0000000000b9', 'verify_orgB', 'general', 'org B note'),
+  ('verify_noteSolo', :'uidA',                                 NULL,          'general', 'solo note (owner A)');
+
 -- ===========================================================================
 -- 1. Org A member: sees org A rows + own solo row (2); must NOT see org B's row.
 -- ===========================================================================
@@ -144,6 +157,52 @@ BEGIN
     RAISE EXCEPTION 'cross-tenant UPDATE touched % org B row(s) (should be 0)', affected;
   END IF;
   RAISE NOTICE 'PASS 5: cross-tenant UPDATE affects no rows.';
+END $$;
+
+-- ===========================================================================
+-- 7. v2 ORG-ONLY table (Incident): org A member sees only org A's incident;
+--    must NOT see org B's. Proves the org-claim-only policy isolates tenants.
+-- ===========================================================================
+DO $$
+DECLARE total int; leaked int;
+BEGIN
+  PERFORM set_config('role', 'authenticated', true);
+  PERFORM set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000a1","organisationId":"verify_orgA"}', true);
+
+  SELECT count(*) INTO total  FROM public."Incident" WHERE id LIKE 'verify_%';
+  SELECT count(*) INTO leaked FROM public."Incident" WHERE id = 'verify_incB';
+
+  IF leaked <> 0 THEN
+    RAISE EXCEPTION 'BOLA: org A member can read org B Incident (cross-tenant leak)';
+  END IF;
+  IF total <> 1 THEN
+    RAISE EXCEPTION 'org A member should see exactly 1 Incident, saw %', total;
+  END IF;
+  RAISE NOTICE 'PASS 7: org-only v2 table (Incident) isolates tenants.';
+END $$;
+
+-- ===========================================================================
+-- 8. v2 OWNER-FALLBACK table (Notification): org A member sees org A's row +
+--    their own solo row (2); must NOT see org B's. Proves owner-OR-org policy.
+-- ===========================================================================
+DO $$
+DECLARE total int; leaked int;
+BEGIN
+  PERFORM set_config('role', 'authenticated', true);
+  PERFORM set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-0000000000a1","organisationId":"verify_orgA"}', true);
+
+  SELECT count(*) INTO total  FROM public."Notification" WHERE id LIKE 'verify_%';
+  SELECT count(*) INTO leaked FROM public."Notification" WHERE id = 'verify_noteB';
+
+  IF leaked <> 0 THEN
+    RAISE EXCEPTION 'BOLA: org A member can read org B Notification (cross-tenant leak)';
+  END IF;
+  IF total <> 2 THEN
+    RAISE EXCEPTION 'org A member should see 2 Notifications (org A + own solo), saw %', total;
+  END IF;
+  RAISE NOTICE 'PASS 8: owner-fallback v2 table (Notification) isolates tenants.';
 END $$;
 
 -- Back to the owner role for the catalog check below. (A SET inside the DO blocks

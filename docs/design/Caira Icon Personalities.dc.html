@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+.card { background:#fff; border:1px solid #e7e9ed; border-radius:24px; box-shadow:0 8px 30px rgba(30,34,42,.07); padding:24px 22px 26px; }
+.nm { font:800 22px 'Bricolage Grotesque',sans-serif; color:#23272e; }
+.pp { font:600 13px 'Figtree',sans-serif; color:#8a909a; margin-top:4px; line-height:1.45; }
+.row { display:flex; gap:12px; margin-top:22px; }
+.cell { display:flex; flex-direction:column; align-items:center; gap:9px; flex:1; }
+.lab { font:600 10px 'Figtree',sans-serif; color:#7a818b; }
+svg { display:block; overflow:visible; }
+</style>
+<svg width="0" height="0" style="position:absolute;"><defs>
+  <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4"/></filter>
+  <filter id="roughB"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3.4"/></filter>
+  <filter id="paperSh" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="2.5" stdDeviation="2.2" flood-color="#7a5a36" flood-opacity="0.22"/></filter>
+  <filter id="claySh" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#5a3d22" flood-opacity="0.20"/></filter>
+  <filter id="blur2"><feGaussianBlur stdDeviation="3"/></filter>
+</defs></svg>
+</helmet>
+
+<div style="position:absolute; left:60px; top:30px; width:1500px; font-family:'Figtree',sans-serif;">
+  <div data-drags-parent="1" style="font:800 15px 'Figtree'; color:#3a3128; letter-spacing:.02em;">CAIRA · ICON PERSONALITY DIRECTIONS</div>
+  <div data-drags-parent="1" style="font:600 13px 'Figtree'; color:#9aa1ab; margin-top:4px;">Four ground-up styles, each giving the app a different character. Same five logs in every set: Food · Drink · Activity · Medication · Mood.</div>
+</div>
+
+<!-- ============ 1 · JOTTED ============ -->
+<div style="position:absolute; left:60px; top:108px; width:340px;">
+  <div data-drags-parent="1" class="card">
+    <div class="nm">1 · Jotted</div>
+    <div class="pp" style="font-family:'Caveat',cursive; font-size:18px; color:#2f6b58;">“like a note from someone who cares”</div>
+    <div class="pp">Hand-drawn ink. Warm, human, a little imperfect — it feels written, not generated.</div>
+    <div class="row">
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#rough)"><circle cx="28" cy="28" r="22" fill="#f3ede0" stroke="none"/><g transform="translate(16,16)" fill="none" stroke="#cf8a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></g></g></svg><span class="lab">Food</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#rough)"><circle cx="28" cy="28" r="22" fill="#e6f1ef"/><g transform="translate(16,16)" fill="none" stroke="#1f8079" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></g></g></svg><span class="lab">Drink</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#rough)"><circle cx="28" cy="28" r="22" fill="#e7f1e9"/><g transform="translate(16,16)" fill="none" stroke="#2f7d4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.6"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></g></g></svg><span class="lab">Activity</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#rough)"><circle cx="28" cy="28" r="22" fill="#f6e7ef"/><g transform="translate(16,16)" fill="none" stroke="#b2407a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></g></g></svg><span class="lab">Meds</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#rough)"><circle cx="28" cy="28" r="22" fill="#fbeadf"/><g transform="translate(16,16)" fill="none" stroke="#cf6a3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></g></g></svg><span class="lab">Mood</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2 · PAPER ============ -->
+<div style="position:absolute; left:440px; top:108px; width:340px;">
+  <div data-drags-parent="1" class="card">
+    <div class="nm">2 · Paper</div>
+    <div class="pp" style="font-family:'Caveat',cursive; font-size:18px; color:#b06a2f;">“calm, tactile, handmade”</div>
+    <div class="pp">Soft cut-paper shapes with a gentle layered shadow. Quiet and reassuring — never clinical.</div>
+    <div class="row">
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><path d="M28 5C40 5 51 11 50 26C49 40 45 51 27 51C12 51 6 40 7 26C8 13 16 5 28 5Z" fill="#f6d99a" filter="url(#paperSh)"/><g transform="translate(16,16)" fill="none" stroke="#8a5a18" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></g></svg><span class="lab">Food</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><path d="M27 5C41 4 52 12 50 27C49 41 43 52 26 51C12 50 5 41 7 25C9 12 17 6 27 5Z" fill="#a9ddd7" filter="url(#paperSh)"/><g transform="translate(16,16)" fill="none" stroke="#0e5e58" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></g></svg><span class="lab">Drink</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><path d="M28 4C41 5 51 12 51 27C51 41 44 52 27 51C13 50 5 40 6 26C7 12 17 4 28 4Z" fill="#aedcb6" filter="url(#paperSh)"/><g transform="translate(16,16)" fill="none" stroke="#256b3f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.5"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></g></svg><span class="lab">Activity</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><path d="M27 5C41 5 52 11 50 26C49 41 44 51 27 51C12 51 6 40 7 25C8 12 16 6 27 5Z" fill="#f3c2d8" filter="url(#paperSh)"/><g transform="translate(16,16)" fill="none" stroke="#962f63" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></g></svg><span class="lab">Meds</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><path d="M28 5C41 4 51 12 50 27C49 40 44 52 26 51C13 50 5 41 7 25C9 12 18 6 28 5Z" fill="#f7c9ad" filter="url(#paperSh)"/><g transform="translate(16,16)" fill="none" stroke="#a8522a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></g></svg><span class="lab">Mood</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 3 · PEBBLE ============ -->
+<div style="position:absolute; left:820px; top:108px; width:340px;">
+  <div data-drags-parent="1" class="card">
+    <div class="nm">3 · Pebble</div>
+    <div class="pp" style="font-family:'Caveat',cursive; font-size:18px; color:#7a5cc0;">“squishy &amp; friendly to tap”</div>
+    <div class="pp">Soft clay buttons with a little depth and shine. Playful, modern, genuinely nice to press.</div>
+    <div class="row">
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#claySh)"><rect x="6" y="6" width="44" height="44" rx="17" fill="#eea53a"/><ellipse cx="22" cy="18" rx="13" ry="8" fill="#fff" opacity=".34" filter="url(#blur2)"/></g><g transform="translate(16,16)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></g></svg><span class="lab">Food</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#claySh)"><rect x="6" y="6" width="44" height="44" rx="17" fill="#2aa39b"/><ellipse cx="22" cy="18" rx="13" ry="8" fill="#fff" opacity=".30" filter="url(#blur2)"/></g><g transform="translate(16,16)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></g></svg><span class="lab">Drink</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#claySh)"><rect x="6" y="6" width="44" height="44" rx="17" fill="#3aa564"/><ellipse cx="22" cy="18" rx="13" ry="8" fill="#fff" opacity=".30" filter="url(#blur2)"/></g><g transform="translate(16,16)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.6"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></g></svg><span class="lab">Activity</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#claySh)"><rect x="6" y="6" width="44" height="44" rx="17" fill="#d35e93"/><ellipse cx="22" cy="18" rx="13" ry="8" fill="#fff" opacity=".30" filter="url(#blur2)"/></g><g transform="translate(16,16)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></g></svg><span class="lab">Meds</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><g filter="url(#claySh)"><rect x="6" y="6" width="44" height="44" rx="17" fill="#e2784a"/><ellipse cx="22" cy="18" rx="13" ry="8" fill="#fff" opacity=".30" filter="url(#blur2)"/></g><g transform="translate(16,16)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></g></svg><span class="lab">Mood</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 4 · MARKER ============ -->
+<div style="position:absolute; left:1200px; top:108px; width:340px;">
+  <div data-drags-parent="1" class="card">
+    <div class="nm">4 · Marker</div>
+    <div class="pp" style="font-family:'Caveat',cursive; font-size:18px; color:#c2563f;">“like ticking off your rounds”</div>
+    <div class="pp">A clean glyph over a hand-swiped highlighter mark. Energetic, human, a little joyful.</div>
+    <div class="row">
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><rect x="9" y="16" width="38" height="26" rx="11" fill="#f6c84a" opacity=".55" filter="url(#roughB)"/><g transform="translate(16,16)" fill="none" stroke="#3a3128" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></g></svg><span class="lab">Food</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><rect x="9" y="16" width="38" height="26" rx="11" fill="#46c4ba" opacity=".50" filter="url(#roughB)"/><g transform="translate(16,16)" fill="none" stroke="#3a3128" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></g></svg><span class="lab">Drink</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><rect x="9" y="16" width="38" height="26" rx="11" fill="#6cc585" opacity=".52" filter="url(#roughB)"/><g transform="translate(16,16)" fill="none" stroke="#3a3128" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.6"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></g></svg><span class="lab">Activity</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><rect x="9" y="16" width="38" height="26" rx="11" fill="#ec84b4" opacity=".50" filter="url(#roughB)"/><g transform="translate(16,16)" fill="none" stroke="#3a3128" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></g></svg><span class="lab">Meds</span></div>
+      <div class="cell"><svg width="54" height="54" viewBox="0 0 56 56"><rect x="9" y="16" width="38" height="26" rx="11" fill="#f29a6a" opacity=".52" filter="url(#roughB)"/><g transform="translate(16,16)" fill="none" stroke="#3a3128" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></g></svg><span class="lab">Mood</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- on a phone preview -->
+<div style="position:absolute; left:60px; top:340px; width:1480px;">
+  <div data-drags-parent="1" style="font:800 13px 'Figtree'; color:#9aa1ab; letter-spacing:.04em;">↓ EACH SET, SHOWN AS THE CAPTURE GRID WOULD FEEL</div>
+</div>
+
+<!-- mini grids -->
+<div style="position:absolute; left:60px; top:374px; width:340px;">
+  <div data-drags-parent="1" style="background:#f3ebdd; border-radius:22px; padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><g filter="url(#rough)"><circle cx="28" cy="28" r="22" fill="#f3ede0"/><g transform="translate(16,16)" fill="none" stroke="#cf8a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></g></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Food</span></div>
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><g filter="url(#rough)"><circle cx="28" cy="28" r="22" fill="#e6f1ef"/><g transform="translate(16,16)" fill="none" stroke="#1f8079" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></g></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Drink</span></div>
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><g filter="url(#rough)"><circle cx="28" cy="28" r="22" fill="#e7f1e9"/><g transform="translate(16,16)" fill="none" stroke="#2f7d4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.6"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></g></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Activity</span></div>
+  </div>
+  <div data-drags-parent="1" style="text-align:center; font:700 12px 'Figtree'; color:#2f6b58; margin-top:8px;">Jotted</div>
+</div>
+<div style="position:absolute; left:440px; top:374px; width:340px;">
+  <div data-drags-parent="1" style="background:#f3ebdd; border-radius:22px; padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 5C40 5 51 11 50 26C49 40 45 51 27 51C12 51 6 40 7 26C8 13 16 5 28 5Z" fill="#f6d99a" filter="url(#paperSh)"/><g transform="translate(16,16)" fill="none" stroke="#8a5a18" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Food</span></div>
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M27 5C41 4 52 12 50 27C49 41 43 52 26 51C12 50 5 41 7 25C9 12 17 6 27 5Z" fill="#a9ddd7" filter="url(#paperSh)"/><g transform="translate(16,16)" fill="none" stroke="#0e5e58" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Drink</span></div>
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 4C41 5 51 12 51 27C51 41 44 52 27 51C13 50 5 40 6 26C7 12 17 4 28 4Z" fill="#aedcb6" filter="url(#paperSh)"/><g transform="translate(16,16)" fill="none" stroke="#256b3f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.5"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Activity</span></div>
+  </div>
+  <div data-drags-parent="1" style="text-align:center; font:700 12px 'Figtree'; color:#b06a2f; margin-top:8px;">Paper</div>
+</div>
+<div style="position:absolute; left:820px; top:374px; width:340px;">
+  <div data-drags-parent="1" style="background:#f3ebdd; border-radius:22px; padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><g filter="url(#claySh)"><rect x="6" y="6" width="44" height="44" rx="17" fill="#eea53a"/><ellipse cx="22" cy="18" rx="13" ry="8" fill="#fff" opacity=".34" filter="url(#blur2)"/></g><g transform="translate(16,16)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Food</span></div>
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><g filter="url(#claySh)"><rect x="6" y="6" width="44" height="44" rx="17" fill="#2aa39b"/><ellipse cx="22" cy="18" rx="13" ry="8" fill="#fff" opacity=".30" filter="url(#blur2)"/></g><g transform="translate(16,16)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Drink</span></div>
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><g filter="url(#claySh)"><rect x="6" y="6" width="44" height="44" rx="17" fill="#3aa564"/><ellipse cx="22" cy="18" rx="13" ry="8" fill="#fff" opacity=".30" filter="url(#blur2)"/></g><g transform="translate(16,16)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.6"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Activity</span></div>
+  </div>
+  <div data-drags-parent="1" style="text-align:center; font:700 12px 'Figtree'; color:#7a5cc0; margin-top:8px;">Pebble</div>
+</div>
+<div style="position:absolute; left:1200px; top:374px; width:340px;">
+  <div data-drags-parent="1" style="background:#f3ebdd; border-radius:22px; padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><rect x="9" y="16" width="38" height="26" rx="11" fill="#f6c84a" opacity=".55" filter="url(#roughB)"/><g transform="translate(16,16)" fill="none" stroke="#3a3128" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Food</span></div>
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><rect x="9" y="16" width="38" height="26" rx="11" fill="#46c4ba" opacity=".50" filter="url(#roughB)"/><g transform="translate(16,16)" fill="none" stroke="#3a3128" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12l-1.1 14.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8L6 4z"/><path d="M6.4 9h11.2"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Drink</span></div>
+    <div style="background:#fffaf3; border:1px solid #ece0cf; border-radius:16px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;"><svg width="40" height="40" viewBox="0 0 56 56"><rect x="9" y="16" width="38" height="26" rx="11" fill="#6cc585" opacity=".52" filter="url(#roughB)"/><g transform="translate(16,16)" fill="none" stroke="#3a3128" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.6"/><path d="M12 9l-2.5 4 3 2.5L11 21"/><path d="M12 9l3.5 1.5L18 9"/><path d="M12 9l-4 1"/></g></svg><span style="font:600 10px 'Figtree'; color:#5b4a3a;">Activity</span></div>
+  </div>
+  <div data-drags-parent="1" style="text-align:center; font:700 12px 'Figtree'; color:#c2563f; margin-top:8px;">Marker</div>
+</div>
+</x-dc>
+</body>
+</html>

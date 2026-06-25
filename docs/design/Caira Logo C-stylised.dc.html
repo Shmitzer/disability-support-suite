@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; font-family:'Figtree',sans-serif; }
+.card { background:#fff; border:1px solid #e7e9ed; border-radius:22px; box-shadow:0 8px 28px rgba(30,34,42,.07); padding:24px; display:flex; flex-direction:column; }
+.nm { font:800 17px 'Bricolage Grotesque'; color:#23272e; }
+.rat { font:600 12px 'Figtree'; color:#8a909a; margin-top:4px; line-height:1.5; min-height:38px; }
+.tile { width:100px; height:100px; border-radius:25px; display:flex; align-items:center; justify-content:center; }
+.lock { display:flex; align-items:center; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid #f0f1f4; }
+.word { font:800 26px 'Bricolage Grotesque'; color:#0f766e; letter-spacing:-.01em; }
+svg { display:block; overflow:visible; }
+</style>
+</helmet>
+
+<div style="position:absolute; left:60px; top:26px; width:1100px;">
+  <div data-drags-parent="1" style="font:800 16px 'Figtree'; color:#3a3128;">CAIRA · STYLISED C-HEART</div>
+  <div data-drags-parent="1" style="font:600 13px 'Figtree'; color:#9aa1ab; margin-top:4px;">Concept 2, with the top of the heart sliced off above the “C” and a little dash where the C meets the body. Four takes.</div>
+</div>
+
+<!-- 1 -->
+<div style="position:absolute; left:60px; top:104px; width:300px;">
+  <div data-drags-parent="1" class="card">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="tile" style="background:#eef5f3;"><svg width="72" height="72" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#0f766e"></path><circle cx="20.5" cy="12.5" r="9.5" fill="#eef5f3"></circle><path d="M29 18 A8.5 8.5 0 1 0 29 34" fill="none" stroke="#eef5f3" stroke-width="4" stroke-linecap="round"></path><line x1="30.5" y1="36" x2="25.5" y2="31" stroke="#eef5f3" stroke-width="2.6" stroke-linecap="round"></line></svg></div>
+      <div class="tile" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="46" height="46" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#fff"></path><circle cx="20.5" cy="12.5" r="9.5" fill="#0f766e"></circle><path d="M29 18 A8.5 8.5 0 1 0 29 34" fill="none" stroke="#0f766e" stroke-width="4" stroke-linecap="round"></path><line x1="30.5" y1="36" x2="25.5" y2="31" stroke="#0f766e" stroke-width="2.6" stroke-linecap="round"></line></svg></div>
+    </div>
+    <div class="nm" style="margin-top:16px;">1 · Sliced top</div>
+    <div class="rat">Left lobe flattened to the C’s curve; a small dash where the C’s tail meets the heart.</div>
+    <div class="lock"><svg width="34" height="34" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#0f766e"></path><circle cx="20.5" cy="12.5" r="9.5" fill="#fff"></circle><path d="M29 18 A8.5 8.5 0 1 0 29 34" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"></path><line x1="30.5" y1="36" x2="25.5" y2="31" stroke="#fff" stroke-width="2.6" stroke-linecap="round"></line></svg><span class="word">Caira</span></div>
+  </div>
+</div>
+
+<!-- 2 -->
+<div style="position:absolute; left:400px; top:104px; width:300px;">
+  <div data-drags-parent="1" class="card">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="tile" style="background:#eef5f3;"><svg width="72" height="72" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#0f766e"></path><path d="M11 20 A11 11 0 0 1 31 20" fill="#eef5f3"></path><path d="M29 19 A8.5 8.5 0 1 0 29 33" fill="none" stroke="#eef5f3" stroke-width="4" stroke-linecap="round"></path><line x1="30" y1="35.5" x2="25" y2="30.5" stroke="#eef5f3" stroke-width="2.6" stroke-linecap="round"></line></svg></div>
+      <div class="tile" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="46" height="46" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#fff"></path><path d="M11 20 A11 11 0 0 1 31 20" fill="#0f766e"></path><path d="M29 19 A8.5 8.5 0 1 0 29 33" fill="none" stroke="#0f766e" stroke-width="4" stroke-linecap="round"></path><line x1="30" y1="35.5" x2="25" y2="30.5" stroke="#0f766e" stroke-width="2.6" stroke-linecap="round"></line></svg></div>
+    </div>
+    <div class="nm" style="margin-top:16px;">2 · Flat shoulder</div>
+    <div class="rat">A straighter cut across the top-left shoulder — more geometric, modern.</div>
+    <div class="lock"><svg width="34" height="34" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#0f766e"></path><path d="M11 20 A11 11 0 0 1 31 20" fill="#fff"></path><path d="M29 19 A8.5 8.5 0 1 0 29 33" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"></path><line x1="30" y1="35.5" x2="25" y2="30.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"></line></svg><span class="word">Caira</span></div>
+  </div>
+</div>
+
+<!-- 3 -->
+<div style="position:absolute; left:740px; top:104px; width:300px;">
+  <div data-drags-parent="1" class="card">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="tile" style="background:#eef5f3;"><svg width="72" height="72" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#0f766e"></path><circle cx="20.5" cy="11" r="10.5" fill="#eef5f3"></circle><path d="M30 19 A9.5 9.5 0 1 0 30 35" fill="none" stroke="#eef5f3" stroke-width="4.4" stroke-linecap="round"></path><line x1="31.5" y1="37.5" x2="26" y2="32" stroke="#eef5f3" stroke-width="3" stroke-linecap="round"></line></svg></div>
+      <div class="tile" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="46" height="46" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#fff"></path><circle cx="20.5" cy="11" r="10.5" fill="#0f766e"></circle><path d="M30 19 A9.5 9.5 0 1 0 30 35" fill="none" stroke="#0f766e" stroke-width="4.4" stroke-linecap="round"></path><line x1="31.5" y1="37.5" x2="26" y2="32" stroke="#0f766e" stroke-width="3" stroke-linecap="round"></line></svg></div>
+    </div>
+    <div class="nm" style="margin-top:16px;">3 · Bold C</div>
+    <div class="rat">A heavier C taking more of the lobe — the initial leads, the heart frames it.</div>
+    <div class="lock"><svg width="34" height="34" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#0f766e"></path><circle cx="20.5" cy="11" r="10.5" fill="#fff"></circle><path d="M30 19 A9.5 9.5 0 1 0 30 35" fill="none" stroke="#fff" stroke-width="4.4" stroke-linecap="round"></path><line x1="31.5" y1="37.5" x2="26" y2="32" stroke="#fff" stroke-width="3" stroke-linecap="round"></line></svg><span class="word">Caira</span></div>
+  </div>
+</div>
+
+<!-- 4 -->
+<div style="position:absolute; left:1080px; top:104px; width:300px;">
+  <div data-drags-parent="1" class="card">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="tile" style="background:#eef5f3;"><svg width="72" height="72" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#0f766e"></path><circle cx="20.5" cy="12.5" r="9.5" fill="#eef5f3"></circle><path d="M29 18 A8.5 8.5 0 1 0 29 34" fill="none" stroke="#eef5f3" stroke-width="4" stroke-linecap="round"></path><line x1="30.5" y1="36" x2="25.5" y2="31" stroke="#df5b40" stroke-width="2.6" stroke-linecap="round"></line></svg></div>
+      <div class="tile" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="46" height="46" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#fff"></path><circle cx="20.5" cy="12.5" r="9.5" fill="#0f766e"></circle><path d="M29 18 A8.5 8.5 0 1 0 29 34" fill="none" stroke="#0f766e" stroke-width="4" stroke-linecap="round"></path><line x1="30.5" y1="36" x2="25.5" y2="31" stroke="#f6b3a2" stroke-width="2.6" stroke-linecap="round"></line></svg></div>
+    </div>
+    <div class="nm" style="margin-top:16px;">4 · Clay dash</div>
+    <div class="rat">Take 1, but the little dash is clay — a warm spark exactly where the C completes the heart.</div>
+    <div class="lock"><svg width="34" height="34" viewBox="0 0 64 64"><path d="M32 48 C13 37 9 23 19.5 16.5 C26 12.5 31 16.5 32 20.5 C33 16.5 38 12.5 44.5 16.5 C55 23 51 37 32 48 Z" fill="#0f766e"></path><circle cx="20.5" cy="12.5" r="9.5" fill="#fff"></circle><path d="M29 18 A8.5 8.5 0 1 0 29 34" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"></path><line x1="30.5" y1="36" x2="25.5" y2="31" stroke="#df5b40" stroke-width="2.6" stroke-linecap="round"></line></svg><span class="word">Caira</span></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

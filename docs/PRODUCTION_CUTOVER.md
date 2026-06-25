@@ -188,9 +188,11 @@ Apply in this order (Supabase SQL Editor: paste each file's contents and Run; or
 | 4 | `prisma/sql/rbac_grants.sql` | `Membership`, `ParticipantAccessGrant`, `Consent` tables (+ their RLS) | When wiring the participant-grant access model (external carers/guardians). Run after `rls_policies.sql`. Code (`resolvePrincipal`) tolerates their absence until then. |
 | 5 | `prisma/sql/participant_care_profile.sql` | `ParticipantCareProfile` table (condition tags + support-need flags that tailor capture chips) | Needed for per-participant chip tailoring + the care-profile editor. `getCareProfile` tolerates its absence (→ full grid), so not required to run, but apply before using the feature. Run after `rls_policies.sql` for the RLS snippet. |
 | 6 | `prisma/sql/org_auto_suggest_cap.sql` | `Organisation.autoSuggestCap` column (admin-tunable cap on automatic AI suggestions per shift) | Additive column, default 3. `getOrgAutoSuggestCap` tolerates its absence (→ default 3), so not required to run; apply before the `/admin/settings` control can persist changes. |
+| 7 | `prisma/sql/rls_policies_v2.sql` | RLS `tenant_isolation` policies for **every table added on this branch** (care profile, assistant context/messages, documents, care tasks + completions, incidents, credentials, notifications, medication + eMAR, EVV, budgets, billable items, messages, handovers) | **Run LAST, after the per-feature files above AND `rls_policies.sql`** — it `ENABLE`s RLS + creates policies on tables those files create. Org-scoped (Option A defence-in-depth); owner-fallback (userId OR org) for `AssistantContext`/`AssistantMessage`/`Document`/`Notification`. Idempotent. Re-run `npm run verify:rls` after (checks 7–8 cover these). |
 
 After applying #1 and #2 the app is correct for this branch's deploy; #3 and #4 can
-follow when their features are switched on.
+follow when their features are switched on. **#7 (`rls_policies_v2.sql`) must be the
+last SQL applied** — it depends on every new table already existing.
 
 Re-verify after applying: `npm run verify:rls` (RLS still green) and load a shift's
 timeline (confirms the `LogEntry.derivedFromId` read path works).
