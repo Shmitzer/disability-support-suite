@@ -43,6 +43,9 @@ model Organisation {
   sectorMode         SectorMode @default(NDIS)
   stripeCustomerId   String?
   subscriptionStatus String?
+  // Max AUTOMATIC AI entry-prompt suggestions per shift (admin-tunable). Manual taps
+  // are never capped. See src/lib/org-settings.ts + the auto-suggest in ShiftTracker.
+  autoSuggestCap     Int      @default(3)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @default(now()) @updatedAt
 }

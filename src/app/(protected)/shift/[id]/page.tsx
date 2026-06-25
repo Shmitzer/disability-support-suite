@@ -25,6 +25,7 @@ import { buildShiftSourceLog } from "@/lib/report";
 import { getApprovedOptions } from "@/lib/learned-options";
 import { getCareProfile } from "@/lib/care-profile";
 import { visibleCategoryKeys } from "@/lib/care-needs";
+import { getOrgAutoSuggestCap } from "@/lib/org-settings";
 import { LOG_CATEGORIES } from "@/lib/log-categories";
 import { signStoredPhotos } from "@/lib/storage";
 
@@ -87,6 +88,8 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   const careProfile = await getCareProfile(shift.participantId);
   const visibleKeys = visibleCategoryKeys(careProfile);
   const supportNeeds = careProfile?.supportNeeds ?? null;
+  // Org-tunable cap on automatic AI suggestions per shift (default 3).
+  const autoSuggestCap = await getOrgAutoSuggestCap(worker.organisationId);
 
   // The live timeline (clock on/off milestones + logged entries). Rendered inside the
   // tracker's Timeline tab while logging, or on its own once the shift is finished.
@@ -179,6 +182,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
           visibleKeys={visibleKeys}
           supportNeeds={supportNeeds}
           shiftStartISO={shift.clockOnAt?.toISOString() ?? null}
+          autoSuggestCap={autoSuggestCap}
         />
       ) : (
         <>

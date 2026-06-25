@@ -41,6 +41,8 @@ export const Capability = {
   AuditRead: "audit:read",
   // Manage a participant's care profile (condition tags + support-need flags).
   CareProfileManage: "care_profile:manage",
+  // Manage organisation-wide settings (e.g. the auto-suggest cap).
+  OrgSettingsManage: "org_settings:manage",
 
   // Participant-scoped capabilities (used by external/family carer + guardian
   // grants, see GRANT_ROLE_CAPABILITIES). These are only ever held against a
@@ -74,6 +76,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
     Capability.ShiftReadOrg,
     Capability.AuditRead,
     Capability.CareProfileManage,
+    Capability.OrgSettingsManage,
   ],
   SUPERADMIN: [],
 };

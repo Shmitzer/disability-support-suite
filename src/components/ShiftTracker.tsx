@@ -56,9 +56,9 @@ const TILE_KEYS = [
 
 type View = "capture" | "timeline" | "voice";
 
-// Max AUTOMATIC entry-prompt fetches per shift (manual taps don't count). Small on
-// purpose — keeps cost/latency bounded across a shift of routine logging.
-const AUTO_SUGGEST_CAP = 6;
+// Fallback cap on AUTOMATIC entry-prompt fetches per shift (manual taps don't count)
+// when the org hasn't set one. Admin-tunable via /admin/settings (org.autoSuggestCap).
+const DEFAULT_AUTO_SUGGEST_CAP = 3;
 
 export function ShiftTracker({
   shiftId,
@@ -67,6 +67,7 @@ export function ShiftTracker({
   visibleKeys,
   supportNeeds,
   shiftStartISO,
+  autoSuggestCap,
 }: {
   shiftId: string;
   // Approved options for each self-learning group (e.g. { drink: [...] }).
@@ -81,7 +82,10 @@ export function ShiftTracker({
   // When the shift was clocked on (ISO) — the start of the valid time window for
   // entries. The end is "now" (logging only happens while the shift is in progress).
   shiftStartISO?: string | null;
+  // Org-tunable cap on AUTOMATIC AI suggestions per shift (manual taps uncapped).
+  autoSuggestCap?: number;
 }) {
+  const autoCap = autoSuggestCap ?? DEFAULT_AUTO_SUGGEST_CAP;
   // The shift window as "HH:MM" bounds for warning on out-of-window entry times.
   const shiftStartHHMM = shiftStartISO ? hhmmLocal(new Date(shiftStartISO)) : null;
   // Tiles to show: the curated tile order, narrowed to what the profile enables.
@@ -139,7 +143,7 @@ export function ShiftTracker({
   // LLM calls (manual taps are never capped). Persisted so it survives a reload.
   const autoSuggestKey = `dsw:autosuggest:${shiftId}`;
   const autoSuggestRemaining = () =>
-    AUTO_SUGGEST_CAP - (parseInt(lsGet(autoSuggestKey) || "0", 10) || 0);
+    autoCap - (parseInt(lsGet(autoSuggestKey) || "0", 10) || 0);
   const bumpAutoSuggest = () =>
     lsSet(autoSuggestKey, String((parseInt(lsGet(autoSuggestKey) || "0", 10) || 0) + 1));
 

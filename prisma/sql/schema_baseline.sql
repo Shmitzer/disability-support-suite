@@ -30,6 +30,7 @@ CREATE TABLE "Organisation" (
     "sectorMode" "SectorMode" NOT NULL DEFAULT 'NDIS',
     "stripeCustomerId" TEXT,
     "subscriptionStatus" TEXT,
+    "autoSuggestCap" INTEGER NOT NULL DEFAULT 3,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

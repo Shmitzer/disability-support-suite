@@ -78,9 +78,12 @@ export default function CairaAdmin() {
             {item}
           </div>
         ))}
-        <div className="mt-auto flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted hover:bg-surface-sunk">
+        <Link
+          href="/admin/settings"
+          className="mt-auto flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted hover:bg-surface-sunk"
+        >
           Settings
-        </div>
+        </Link>
         <div className="mt-2 flex items-center gap-2.5 border-t border-border px-2 py-2.5">
           <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#dbe7e4] font-display text-xs font-bold text-brand">
             EM
