@@ -36,7 +36,20 @@ import {
 
 // The categories shown as Paper tiles, in design order. Note is reached via the
 // voice/type free-text; Incident via its own button below the grid.
-const TILE_KEYS = ["Meal", "Fluids", "Hygiene", "Activity", "Sleep", "Toileting", "Meds"];
+// Curated tile order. Need-gated tiles (Behaviour/Seizure/Repositioning) only render
+// when the participant's profile enables them (TILE_KEYS ∩ visibleKeys).
+const TILE_KEYS = [
+  "Meal",
+  "Fluids",
+  "Hygiene",
+  "Activity",
+  "Sleep",
+  "Toileting",
+  "Meds",
+  "Behaviour",
+  "Seizure",
+  "Repositioning",
+];
 
 type View = "capture" | "timeline" | "voice";
 

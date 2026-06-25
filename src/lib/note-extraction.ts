@@ -34,9 +34,13 @@ export type MappedEntry = {
 export const EXTRACTION_TARGETS = LOG_CATEGORIES.filter((c) => c.key !== "Note");
 
 // A compact catalogue string injected into the system prompt, generated FROM the
-// real categories so the prompt and the app never disagree on what's valid.
-export function extractionCatalogue(): string {
-  return EXTRACTION_TARGETS.map((c) => {
+// real categories so the prompt and the app never disagree on what's valid. When
+// `allowedKeys` is given (the participant's enabled chips), the catalogue is scoped
+// to those so the model only maps to categories that participant actually uses.
+export function extractionCatalogue(allowedKeys?: string[]): string {
+  const allow = allowedKeys ? new Set(allowedKeys) : null;
+  return EXTRACTION_TARGETS.filter((c) => !allow || allow.has(c.key))
+    .map((c) => {
     const groups = (c.groups ?? []).map(
       (g) => `${g.key} [${g.mode}]: ${g.options.join(", ")}${g.allowOther ? ", or free text" : ""}`,
     );

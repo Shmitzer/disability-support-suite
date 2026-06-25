@@ -240,8 +240,9 @@ export async function extractLogItems(
   noteText: string,
   startTime: string,
   people: string[] = [],
+  allowedKeys?: string[],
 ): Promise<ExtractedItem[]> {
-  const system = EXTRACT_SYSTEM_PROMPT.replace("{{CATALOGUE}}", extractionCatalogue());
+  const system = EXTRACT_SYSTEM_PROMPT.replace("{{CATALOGUE}}", extractionCatalogue(allowedKeys));
   // Scrub PII before the note leaves the app (Rule 2); restore in returned strings.
   const { text, restore } = scrubPII(`Note start time: ${startTime}\n\nNote:\n${noteText}`, people);
   const raw = await callGemini(system, text, { responseMimeType: "application/json" });

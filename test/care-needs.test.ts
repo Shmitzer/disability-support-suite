@@ -30,8 +30,8 @@ test("suggestNeeds: condition tags map to a deduped union of flags", () => {
   assert.deepEqual(suggestNeeds(["Not a condition"]), []);
 });
 
-test("Phase 1 is behaviour-neutral: all current categories are alwaysOn", () => {
-  assert.ok(LOG_CATEGORIES.every((c) => c.alwaysOn === true));
+test("every category is either alwaysOn or need-gated (no orphans)", () => {
+  assert.ok(LOG_CATEGORIES.every((c) => c.alwaysOn || c.need));
 });
 
 test("visibleCategoryKeys: null profile (not configured) → ALL categories", () => {
@@ -41,12 +41,22 @@ test("visibleCategoryKeys: null profile (not configured) → ALL categories", ()
   );
 });
 
-test("visibleCategoryKeys: configured profile still shows every current (alwaysOn) chip", () => {
+test("visibleCategoryKeys: configured profile with no needs → only alwaysOn (universal) chips", () => {
   const profile: CareProfile = { conditions: [], supportNeeds: [] };
   assert.deepEqual(
     visibleCategoryKeys(profile),
-    LOG_CATEGORIES.map((c) => c.key),
+    LOG_CATEGORIES.filter((c) => c.alwaysOn).map((c) => c.key),
   );
+  // The need-gated tiles are hidden until their flag is set.
+  for (const k of ["Behaviour", "Seizure", "Repositioning"]) {
+    assert.ok(!visibleCategoryKeys(profile).includes(k), `${k} should be hidden`);
+  }
+});
+
+test("visibleCategoryKeys: a need flag reveals its gated category (live catalogue)", () => {
+  const seized = visibleCategoryKeys({ conditions: [], supportNeeds: [SupportNeed.Seizures] });
+  assert.ok(seized.includes("Seizure"));
+  assert.ok(!seized.includes("Behaviour")); // unrelated flag stays hidden
 });
 
 test("visibleCategoryKeys: need-gated categories appear only when the flag is set", () => {

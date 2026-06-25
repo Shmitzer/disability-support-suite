@@ -24,6 +24,8 @@ import {
 import { getApprovedOptions, recordCustomOption } from "@/lib/learned-options";
 import { extractLogItems } from "@/lib/ai";
 import { mapExtractedToEntries, parseTimeOnDate } from "@/lib/note-extraction";
+import { getCareProfile } from "@/lib/care-profile";
+import { visibleCategoryKeys } from "@/lib/care-needs";
 import { storageConfigured, uploadDataUrl } from "@/lib/storage";
 import { planPhotoUpdate } from "@/lib/photos";
 import { revalidatePath } from "next/cache";
@@ -345,9 +347,12 @@ export async function extractNotePreview(
   const people = [shift.participant.name, shift.allocatedTo?.name].filter(
     (n): n is string => !!n,
   );
+  // Scope extraction to the chips this participant's care profile enables.
+  const profile = await getCareProfile(shift.participantId);
+  const allowedKeys = visibleCategoryKeys(profile);
 
   try {
-    const raw = await extractLogItems(noteText, hhmm(base), people);
+    const raw = await extractLogItems(noteText, hhmm(base), people, allowedKeys);
     const mapped = mapExtractedToEntries(raw, base);
     return {
       items: mapped.map((m) => ({

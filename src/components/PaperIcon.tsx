@@ -36,6 +36,9 @@ const ICONS: Record<string, { blob: string; fill: string; stroke: string; glyph:
   Toileting: { blob: BLOB.B, fill: "#b9e0da", stroke: "#14756a", glyph: '<path d="M6 3v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"></path><path d="M9 17v3"></path><path d="M15 17v3"></path>' },
   Meds:      { blob: BLOB.A, fill: "#f3c2d8", stroke: "#962f63", glyph: '<rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"></rect><line x1="9" y1="9" x2="15" y2="15"></line>' },
   Sleep:     { blob: BLOB.C, fill: "#d7d0ec", stroke: "#5b4d8a", glyph: '<path d="M18 13.5A7.5 7.5 0 1 1 9 4.2 6 6 0 0 0 18 13.5Z"></path>' },
+  Behaviour:    { blob: BLOB.A, fill: "#e8d3bf", stroke: "#8f5b39", glyph: '<path d="M4 5h16v10H8l-4 4V5z"></path><circle cx="9" cy="10" r="0.6"></circle><circle cx="12" cy="10" r="0.6"></circle><circle cx="15" cy="10" r="0.6"></circle>' },
+  Seizure:      { blob: BLOB.B, fill: "#f5d59a", stroke: "#9a6a1f", glyph: '<path d="M13 2 5 13h6l-2 9 10-13h-7z"></path>' },
+  Repositioning:{ blob: BLOB.C, fill: "#cdd9e0", stroke: "#3f5b6b", glyph: '<path d="M4 12a8 8 0 0 1 14-5"></path><path d="M18 3v4h-4"></path><path d="M20 12a8 8 0 0 1-14 5"></path><path d="M6 21v-4h4"></path>' },
 };
 
 export function hasPaperIcon(category: string): boolean {

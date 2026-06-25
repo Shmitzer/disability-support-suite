@@ -117,6 +117,20 @@ export const LOG_CATEGORIES: LogCategory[] = [
         mode: "single",
         options: ["Independent", "Prompted", "Assisted", "Full assistance"],
       },
+      // Precise IDDSI food texture — only for participants flagged with dysphagia.
+      {
+        key: "iddsiFood",
+        label: "IDDSI food level",
+        mode: "single",
+        options: [
+          "Level 3 Liquidised",
+          "Level 4 Pureed",
+          "Level 5 Minced & moist",
+          "Level 6 Soft & bite-sized",
+          "Level 7 Regular",
+        ],
+        needWhen: "dysphagia",
+      },
     ],
   },
   {
@@ -143,6 +157,20 @@ export const LOG_CATEGORIES: LogCategory[] = [
         label: "consistency",
         mode: "single",
         options: ["Thin", "Thickened"],
+      },
+      // Precise IDDSI fluid level — only for participants flagged with dysphagia.
+      {
+        key: "iddsiFluid",
+        label: "IDDSI fluid level",
+        mode: "single",
+        options: [
+          "Level 0 Thin",
+          "Level 1 Slightly thick",
+          "Level 2 Mildly thick",
+          "Level 3 Moderately thick",
+          "Level 4 Extremely thick",
+        ],
+        needWhen: "dysphagia",
       },
     ],
     amount: {
@@ -357,6 +385,118 @@ export const LOG_CATEGORIES: LogCategory[] = [
     ],
     textFields: [{ key: "dose", label: "Dose", placeholder: "e.g. 1 tablet, 5 mg" }],
     requireNoteWhen: { group: "status", in: ["PRN", "Refused"] },
+  },
+  // --- Need-gated categories (shown only when the participant's care profile has the
+  // matching support-need flag — see care-needs.ts). ---
+  {
+    key: "Behaviour",
+    need: "behaviour_support_plan",
+    label: "Behaviour",
+    emoji: "🧩",
+    requireNote: true, // the note carries the antecedent → behaviour → consequence
+    notePlaceholder: "Factual: what happened before, the behaviour, and what followed",
+    groups: [
+      {
+        key: "behaviour",
+        label: "behaviour",
+        mode: "multi",
+        options: [
+          "Verbal",
+          "Physical aggression",
+          "Property damage",
+          "Self-injurious",
+          "Absconding",
+          "Non-engagement",
+          "Distress",
+          "Other",
+        ],
+      },
+      {
+        key: "strategy",
+        label: "strategy used",
+        mode: "single",
+        options: [
+          "Redirection",
+          "Offered choice",
+          "Quiet space",
+          "Reassurance",
+          "De-escalation",
+          "PRN medication",
+          "Followed BSP",
+        ],
+      },
+      // Restrictive practices — only when the participant is flagged for them. Each use
+      // is compliance-recorded (and may be a reportable incident).
+      {
+        key: "restrictive",
+        label: "restrictive practice used",
+        mode: "multi",
+        options: [
+          "Physical restraint",
+          "Environmental restraint",
+          "Seclusion",
+          "Chemical restraint",
+          "Mechanical restraint",
+        ],
+        needWhen: "restrictive_practices",
+      },
+    ],
+  },
+  {
+    key: "Seizure",
+    need: "seizures",
+    label: "Seizure",
+    emoji: "⚡",
+    notePlaceholder: "e.g. warning signs, what was seen, recovery",
+    groups: [
+      {
+        key: "type",
+        label: "type",
+        mode: "single",
+        options: ["Tonic-clonic", "Absence", "Focal", "Myoclonic", "Atonic", "Unknown"],
+      },
+      {
+        key: "duration",
+        label: "duration",
+        mode: "single",
+        options: ["<1 min", "1–2 min", "2–5 min", ">5 min"],
+        allowOther: true,
+      },
+      {
+        key: "obs",
+        label: "observations",
+        mode: "multi",
+        options: ["Injury", "Incontinence", "Colour change", "Post-ictal sleep", "Recovered fully"],
+      },
+      {
+        key: "response",
+        label: "response",
+        mode: "single",
+        options: ["Monitored", "Rescue medication given", "Ambulance called"],
+      },
+    ],
+    requireNoteWhen: { group: "response", in: ["Rescue medication given", "Ambulance called"] },
+  },
+  {
+    key: "Repositioning",
+    need: "pressure_care",
+    label: "Reposition",
+    emoji: "🔄",
+    notePlaceholder: "e.g. position changed, skin at pressure points",
+    groups: [
+      {
+        key: "position",
+        label: "position",
+        mode: "single",
+        options: ["Left side", "Right side", "Back", "Chair", "Standing", "Walked"],
+      },
+      {
+        key: "skin",
+        label: "skin at pressure points",
+        mode: "multi",
+        options: ["Skin intact", "Redness", "Pressure area – see note"],
+      },
+    ],
   },
   // A free-text catch-all for anything the specific chips don't cover. The note
   // IS the entry, so it's required.

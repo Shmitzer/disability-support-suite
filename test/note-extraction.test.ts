@@ -26,6 +26,14 @@ test("extractionCatalogue: lists real chips and excludes the source Note", () =>
   assert.ok(!EXTRACTION_TARGETS.some((c) => c.key === "Note"));
 });
 
+test("extractionCatalogue: scopes to allowedKeys when given", () => {
+  const scoped = extractionCatalogue(["Fluids"]);
+  assert.ok(scoped.includes("Fluids"));
+  assert.ok(!scoped.includes("Toileting")); // excluded when not allowed
+  // Unscoped still lists everything.
+  assert.ok(extractionCatalogue().includes("Toileting"));
+});
+
 test("parseTimeOnDate: resolves HH:MM onto the base date; bad input falls back", () => {
   assert.equal(parseTimeOnDate("07:30", BASE).getHours(), 7);
   assert.equal(parseTimeOnDate("07:30", BASE).getMinutes(), 30);
