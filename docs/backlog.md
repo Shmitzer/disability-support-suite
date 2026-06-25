@@ -45,12 +45,14 @@ P0 in order **3 → 1 → 2 → 4 → 5** (approval is small and finishes an exi
 then tasks, incidents, the record, notifications). Then P1 starting **7 (credentials →
 unblocks competency gating) → 6 (eMAR) → 10 (reporting) → 8 → 9**.
 
-## What I (CC) can start now, logic-only, no decision needed
-- **#3 supervisor approval** (capability + action + audit) — smallest, unblocks a flow.
-- **#1 task/ADL checklist** model + resolve/save logic (cd renders the checklist).
-- **#2 incident register** model + workflow logic + reportable fields.
-- **#7 credentials** model + expiry logic (then wire the deferred competency gate).
-Each adds a `prisma/sql` (unapplied) + pure-tested logic, mirroring the work already on this branch.
+## CC logic-only items — STATUS
+- ✅ **#3 supervisor approval** — `NoteApprove` cap + supervisorApprove/Reopen actions.
+- ✅ **#1 task/ADL checklist** — CareTask + ShiftTaskCompletion; care-task-actions.ts.
+- ✅ **#2 incident register** — Incident model; incident-actions.ts (report/review/list).
+- ✅ **#7 credentials** — WorkerCredential; credential-actions.ts + credentials.ts; the
+  competency gate (`workerMayLogNeed`) now wires the deferred Phase-5 hook.
+All logic only (cd builds UI); each adds a `prisma/sql` (unapplied) + pure-tested helpers.
+Remaining CC-startable: none in P0 without a decision — next items need the decisions below.
 
 ## Needs a decision before building
 - #5 notification channel (email via Resend / web push / in-app only).

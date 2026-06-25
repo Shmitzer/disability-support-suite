@@ -466,6 +466,83 @@ model AssistantMessage {
   @@index([userId, createdAt])
 }
 
+// #1 Care task / ADL checklist — the plan of tasks for a participant, ticked off per
+// shift. See src/lib/care-task-actions.ts. NOT auto-applied (prisma/sql/care_tasks.sql).
+model CareTask {
+  id             String   @id @default(cuid())
+  participantId  String
+  organisationId String?
+  title          String
+  category       String? // e.g. ADL | domestic | community | health
+  sortOrder      Int      @default(100)
+  active         Boolean  @default(true)
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([participantId, active])
+}
+
+model ShiftTaskCompletion {
+  id             String   @id @default(cuid())
+  shiftId        String
+  careTaskId     String
+  status         String // DONE | SKIPPED
+  note           String?
+  completedById  String?
+  organisationId String?
+  completedAt    DateTime @default(now())
+
+  @@unique([shiftId, careTaskId])
+  @@index([shiftId])
+}
+
+// #2 Incident register — first-class incidents with mandatory fields + reportable
+// workflow. See src/lib/incident-actions.ts. NOT auto-applied (prisma/sql/incidents.sql).
+model Incident {
+  id              String    @id @default(cuid())
+  participantId   String?
+  shiftId         String?
+  reportedById    String?
+  organisationId  String?
+  occurredAt      DateTime
+  type            String // physical | behavioural | environmental | medical | other
+  severity        String // low | medium | high | critical
+  description     String
+  immediateAction String?
+  notified        Json? // { participant, guardian, supervisor, commission }
+  followUp        String?
+  reportable      Boolean   @default(false)
+  status          String    @default("OPEN") // OPEN | UNDER_REVIEW | CLOSED
+  reviewedById    String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  @@index([organisationId, status])
+  @@index([participantId])
+}
+
+// #7 Worker credentials / training (expiry tracking; also gates high-intensity
+// competency — see src/lib/credentials.ts). NOT auto-applied (prisma/sql/credentials.sql).
+model WorkerCredential {
+  id                 String    @id @default(cuid())
+  workerId           String
+  organisationId     String?
+  type               String // first_aid | ndis_worker_screening | <competency keys> | …
+  name               String?
+  issuedAt           DateTime?
+  expiresAt          DateTime?
+  evidenceDocumentId String?
+  createdById        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now()) @updatedAt
+
+  @@index([workerId])
+  @@index([organisationId, expiresAt])
+}
+
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a
 // tenant table: people on the waitlist are not users yet, so there is no userId /
 // organisationId (the same Rule 5/10 exception LearnedOption notes for global rows).

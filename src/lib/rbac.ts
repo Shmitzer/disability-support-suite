@@ -45,6 +45,10 @@ export const Capability = {
   OrgSettingsManage: "org_settings:manage",
   // Supervisor sign-off: approve / reopen another worker's shift report (note).
   NoteApprove: "notes:approve",
+  // Review / close incidents in the org register.
+  IncidentManage: "incident:manage",
+  // Manage worker credentials / training records.
+  CredentialManage: "credential:manage",
 
   // Participant-scoped capabilities (used by external/family carer + guardian
   // grants, see GRANT_ROLE_CAPABILITIES). These are only ever held against a
@@ -69,8 +73,13 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
   // SUPERVISOR / PARTICIPANT / SUPERADMIN: no capabilities granted YET (matches
   // current behaviour — only ADMIN passed the old `isRosteringRole` gate). Widen
   // here when each role becomes active; do not re-plumb call sites.
-  // Supervisor: oversight + note sign-off within the org (the role's stated purpose).
-  SUPERVISOR: [Capability.ShiftReadOrg, Capability.NoteApprove],
+  // Supervisor: oversight + note sign-off + incident/credential management.
+  SUPERVISOR: [
+    Capability.ShiftReadOrg,
+    Capability.NoteApprove,
+    Capability.IncidentManage,
+    Capability.CredentialManage,
+  ],
   PARTICIPANT: [],
   ADMIN: [
     Capability.RosterManage,
@@ -81,6 +90,8 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
     Capability.CareProfileManage,
     Capability.OrgSettingsManage,
     Capability.NoteApprove,
+    Capability.IncidentManage,
+    Capability.CredentialManage,
   ],
   SUPERADMIN: [],
 };
