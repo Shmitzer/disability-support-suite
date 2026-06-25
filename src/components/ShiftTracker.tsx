@@ -20,6 +20,7 @@ import {
   addLogEntry,
   extractNotePreview,
   commitExtractedEntries,
+  getEntryQuestions,
   type NoteEntryDraft,
 } from "@/lib/log-actions";
 import { timeWindowWarning, minutesOfDay } from "@/lib/shift-time";
@@ -91,6 +92,10 @@ export function ShiftTracker({
   const [groupValues, setGroupValues] = useState<Record<string, string[]>>({});
   const [photos, setPhotos] = useState<string[]>([]);
   const [note, setNote] = useState("");
+  // AI entry-level clarifying prompts (e.g. "Did Sam buy anything?") for the chip being
+  // logged. Fetched on demand; tapping one drops it into the note to answer.
+  const [entryQuestions, setEntryQuestions] = useState<string[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [entryKey, setEntryKey] = useState("");
   // Voice mode: record → transcribe → editable note. `vstatus` drives the mic UI;
   // the MediaRecorder + its captured chunks live in refs (not state — they mustn't
@@ -129,12 +134,39 @@ export function ShiftTracker({
     setChipTime("");
     setGroupValues({});
     setPhotos([]);
+    setEntryQuestions([]);
+    setLoadingQuestions(false);
     if (key) {
       setEntryKey(crypto.randomUUID());
       setNote(lsGet(noteBackupKey(key)));
     } else {
       setNote("");
     }
+  }
+
+  // Ask the AI for a few human, entry-specific prompts for the chip being logged.
+  async function handleSuggestQuestions() {
+    if (!selected || loadingQuestions) return;
+    setLoadingQuestions(true);
+    try {
+      const res = await getEntryQuestions(shiftId, selected, groupValues, note);
+      setEntryQuestions(res.questions);
+    } catch {
+      setEntryQuestions([]);
+    } finally {
+      setLoadingQuestions(false);
+    }
+  }
+
+  // Drop a suggested question into the note for the worker to answer, then remove it
+  // from the list. Appends on its own line so several can be stacked.
+  function insertQuestion(q: string) {
+    setNote((prev) => {
+      const next = prev.trim() ? `${prev.trimEnd()}\n${q} ` : `${q} `;
+      if (selected) lsSet(noteBackupKey(selected), next);
+      return next;
+    });
+    setEntryQuestions((qs) => qs.filter((x) => x !== q));
   }
 
   function gotoView(next: View) {
@@ -356,6 +388,7 @@ export function ShiftTracker({
     setChipTime("");
     setGroupValues({});
     setPhotos([]);
+    setEntryQuestions([]);
   }
 
   // Save the voice/typed free-text as a Note entry, then return to capture.
@@ -498,6 +531,34 @@ export function ShiftTracker({
               }
               className="rounded-2xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-brand focus:outline-none"
             />
+
+            {/* AI nudge: a few human, specific prompts for THIS entry. Optional — the
+                worker taps one to drop it into the note and answers it. */}
+            <button
+              type="button"
+              onClick={handleSuggestQuestions}
+              disabled={loadingQuestions}
+              className="flex h-10 items-center justify-center gap-2 self-start rounded-full border border-brand bg-brand-tint px-4 text-sm font-bold text-brand transition-colors hover:bg-brand-tint/70 disabled:opacity-60"
+            >
+              {loadingQuestions ? "Thinking…" : "✨ Suggest what to add"}
+            </button>
+            {entryQuestions.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-semibold text-muted">
+                  Tap one to add it to your note, then answer it:
+                </span>
+                {entryQuestions.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => insertQuestion(q)}
+                    className="rounded-2xl border border-border bg-surface px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-surface-sunk"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <input type="hidden" name="photos" value={JSON.stringify(photos)} />
 

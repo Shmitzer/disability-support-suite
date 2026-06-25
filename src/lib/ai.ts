@@ -213,6 +213,66 @@ export async function generateClarifyingQuestions(
   return [];
 }
 
+// The system prompt for ENTRY-LEVEL clarifying questions (asked while the worker is
+// logging a single thing, e.g. an Activity "shopping trip"). The point is to nudge the
+// worker — in a warm, human, specific way — to capture the detail that's actually
+// missing for THIS entry, instead of a generic "what outcomes were achieved".
+const ENTRY_QUESTIONS_SYSTEM_PROMPT = `A Disability Support Worker is logging ONE entry during a shift. Help them capture it well by suggesting a few short, friendly, SPECIFIC questions they could answer in their note.
+
+You are given the category, any structured details already picked, the participant's name, and the note so far (which may be empty).
+
+Write 2-3 questions that sound like a warm colleague asking — natural and specific to what's being logged. Use the participant's first name where it reads naturally. Examples for a shopping outing: "Did {name} buy anything while you were out?", "How did the shopping trip go?", "Was there anything {name} needed a hand with at the shops?".
+
+Rules:
+- Be SPECIFIC to the category and details given — never generic like "what outcomes were achieved".
+- Ask only about things the worker could directly observe or that the participant actually said or did. NEVER ask them to guess, interpret, or infer anyone's feelings, mood, or thoughts.
+- Don't ask about detail that's already clearly captured in the note.
+- Keep each question to one short sentence.
+- If nothing useful is missing, return an empty list.
+- Return ONLY a JSON array of question strings. No other text.`;
+
+// Suggest a few human, entry-specific clarifying questions for the thing being logged.
+// Returns at most 3 plain strings (empty if nothing useful is missing or on error).
+export async function suggestEntryQuestions(input: {
+  label: string; // the category's human label, e.g. "Activity"
+  detail?: string | null; // assembled picks, e.g. "Community access · Outing"
+  note?: string; // the worker's note so far (may be empty)
+  participantName?: string;
+}): Promise<string[]> {
+  const people = input.participantName ? [input.participantName] : [];
+  const prompt = [
+    `Category: ${input.label}`,
+    input.detail ? `Details picked: ${input.detail}` : null,
+    `Participant: ${input.participantName ?? "the participant"}`,
+    `Note so far: ${input.note?.trim() ? input.note.trim() : "(empty)"}`,
+    `Suggest the questions now.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  // Scrub PII before sending (Rule 2); restore the name in each returned question.
+  const { text, restore } = scrubPII(prompt, people);
+  let raw: string;
+  try {
+    raw = await callGemini(ENTRY_QUESTIONS_SYSTEM_PROMPT, text, {
+      responseMimeType: "application/json",
+    });
+  } catch {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((q): q is string => typeof q === "string" && q.trim().length > 0)
+        .map((q) => restore(q).trim())
+        .slice(0, 3);
+    }
+  } catch {
+    // Not clean JSON → treat as "no questions".
+  }
+  return [];
+}
+
 // --- Note → structured log entries (extraction) -----------------------------
 //
 // Turn a free-text shift note into a list of categorised log items mapped EXACTLY

@@ -22,8 +22,8 @@ import {
   validDetailsFor,
 } from "@/lib/log-categories";
 import { getApprovedOptions, recordCustomOption } from "@/lib/learned-options";
-import { extractLogItems } from "@/lib/ai";
-import { mapExtractedToEntries, parseTimeOnDate } from "@/lib/note-extraction";
+import { extractLogItems, suggestEntryQuestions } from "@/lib/ai";
+import { mapExtractedToEntries, parseTimeOnDate, buildDetailFromGroups } from "@/lib/note-extraction";
 import { getCareProfile } from "@/lib/care-profile";
 import { visibleCategoryKeys } from "@/lib/care-needs";
 import { storageConfigured, uploadDataUrl } from "@/lib/storage";
@@ -327,6 +327,44 @@ export type NoteEntryDraft = {
   time: string;
   timeEstimated: boolean; // true = model guessed the time; flag it for confirmation
 };
+
+// Suggest a few human, entry-specific clarifying questions for the thing the worker is
+// currently logging (e.g. an Activity shopping trip → "Did Sam buy anything?"). Read-
+// only; never writes. The worker answers in their note — the AI only prompts.
+export async function getEntryQuestions(
+  shiftId: string,
+  category: string,
+  groups: Record<string, string[]> | undefined,
+  note: string,
+): Promise<{ questions: string[]; error?: string }> {
+  const worker = await getCurrentWorker();
+  if (!worker || !shiftId) return { questions: [], error: "Not signed in." };
+  if (!isLogCategory(category)) return { questions: [] };
+
+  const shift = await prisma.shift.findUnique({
+    where: { id: shiftId },
+    include: { participant: true },
+  });
+  if (!shift || shift.allocatedToId !== worker.id || shift.status !== "IN_PROGRESS") {
+    return { questions: [], error: "This isn't an active shift you can log to." };
+  }
+
+  const cat = findCategory(category);
+  // Rebuild the detail from the picked groups on the server (never trust the browser).
+  const detail = buildDetailFromGroups(category, groups);
+  try {
+    const questions = await suggestEntryQuestions({
+      label: cat?.label ?? category,
+      detail,
+      note: typeof note === "string" ? note : "",
+      participantName: shift.participant.name,
+    });
+    return { questions };
+  } catch (err) {
+    console.error("getEntryQuestions failed:", err);
+    return { questions: [] }; // suggestions are a nicety — fail quietly
+  }
+}
 
 // Read-only: parse the note into draft entries for review. Never writes.
 export async function extractNotePreview(
