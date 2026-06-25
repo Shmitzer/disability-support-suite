@@ -56,6 +56,10 @@ const TILE_KEYS = [
 
 type View = "capture" | "timeline" | "voice";
 
+// Max AUTOMATIC entry-prompt fetches per shift (manual taps don't count). Small on
+// purpose — keeps cost/latency bounded across a shift of routine logging.
+const AUTO_SUGGEST_CAP = 6;
+
 export function ShiftTracker({
   shiftId,
   learnedOptions,
@@ -131,6 +135,14 @@ export function ShiftTracker({
   const voiceBackupKey = `dsw:voicenote:${shiftId}`;
   const selectedCat = selected ? findCategory(selected) : null;
 
+  // Cap AUTOMATIC suggestions per shift so routine logging can't fan out into a pile of
+  // LLM calls (manual taps are never capped). Persisted so it survives a reload.
+  const autoSuggestKey = `dsw:autosuggest:${shiftId}`;
+  const autoSuggestRemaining = () =>
+    AUTO_SUGGEST_CAP - (parseInt(lsGet(autoSuggestKey) || "0", 10) || 0);
+  const bumpAutoSuggest = () =>
+    lsSet(autoSuggestKey, String((parseInt(lsGet(autoSuggestKey) || "0", 10) || 0) + 1));
+
   const rnw = selectedCat?.requireNoteWhen;
   const noteRequired =
     (selected ? categoryRequiresNote(selected) : false) ||
@@ -186,7 +198,9 @@ export function ShiftTracker({
     if (view !== "capture" || !selected) return;
     if (autoSuggestedRef.current === entryKey) return;
     if (!hasPicks || note.trim().length >= 12) return;
+    if (autoSuggestRemaining() <= 0) return; // per-shift auto cap reached
     autoSuggestedRef.current = entryKey;
+    bumpAutoSuggest();
     // Defer out of the effect body (the fetch sets state on resolve).
     const t = setTimeout(() => void handleSuggestQuestions(), 0);
     return () => clearTimeout(t);
@@ -275,7 +289,10 @@ export function ShiftTracker({
       setDraftQuestions({});
       setDraftQLoading({});
       set.forEach((d, i) => {
-        if (!d.notes.trim()) void suggestForDraft(i);
+        if (d.notes.trim()) return;
+        if (autoSuggestRemaining() <= 0) return; // per-shift auto cap reached
+        bumpAutoSuggest();
+        void suggestForDraft(i);
       });
     }, 0);
     return () => clearTimeout(t);
