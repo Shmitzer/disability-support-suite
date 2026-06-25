@@ -28,6 +28,9 @@ type Entry = {
   photos: string | null; // JSON array of display URLs (signed Storage URLs, or
   // inline data URLs when Storage isn't configured); resolved server-side
   timestamp: Date;
+  // Set when this entry was AI-extracted from a free-text Note (provenance); drives
+  // the "from note" badge. Null for entries captured directly via the chips.
+  derivedFromId?: string | null;
 };
 
 export function TimelineEntry({
@@ -105,7 +108,10 @@ export function TimelineEntry({
                   {/* Heading + the 📷 add button, enlarged and centred between the
                       heading and the card edge. */}
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-zinc-900">{heading}</span>
+                    <span className="flex items-center gap-1.5 text-lg font-semibold text-zinc-900">
+                      {heading}
+                      {entry.derivedFromId && <FromNoteBadge />}
+                    </span>
                     <div className="flex flex-1 justify-center">
                       <PhotoInput iconOnly mode="add" photos={photos} onChange={setPhotos} />
                     </div>
@@ -233,7 +239,10 @@ export function TimelineEntry({
             ) : (
               // Read-only expanded (a completed shift): full detail, no editing.
               <>
-                <span className="text-lg font-semibold text-zinc-900">{heading}</span>
+                <span className="flex items-center gap-1.5 text-lg font-semibold text-zinc-900">
+                  {heading}
+                  {entry.derivedFromId && <FromNoteBadge />}
+                </span>
                 <Aspect label="Detail">
                   <span className="text-base text-zinc-700">{entry.detail || "—"}</span>
                 </Aspect>
@@ -296,7 +305,10 @@ export function TimelineEntry({
           >
             <div className="flex items-start gap-2">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-lg font-semibold text-zinc-900">{heading}</span>
+                <span className="flex items-center gap-1.5 text-lg font-semibold text-zinc-900">
+                  {heading}
+                  {entry.derivedFromId && <FromNoteBadge />}
+                </span>
                 {entry.detail && <span className="text-base text-zinc-500">{entry.detail}</span>}
               </div>
 
@@ -488,6 +500,22 @@ function parsePhotos(json: string | null): string[] {
 
 function formatTime(d: Date): string {
   return d.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+}
+
+// Small provenance chip: marks an entry that was AI-extracted from a free-text note.
+function FromNoteBadge() {
+  return (
+    <span
+      title="Created from a note"
+      className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand-tint px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand"
+    >
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+        <path d="M14 3v4h4" />
+      </svg>
+      from note
+    </span>
+  );
 }
 
 function hhmm(d: Date): string {
