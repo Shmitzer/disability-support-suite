@@ -6,7 +6,7 @@
     "dev": "next dev",
     "dev:phone": "node scripts/phone-tunnel.mjs --dev",
     "tunnel": "node scripts/phone-tunnel.mjs",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test test/*.test.ts",
