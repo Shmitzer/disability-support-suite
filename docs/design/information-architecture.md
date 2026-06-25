@@ -141,7 +141,72 @@ api/health, api/transcribe, api/generate-note, api/stripe/webhook  [exists]
 
 ---
 
-## 5. Build notes
+## 5. Common / cross-cutting pages (need making)
+
+Recurring pages that aren't unique to one surface. Each gates on a capability and reuses
+shared components. `[exists]`/`[new]` as before.
+
+**Profile & account** (the signed-in person)
+- `account/` `[new]` — name, photo, preferred name, contact, language; **security** (passkey/magic-link, active sessions, sign out everywhere); **notification prefs**; the roles/grants this account holds (read-only); **credentials** (training/competency — future, ties to high-intensity gating); delete/anonymise account (right-to-erasure).
+
+**Settings** (two levels)
+- User settings → live under `account/` above.
+- Org settings → `console/settings/` `[exists, expand]` — sector mode, branding/logo, capture defaults (auto-suggest cap `[exists]`), data-retention policy, integrations (Stripe, email/Resend, Sentry/PostHog), feature toggles, business details (ABN once registered).
+
+**Documents** (files, scoped by who may see them)
+- Participant documents → `console/participants/[id]/documents/` + `portal/.../documents/` `[new]` — care plans, NDIS plan, consent forms, assessments, reports, photos. Upload, categorise, version, set **share scope** (org-only / family / guardian), expiry. Storage = Supabase relative paths (Rule 3).
+- Org documents → `console/documents/` `[new]` — policies, templates, induction docs.
+
+**Notifications / activity** — `notifications/` `[new]` — meds due, incidents, handovers, shift offers, approvals; per-channel prefs.
+
+**Search** — global `[new]` — participants, notes (full-text via tsvector), shifts; scoped to what the principal may see.
+
+**Help & support** — `help/` `[new]` — FAQs, contact, report-a-problem; public help under `(public)`.
+
+**Onboarding / first-run** — `[new]` — provider setup wizard (org, seats, first participant), worker first-run (accept invite, first shift), participant/family invite acceptance.
+
+**Billing & invoices** — solo: `(protected)/billing/` `[exists]`; org: `console/billing/` `[new]` — plan/seats, payment method, invoice history, GST. (BillingManage)
+
+**Team & invitations** — `console/team/` `[new]` — workers/seats, roles, invite/revoke, status. (OrgSettingsManage)
+
+**Access & consent** — `console/participants/[id]/access/` `[new]` (who can see this person; grant/revoke) + `portal/.../consent/` `[new]` (guardian grants/withdraws). (ConsentManage)
+
+**Incident detail** — `console/incidents/[id]/` `[new]` — full incident + mandatory NDIS fields + reportable-incident workflow + audit.
+
+**Report / note detail** — `notes/[id]/` `[new]` — a single progress note, edit, supervisor approval, PDF export, provenance.
+
+**Export centre** — `[new]` — NDIS audit PDF, CSV exports; reachable from reports/notes.
+
+**Audit viewer** — `console/audit/` `[new]` — tamper-evident trail + `verifyAuditChain()`. (AuditRead)
+
+**Legal & trust** (public) — `privacy/` `[exists]`, `terms/` `[new]`, `dpa/` `[new]` (provider data-processing agreement), `accessibility/` `[new]`, `security/` `[new]`, `status/` `[new]` (uptime).
+
+**System / state pages** — `not-found.tsx` (404) `[new]`, `error.tsx` (500) `[new]`, offline/PWA fallback `[new]`, `auth/denied` `[exists]`, "what's new"/changelog modal `[new]`.
+
+---
+
+## 6. Participant record — canonical contents (the central object)
+
+The participant record is reused by the worker app, console, and portal (each shows the
+slice its capabilities allow). One canonical content set (fields from the Master Tech
+Spec Participant model + `care-needs.ts`):
+- **Identity**: first/last/preferred name, photo, DOB, pronouns, language.
+- **NDIS**: NDIS number, plan start/end, funding categories, support goals, primary + secondary disability.
+- **Care profile** (`care-needs.ts`): condition tags → support-need flags (drives capture chips); IDDSI levels; repositioning interval. (CareProfileManage to edit.)
+- **Support needs**: communication needs / AAC, behaviour support plan flag, medication-managed flag, high-intensity supports (with worker-competency gating, future).
+- **Contacts**: guardian/nominee, next of kin, GP, coordinator, emergency contacts.
+- **Care plan & documents**: current plan, attached files (see Documents).
+- **Timeline**: chronological logs/notes (read scope by capability).
+- **Access grants**: who can see this person (workers, family carer, guardian) + consent state.
+- **Audit**: every change recorded (Rule 9).
+
+Surfacing rules: worker sees the support-relevant slice for people they're rostered to;
+coordinator sees/edits the full record for their org; family/guardian see only their
+person, only the shared slice.
+
+---
+
+## 7. Build notes
 - Each new page gates on a **capability**, not a role — so the future 32-role model is a
   data change to `ROLE_CAPABILITIES` / `GRANT_ROLE_CAPABILITIES`, no route rewrites.
 - Portal + console are new **surfaces**; per project convention, design them in
