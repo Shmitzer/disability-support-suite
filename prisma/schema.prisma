@@ -695,3 +695,109 @@ model WaitlistSignup {
   source    String   @default("landing") // where the signup came from
   createdAt DateTime @default(now())
 }
+
+// =====================================================================
+// GAME SUITE — System A (single-player, therapeutic, NDIS-goal-linked)
+// =====================================================================
+// Foundation models for docs/GAME_SUITE_SINGLEPLAYER_100.md. These are the
+// ONLY place therapeutic XP and goal progress exist (System B/multiplayer is
+// out of scope and must never write here). Tenant rules apply: every owned row
+// carries userId + organisationId, stamped via tenantOwner() on write and
+// filtered via tenantScope() on read (see src/lib/tenant.ts).
+//
+// participantId is kept as a scalar (like Message / BillableItem) rather than a
+// relation, so the games subsystem stays loosely coupled to the Participant model.
+
+// A goal from a participant's NDIS plan, tracked inside the app. Progress accrues
+// from game sessions, worker observations and self-reports — never deleted, the
+// GoalProgress log is the evidence trail.
+model NDISGoal {
+  id          String    @id @default(cuid())
+  participantId String
+  userId      String
+  organisationId String?
+  title       String // short, plain-language title
+  description String?
+  category    String // communication | numeracy | daily_living | social_participation | independence | fine_motor | health_wellbeing | learning | other
+  targetDate  DateTime?
+  progressType String   @default("percentage") // percentage | count | milestone
+  targetValue Int       @default(100)
+  currentValue Int      @default(0)
+  status      String    @default("active") // active | achieved | paused | removed
+  createdByRole String?
+  createdById String?
+  isVisibleToParticipant Boolean @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  progressItems GoalProgress[]
+  gameLinks     GoalGameLink[]
+
+  @@index([participantId, status])
+  @@index([organisationId, status])
+}
+
+// Immutable log of every progress increment toward a goal. Never deleted.
+model GoalProgress {
+  id          String   @id @default(cuid())
+  goal        NDISGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goalId      String
+  sourceType  String // game_session | worker_observation | self_report | manual
+  sourceId    String? // id of the GameSession (or other source record)
+  valueAdded  Int // how much this item added to the goal's currentValue
+  note        String?
+  recordedById String? // who recorded it (worker, participant, system)
+  organisationId String?
+  createdAt   DateTime @default(now())
+
+  @@index([goalId, createdAt])
+}
+
+// Many-to-many map of which games feed which goals, and how much per session.
+model GoalGameLink {
+  id          String   @id @default(cuid())
+  goal        NDISGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goalId      String
+  gameSlug    String // matches the game's identifier (see catalogue)
+  xpPerSession Int     @default(10) // progress this game adds per completed session
+  organisationId String?
+  createdAt   DateTime @default(now())
+
+  @@unique([goalId, gameSlug])
+  @@index([gameSlug])
+}
+
+// Records every game session a participant plays. score/maxScore may be 0 for
+// no-score sensory games (e.g. touch-bloom) — those log engagement, not correctness.
+model GameSession {
+  id          String   @id @default(cuid())
+  participantId String
+  userId      String
+  organisationId String?
+  gameSlug    String
+  tier        String? // T1..T5 the session ran at
+  difficulty  String   @default("medium") // easy | medium | challenge
+  score       Int      @default(0)
+  maxScore    Int      @default(0)
+  durationSecs Int     @default(0)
+  completed   Boolean  @default(false) // false if quit partway
+  xpEarned    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([participantId, gameSlug])
+  @@index([organisationId, createdAt])
+}
+
+// Running XP total per participant. System A only — never written from System B.
+model ParticipantXP {
+  id          String   @id @default(cuid())
+  participantId String  @unique
+  userId      String
+  organisationId String?
+  totalXP     Int      @default(0)
+  currentStreak Int    @default(0) // streak-free encouragement: informational, never punitive
+  lastPlayedAt DateTime?
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([organisationId])
+}
