@@ -47,7 +47,7 @@ Owner key: **L** legal (NDIS lawyer + Edward) · **P** product/copy · **D** cd 
 ## 7. AI in-page disclaimers / notices (the embedded docs)  ☐
 - ☐ **P** Final copy for each notice.
 - ☐ **D** Placement on screens (design).
-- ☐ **C** Logic/flags to surface them where conditional. Required notices:
+- ◐ **C** Logic/flags to surface them where conditional. **Resolver done** — `src/lib/notices.ts` (`activeNotices(ctx)`/`shouldShow`, pure + tested); cd consumes the returned keys. Required notices:
   - ☐ AI generate + extract→review: "AI-assisted — review & confirm before saving. No clinical decisions."
   - ☐ Note approval attestation: "By approving you confirm this reflects the support provided."
   - ☐ Incident flag → mandatory NDIS fields + reportable-incident timeline pointer.
