@@ -40,6 +40,24 @@ export const SupportNeed = {
 } as const;
 export type SupportNeed = (typeof SupportNeed)[keyof typeof SupportNeed];
 
+// High-intensity supports (NDIS Q&S Commission High Intensity Daily Personal
+// Activities). These carry specific worker training/competency requirements — the
+// hook point for **Phase 5** competency gating: before a worker can see/log one of
+// these chips, check they meet the competency. Gating itself is DEFERRED until a
+// worker credential/training model exists (see docs/design/participant-care-profile.md).
+export const HIGH_INTENSITY_NEEDS: readonly SupportNeed[] = [
+  SupportNeed.EnteralFeeding,
+  SupportNeed.Seizures,
+  SupportNeed.ComplexBowelCare,
+  SupportNeed.Catheter,
+  SupportNeed.Respiratory,
+  SupportNeed.Dysphagia,
+];
+
+export function isHighIntensitySupport(need: string): boolean {
+  return (HIGH_INTENSITY_NEEDS as readonly string[]).includes(need);
+}
+
 // Human-readable labels for the flags (for the care-profile editor UI).
 export const NEED_LABELS: Record<SupportNeed, string> = {
   [SupportNeed.Dysphagia]: "Dysphagia / thickened fluids",

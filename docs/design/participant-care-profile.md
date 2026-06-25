@@ -151,15 +151,23 @@ participants — solving the grid-clutter trade-off.
 ---
 
 ## 7. Phasing (each independently shippable, green)
-1. **Model + mapping (no behaviour change).** `care-needs.ts` (flags, condition map,
+1. ✅ **Model + mapping (no behaviour change).** `care-needs.ts` (flags, condition map,
    resolution) + category/group annotations + the SQL (unapplied) + unit tests.
-   Default-on so nothing changes yet.
-2. **Chip filtering.** `ShiftTracker`/`DetailFields` consume the resolution; participants
-   with a profile see a tailored grid; without one, unchanged.
-3. **Profile editor UI** + capability + audit.
-4. **New need-gated chips** (Seizure/Health, Feed, Transfer, Repositioning, Behaviour…)
-   added incrementally, plus IDDSI config and note-extraction scoping.
-5. **Competency gating** for high-intensity flags (ties to RBAC/credentials).
+2. ✅ **Chip filtering.** `ShiftTracker` (`TILE_KEYS ∩ visibleKeys`) + `DetailFields`
+   (`needWhen`) consume the resolution; participants with a profile see a tailored grid,
+   without one unchanged. Fed from `getCareProfile` (resilient → null when unconfigured).
+3. ✅ **Profile editor UI** at `/participants/[id]/care-profile` + `Capability.CareProfileManage`
+   + audited save (`CARE_PROFILE_UPDATED`).
+4. ✅ **Need-gated chips + IDDSI + extraction scoping.** Behaviour, Seizure,
+   Repositioning tiles (need-gated) + IDDSI fluid/food groups (`needWhen=dysphagia`) +
+   restrictive-practice group (`needWhen=restrictive_practices`); note extraction scoped
+   to enabled chips. (Further chips — Feed/PEG, Transfer, Wound, Respiratory, Diabetes —
+   follow the same pattern when wanted.)
+5. ⏸ **Competency gating** for high-intensity flags — **DEFERRED**: needs a worker
+   credential/training model (the "Credentials" module in the Drive notes), which
+   doesn't exist yet. The hook is in place: `HIGH_INTENSITY_NEEDS` / `isHighIntensitySupport()`
+   in `care-needs.ts` mark which flags require competency; once credentials land, gate
+   visibility/logging of those chips on `workerHasCompetency(worker, need)`.
 
 ---
 
