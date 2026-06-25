@@ -409,6 +409,39 @@ model ParticipantCareProfile {
   @@index([organisationId])
 }
 
+// Caira assistant — per-user AI context store (see src/lib/assistant-* + docs/
+// caira-assistant.md). Each row is a retrievable snippet the user's assistant may draw
+// on. `source` says where it came from; `participantId` (when set) scopes a snippet to
+// one person so retrieval can drop it if the user no longer has access. NOT auto-applied
+// (prisma/sql/assistant.sql).
+model AssistantContext {
+  id             String   @id @default(cuid())
+  userId         String // owner — whose assistant this feeds
+  organisationId String?
+  source         String // "upload" | "note" | "learned" | "profile" | "manual"
+  title          String?
+  content        String // the retrievable text
+  participantId  String? // set when the snippet is about a specific participant
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([participantId])
+}
+
+// Assistant conversation history (also the raw material for "learn as they use it").
+model AssistantMessage {
+  id             String   @id @default(cuid())
+  userId         String
+  organisationId String?
+  role           String // "user" | "assistant"
+  content        String
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a
 // tenant table: people on the waitlist are not users yet, so there is no userId /
 // organisationId (the same Rule 5/10 exception LearnedOption notes for global rows).

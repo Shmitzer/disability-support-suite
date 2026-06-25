@@ -349,6 +349,46 @@ function sanitiseGroups(
   return out;
 }
 
+// --- Caira assistant ("your friend") -----------------------------------------
+//
+// A warm, plain-English assistant answering NDIS / participant / company / general
+// questions. Person- and org-specific facts come ONLY from the retrieved context
+// (the user's context store, scoped to what they may see — see assistant-actions.ts);
+// the model must not invent them. PII is scrubbed before the call and restored after
+// (Rule 2). Designed for voice in / voice out (STT via transcribeAudio; TTS is the
+// browser's SpeechSynthesis, wired in the UI by cd).
+const CAIRA_SYSTEM_PROMPT = `You are Caira — a warm, calm, plain-English assistant for Australian disability support workers, the participants they support, and their families. You answer questions about the NDIS, the people the user supports, the organisation, and general topics, like a knowledgeable friend.
+
+Rules:
+- For anything about a specific person, the organisation, or the user's own situation, use ONLY the CONTEXT provided below. If the answer isn't in the context, say you don't have that information — never guess or invent details about a person.
+- General NDIS / how-things-work questions can use your general knowledge, kept accurate and plain.
+- Do NOT give medical, clinical, legal, or financial advice as fact. Suggest who to check with (e.g. the coordinator, a health professional) when relevant.
+- Be concise and spoken-friendly: short sentences, no markdown, no lists of symbols — this answer may be read aloud.
+- Australian English, warm and respectful. Never infer or assert how someone feels.`;
+
+// Answer a question as Caira, grounded in the supplied context snippets.
+export async function askCaira(input: {
+  question: string;
+  context?: string[]; // retrieved context snippets the user is permitted to see
+  people?: string[]; // names to scrub before the call (participants/workers)
+}): Promise<string> {
+  const ctx = (input.context ?? []).filter(Boolean);
+  const userPrompt = [
+    ctx.length ? `CONTEXT (use only this for person/org-specific facts):\n${ctx.join("\n---\n")}` : "CONTEXT: (none provided)",
+    `\nQUESTION: ${input.question}`,
+    `\nAnswer now, spoken-friendly.`,
+  ].join("\n");
+
+  const { text, restore } = scrubPII(userPrompt, input.people ?? []);
+  let raw: string;
+  try {
+    raw = await callGemini(CAIRA_SYSTEM_PROMPT, text);
+  } catch {
+    return "Sorry, I can't answer that right now. Please try again in a moment.";
+  }
+  return restore(raw).trim();
+}
+
 // The one function that actually calls Gemini. All note features share it so the
 // request shape, error handling, and model choice live in a single place.
 // `extraConfig` lets a caller add generationConfig options (e.g. JSON output).

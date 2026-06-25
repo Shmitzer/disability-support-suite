@@ -401,3 +401,34 @@ CREATE TABLE "ParticipantCareProfile" (
 -- CreateIndex
 CREATE UNIQUE INDEX "ParticipantCareProfile_participantId_key" ON "ParticipantCareProfile"("participantId");
 CREATE INDEX "ParticipantCareProfile_organisationId_idx" ON "ParticipantCareProfile"("organisationId");
+
+
+-- CreateTable: Caira assistant context store + history (see prisma/sql/assistant.sql)
+CREATE TABLE "AssistantContext" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "source" TEXT NOT NULL,
+    "title" TEXT,
+    "content" TEXT NOT NULL,
+    "participantId" TEXT,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AssistantContext_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "AssistantContext_userId_idx" ON "AssistantContext"("userId");
+CREATE INDEX "AssistantContext_participantId_idx" ON "AssistantContext"("participantId");
+
+CREATE TABLE "AssistantMessage" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "role" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AssistantMessage_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "AssistantMessage_userId_createdAt_idx" ON "AssistantMessage"("userId", "createdAt");
