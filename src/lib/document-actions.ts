@@ -93,6 +93,29 @@ export async function addDocument(input: {
   }
 }
 
+// Convenience: a worker / manager / admin attaches a note or a file TO a participant.
+// Thin wrapper over addDocument (which authorises via canAccessParticipant, audits, and
+// auto-ingests text). Used by the note/participant flows; cd supplies text and/or file.
+export async function attachToParticipant(input: {
+  participantId: string;
+  title?: string;
+  text?: string; // a typed note
+  dataUrl?: string; // an attached file/image
+  mimeType?: string;
+  source?: string; // defaults to worker_attachment
+}): Promise<DocResult> {
+  if (!input.participantId) return { ok: false, error: "A participant is required." };
+  if (!input.text?.trim() && !input.dataUrl) return { ok: false, error: "Add a note or a file." };
+  return addDocument({
+    source: input.source ?? "worker_attachment",
+    title: input.title,
+    participantId: input.participantId,
+    text: input.text,
+    dataUrl: input.dataUrl,
+    mimeType: input.mimeType,
+  });
+}
+
 // Photograph a document → OCR → store as a READY document and ingest its text.
 export async function photoToDocument(input: {
   base64: string;
