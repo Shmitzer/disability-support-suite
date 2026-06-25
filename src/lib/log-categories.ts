@@ -7,6 +7,10 @@
 // This is a plain data module: no "use client" / "use server", so both sides can
 // import it. Keep it free of anything server-only (no database, no cookies).
 
+// Type-only import: care-needs.ts imports LOG_CATEGORIES at runtime, so importing a
+// value from it here would be a cycle. The type is erased at build (no cycle).
+import type { SupportNeed } from "@/lib/care-needs";
+
 // A predefined amount the worker can pick instead of typing (e.g. "Can — 375 mL").
 // `ml` is the value stored; `label` is what's shown in the dropdown / sheet.
 export type AmountPreset = {
@@ -48,6 +52,10 @@ export type DetailGroup = {
   // Only show this group when another group's value is one of `in` (e.g. show the
   // Bristol scale only when the toilet type is Bowel or Both).
   showWhen?: { group: string; in: string[] };
+  // Only show this group when the PARTICIPANT'S care profile has this support-need
+  // flag set (e.g. an IDDSI fluid-level group only when `dysphagia` is on). Sibling
+  // of showWhen, keyed on the profile rather than another group. See care-needs.ts.
+  needWhen?: SupportNeed;
 };
 
 export type LogCategory = {
@@ -67,6 +75,13 @@ export type LogCategory = {
   requireNoteWhen?: { group: string; in: string[] };
   // Example/prompt text shown in the free-text note box, tailored to this category.
   notePlaceholder?: string;
+  // Participant-tailoring (see care-needs.ts + docs/design/participant-care-profile.md):
+  //   alwaysOn — universal; shown for every participant (the baseline set).
+  //   need     — shown only when the participant's care profile has this flag set.
+  // A category with neither is treated as need-less (always shown today). Phase 1
+  // marks the current categories alwaysOn; need-gated categories arrive in Phase 4.
+  alwaysOn?: boolean;
+  need?: SupportNeed;
 };
 
 // The order here is the order the chips appear on screen. Detail chips are kept
@@ -76,6 +91,7 @@ export type LogCategory = {
 export const LOG_CATEGORIES: LogCategory[] = [
   {
     key: "Meal",
+    alwaysOn: true,
     label: "Food",
     emoji: "🍽️",
     notePlaceholder: "e.g. what they ate, appetite, any help needed",
@@ -105,6 +121,7 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   {
     key: "Fluids",
+    alwaysOn: true,
     label: "Drink",
     emoji: "💧",
     notePlaceholder: "e.g. encouraged fluids, sips vs full glass",
@@ -146,6 +163,7 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   {
     key: "Activity",
+    alwaysOn: true,
     label: "Activity",
     emoji: "🏃",
     notePlaceholder: "e.g. what they did, where, who was there",
@@ -188,6 +206,7 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   {
     key: "Sleep",
+    alwaysOn: true,
     label: "Sleep",
     emoji: "😴",
     notePlaceholder: "e.g. settled 10pm, brief wake at 2am, checked every 30 min",
@@ -216,6 +235,7 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   {
     key: "Toileting",
+    alwaysOn: true,
     label: "Toilet",
     emoji: "🚻",
     notePlaceholder: "e.g. any pain, blood, or concerns",
@@ -266,6 +286,7 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   {
     key: "Hygiene",
+    alwaysOn: true,
     label: "Hygiene",
     emoji: "🧼",
     notePlaceholder: "e.g. how they managed, any skin concerns",
@@ -312,6 +333,7 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   {
     key: "Meds",
+    alwaysOn: true,
     label: "Medication",
     emoji: "💊",
     notePlaceholder: "e.g. reason if PRN or refused, any effects",
@@ -338,9 +360,10 @@ export const LOG_CATEGORIES: LogCategory[] = [
   },
   // A free-text catch-all for anything the specific chips don't cover. The note
   // IS the entry, so it's required.
-  { key: "Note", label: "Note", emoji: "📝", requireNote: true },
+  { key: "Note", label: "Note", emoji: "📝", requireNote: true, alwaysOn: true },
   {
     key: "Incident",
+    alwaysOn: true,
     label: "Incident",
     emoji: "⚠️",
     notePlaceholder: "e.g. what happened, who was involved, action taken",

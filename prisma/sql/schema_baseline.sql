@@ -379,3 +379,24 @@ CREATE TABLE "Consent" (
 
 -- CreateIndex
 CREATE INDEX "Consent_participantId_scope_status_idx" ON "Consent"("participantId", "scope", "status");
+
+
+-- CreateTable: ParticipantCareProfile — condition tags + support-need flags that
+-- tailor capture chips (see src/lib/care-needs.ts; prisma/sql/participant_care_profile.sql)
+CREATE TABLE "ParticipantCareProfile" (
+    "id" TEXT NOT NULL,
+    "participantId" TEXT NOT NULL,
+    "conditions" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+    "supportNeeds" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+    "needConfig" JSONB,
+    "organisationId" TEXT,
+    "updatedById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ParticipantCareProfile_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ParticipantCareProfile_participantId_key" ON "ParticipantCareProfile"("participantId");
+CREATE INDEX "ParticipantCareProfile_organisationId_idx" ON "ParticipantCareProfile"("organisationId");

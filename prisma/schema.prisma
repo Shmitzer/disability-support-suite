@@ -385,6 +385,27 @@ model Consent {
   @@index([participantId, scope, status])
 }
 
+// Per-participant care profile (see src/lib/care-needs.ts + docs/design/
+// participant-care-profile.md). `conditions` are curated condition tags that SEED
+// `supportNeeds` (the resolved functional support-need flags — the source of truth that
+// switches capture chips on). `needConfig` holds per-flag config (e.g. IDDSI levels,
+// repositioning interval). 1:1 with Participant (kept as a scalar id, like the other
+// lightweight relations). NOT yet wired into the request path — see prisma/sql/
+// participant_care_profile.sql (NOT auto-applied).
+model ParticipantCareProfile {
+  id             String   @id @default(cuid())
+  participantId  String   @unique
+  conditions     String[] // curated condition tags
+  supportNeeds   String[] // resolved support-need flags (source of truth)
+  needConfig     Json? // per-flag config (IDDSI levels, reposition interval, …)
+  organisationId String?
+  updatedById    String? // who last edited it (audit)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([organisationId])
+}
+
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a
 // tenant table: people on the waitlist are not users yet, so there is no userId /
 // organisationId (the same Rule 5/10 exception LearnedOption notes for global rows).
