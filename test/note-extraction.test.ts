@@ -89,6 +89,24 @@ test("mapExtractedToEntries: maps the narrative, sorts by time, skips junk", () 
   assert.equal(out[2].timestamp.getHours(), 7);
 });
 
+test("buildDetailFromGroups: Toilet keeps assist (single) + obs (multi) together", () => {
+  const detail = buildDetailFromGroups("Toileting", {
+    type: ["Both"],
+    assist: ["Assisted"],
+    obs: ["Accident / incontinence", "Continence aid changed"],
+  });
+  assert.equal(detail, "Both · Assisted · Accident / incontinence · Continence aid changed");
+});
+
+test("buildDetailFromGroups: Hygiene skin check is multi-select", () => {
+  const detail = buildDetailFromGroups("Hygiene", {
+    tasks: ["Shower"],
+    assist: ["Prompted"],
+    skin: ["Redness", "Skin tear"],
+  });
+  assert.equal(detail, "Shower · Prompted · Redness · Skin tear");
+});
+
 test("mapExtractedToEntries: tolerates non-array / empty input", () => {
   assert.deepEqual(mapExtractedToEntries([], BASE), []);
   // @ts-expect-error — exercising defensive runtime handling of bad input

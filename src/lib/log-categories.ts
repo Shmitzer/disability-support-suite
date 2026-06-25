@@ -195,9 +195,11 @@ export const LOG_CATEGORIES: LogCategory[] = [
     label: "Toilet",
     emoji: "🚻",
     notePlaceholder: "e.g. any pain, blood, or concerns",
-    // Type (single) → Bristol scale only for Bowel/Both → observation toggles (multi).
-    // Captures the bowel data (type + Bristol + timestamp) the future anti-impaction
-    // plan needs. No learning — toileting is a fixed clinical vocabulary.
+    // Type (single) → Bristol scale only for Bowel/Both → assistance level (single,
+    // standard scale) + observations (MULTI — a session can be several events at once,
+    // e.g. "Needed assistance" AND "Continence aid changed"). Captures the bowel data
+    // (type + Bristol + timestamp) the future anti-impaction plan needs. No learning —
+    // toileting is a fixed clinical vocabulary.
     groups: [
       { key: "type", label: "type", mode: "single", options: ["Urine", "Bowel", "Both"] },
       {
@@ -215,16 +217,24 @@ export const LOG_CATEGORIES: LogCategory[] = [
         ],
         showWhen: { group: "type", in: ["Bowel", "Both"] },
       },
+      // The standard assistance scale (shared with Hygiene/Food) — single-select.
+      {
+        key: "assist",
+        label: "assistance",
+        mode: "single",
+        options: ["Independent", "Prompted", "Assisted", "Full assistance"],
+      },
+      // Observations are EVENTS, so multi-select (they co-occur with assistance and
+      // each other). Split out of the old single-select group that mixed the two.
       {
         key: "obs",
         label: "observations",
-        mode: "single",
+        mode: "multi",
         options: [
-          "Independent",
-          "Needed assistance",
           "Accident / incontinence",
           "Continence aid changed",
           "Catheter care",
+          "Pad check – dry",
           "Concern – see note",
         ],
       },
@@ -235,7 +245,9 @@ export const LOG_CATEGORIES: LogCategory[] = [
     label: "Hygiene",
     emoji: "🧼",
     notePlaceholder: "e.g. how they managed, any skin concerns",
-    // Tasks done (multi — a session is often several) + the assistance level (single).
+    // Tasks done (multi — a session is often several) + assistance level (single) +
+    // skin-integrity observations (multi). Skin checks are a key safeguarding /
+    // pressure-care compliance item — anything but "Skin intact" should prompt a note.
     groups: [
       {
         key: "tasks",
@@ -258,6 +270,19 @@ export const LOG_CATEGORIES: LogCategory[] = [
         label: "assistance",
         mode: "single",
         options: ["Independent", "Prompted", "Assisted", "Full assistance"],
+      },
+      {
+        key: "skin",
+        label: "skin check",
+        mode: "multi",
+        options: [
+          "Skin intact",
+          "Redness",
+          "Bruise",
+          "Skin tear",
+          "Rash",
+          "Pressure area – see note",
+        ],
       },
     ],
   },
