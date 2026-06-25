@@ -6,7 +6,7 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/sharp-hypatia-6zdy2h` (Caira overnight build)
-- **Last updated:** 2026-06-25 (participant-tailored capture chips — care profile, phases 1–5)
+- **Last updated:** 2026-06-25 (AI entry prompts + admin cap; timestamp accuracy; care-profile chips)
 
 ---
 
@@ -97,6 +97,10 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 ---
 
 ## Decision log (newest first)
+
+- **2026-06-25** — **AI entry-clarifying prompts (chips + voice) with an admin-tunable cap.** While logging, the worker gets short, human, entry-specific questions ("Did Sam buy anything while you were out?") instead of generic prompts — tailored to category + picked detail + participant first name. `ai.suggestEntryQuestions` (factual-only per house rules: no mood/feeling inference; PII-scrubbed name placeholdered→restored; ≤3; fails quietly). Server actions `getEntryQuestions` (chip, groups-based) + `getDraftQuestions` (voice review, detail-based), own-shift validated. UI: tap **"✨ Suggest what to add"** on a chip or any voice-review draft; **auto-suggest** also fires once for sparse-note chip entries and empty-note drafts. **Auto fetches are capped per shift** (manual taps uncapped), persisted in localStorage; the cap is an **org setting** — `Organisation.autoSuggestCap` (default 3, clamp 0–20, 0 = off) edited at **`/admin/settings`** (`Capability.OrgSettingsManage`, ADMIN, audited `ORG_SETTINGS_UPDATED`), read resiliently by `getOrgAutoSuggestCap`. Schema → `prisma/sql/org_auto_suggest_cap.sql` (+ baseline), **NOT applied** (falls back to 3). 85 tests; tsc/lint/build green.
+
+- **2026-06-25** — **Timestamp accuracy for back-logged & verbal entries (warn, don't block).** End-of-shift batch logging now lands events at the time they happened, not all at "now". `shift-time.ts` (pure, overnight-aware): `minutesOfDay`/`isWithinWindow`/`timeWindowWarning`. Verbal: the model flags each time **stated vs estimated** (`timeEstimated` through `ai → note-extraction → NoteEntryDraft`); the review screen badges estimated times, warns on out-of-window / out-of-order, and editing a time clears the estimated flag. Chips: the time row is now a **"When did this happen?"** prompt (Now default, controlled input) with an out-of-window warning. Shift page passes `clockOnAt` for the window. Warn-allow-override throughout; server stays permissive by design. 85 tests; tsc/lint/build green.
 
 - **2026-06-25** — **Participant-tailored capture chips (phases 1–5).** Each participant's chips are now driven by a care profile: condition tags seed editable **support-need flags** (`src/lib/care-needs.ts`, the source of truth), which switch chips on. Backed by [research](research/ndis-condition-chip-profiles.md) + [design](design/participant-care-profile.md). **P1** model/mapping (flags, condition→flags, resolution; pure, tested). **P2** filtering — shift page resolves the profile (resilient `getCareProfile` → null when unconfigured) and `ShiftTracker` (`TILE_KEYS ∩ visibleKeys`) + `DetailFields` (`needWhen`) tailor the grid; no profile → full grid (legacy unchanged). **P3** capability-gated editor `/participants/[id]/care-profile` (`CareProfileManage`) with audited save. **P4** need-gated tiles (Behaviour, Seizure, Repositioning) + IDDSI fluid/food groups (`needWhen=dysphagia`) + restrictive-practice group + note-extraction scoped to enabled chips. **P5** competency gating **deferred** (needs a worker-credentials model); hook in place (`HIGH_INTENSITY_NEEDS`/`isHighIntensitySupport`). Schema: `ParticipantCareProfile` → `prisma/sql/participant_care_profile.sql` (+ baseline), **NOT applied** (`getCareProfile` tolerates absence). 80 tests; tsc/lint/build green.
 
