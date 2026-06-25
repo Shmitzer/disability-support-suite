@@ -11,7 +11,7 @@ import { getCurrentWorker } from "@/lib/session";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { cairaChat, generateProgressNote, type GeminiTurn } from "@/lib/ai";
 import { cairaPersona, webAccessAllowedForRole } from "@/lib/caira/roles";
-import { quickSafetyCheck } from "@/lib/caira/safetyDetect";
+import { quickSafetyCheck, stripSafetyJson } from "@/lib/caira/safetyDetect";
 import {
   workerPrompt,
   participantSimplePrompt,
@@ -26,19 +26,6 @@ import {
 } from "@/lib/caira/context";
 
 const GENERIC_ERROR = "I'm having trouble right now. Please try again.";
-
-// Remove a trailing/inline {"safetyFlag":…} JSON object the participant model may
-// append, and report whether it indicated a flag. Defensive: returns the text
-// unchanged if there's no JSON to strip.
-function stripSafetyJson(text: string): { cleaned: string; flagged: boolean } {
-  const flagged = /"safetyFlag"\s*:\s*true/i.test(text);
-  // Drop any {...} block that mentions safetyFlag (and tidy leftover whitespace).
-  const cleaned = text
-    .replace(/\{[^{}]*safetyFlag[^{}]*\}/gi, "")
-    .replace(/```json|```/gi, "")
-    .trim();
-  return { cleaned, flagged };
-}
 
 export async function POST(request: Request) {
   const worker = await getCurrentWorker();

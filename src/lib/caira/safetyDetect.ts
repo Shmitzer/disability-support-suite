@@ -53,3 +53,16 @@ export function quickSafetyCheck(message: string): SafetyCheck {
   }
   return { flagged: false };
 }
+
+// The participant prompt asks the model to append a {"safetyFlag":…} object. Parse it
+// (a second signal alongside the keyword pre-check) and strip it so the participant
+// only ever sees the warm, plain-text reply — never raw JSON. Defensive: returns the
+// text unchanged when there's no JSON to strip.
+export function stripSafetyJson(text: string): { cleaned: string; flagged: boolean } {
+  const flagged = /"safetyFlag"\s*:\s*true/i.test(text);
+  const cleaned = text
+    .replace(/\{[^{}]*safetyFlag[^{}]*\}/gi, "")
+    .replace(/```json|```/gi, "")
+    .trim();
+  return { cleaned, flagged };
+}
