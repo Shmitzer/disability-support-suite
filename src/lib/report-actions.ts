@@ -19,6 +19,7 @@ import { getCurrentPrincipal } from "@/lib/access";
 import { can, Capability } from "@/lib/rbac";
 import { tenantOwner } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
+import { notify } from "@/lib/notifications";
 import { buildShiftSourceLog } from "@/lib/report";
 import {
   generateShiftReport,
@@ -309,6 +310,21 @@ export async function supervisorApproveReport(formData: FormData): Promise<Repor
     where: { id: report.id },
     data: { status: "APPROVED", approvedAt: new Date(), approvedBy: supervisor.id, approvalNotes: notes },
   });
+  const shift = await prisma.shift.findUnique({
+    where: { id: report.shiftId },
+    select: { allocatedToId: true },
+  });
+  if (shift?.allocatedToId) {
+    await notify({
+      userId: shift.allocatedToId,
+      organisationId: report.organisationId,
+      type: "approval",
+      title: "Your shift note was approved",
+      link: `/shift/${report.shiftId}`,
+      entityType: "ShiftReport",
+      entityId: report.id,
+    });
+  }
   await recordAudit({
     action: "REPORT_APPROVED",
     targetType: "ShiftReport",
@@ -334,6 +350,21 @@ export async function supervisorReopenReport(formData: FormData): Promise<Report
     where: { id: report.id },
     data: { status: "DRAFT", approvedAt: null, approvedBy: null, approvalNotes: notes },
   });
+  const shift = await prisma.shift.findUnique({
+    where: { id: report.shiftId },
+    select: { allocatedToId: true },
+  });
+  if (shift?.allocatedToId) {
+    await notify({
+      userId: shift.allocatedToId,
+      organisationId: report.organisationId,
+      type: "approval",
+      title: "Your shift note was reopened",
+      link: `/shift/${report.shiftId}`,
+      entityType: "ShiftReport",
+      entityId: report.id,
+    });
+  }
   await recordAudit({
     action: "REPORT_REOPENED",
     targetType: "ShiftReport",

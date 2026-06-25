@@ -543,6 +543,119 @@ model WorkerCredential {
   @@index([organisationId, expiresAt])
 }
 
+// #5 In-app notifications (recipient-scoped). See src/lib/notifications.ts.
+model Notification {
+  id             String    @id @default(cuid())
+  userId         String // recipient
+  organisationId String?
+  type           String // shift | meds_due | incident | approval | credential_expiry | general
+  title          String
+  body           String?
+  link           String?
+  entityType     String?
+  entityId       String?
+  readAt          DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId, readAt])
+}
+
+// #6 Medication chart (per participant) + eMAR administration events.
+model Medication {
+  id             String   @id @default(cuid())
+  participantId  String
+  organisationId String?
+  name           String
+  dose           String?
+  route          String?
+  frequency      String?
+  scheduleTimes  Json? // e.g. ["08:00","20:00"]
+  prn            Boolean  @default(false)
+  prnProtocol    String?
+  active         Boolean  @default(true)
+  notes          String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([participantId, active])
+}
+
+model MedicationAdministration {
+  id               String    @id @default(cuid())
+  medicationId     String
+  participantId    String
+  shiftId          String?
+  organisationId   String?
+  status           String // GIVEN | WITHHELD | REFUSED | PRN_GIVEN
+  scheduledAt      DateTime?
+  administeredAt   DateTime  @default(now())
+  administeredById String?
+  witnessedById    String?
+  dose             String?
+  note             String?
+  createdAt        DateTime  @default(now())
+
+  @@index([participantId, administeredAt])
+  @@index([medicationId])
+}
+
+// #11 EVV / visit verification — geo + method captured at clock on/off (AU light).
+model VisitVerification {
+  id             String   @id @default(cuid())
+  shiftId        String
+  organisationId String?
+  event          String // CLOCK_ON | CLOCK_OFF
+  lat            Float?
+  lng            Float?
+  accuracy       Float?
+  method         String   @default("gps") // gps | manual
+  capturedById   String?
+  createdAt      DateTime @default(now())
+
+  @@index([shiftId])
+}
+
+// #8 NDIS plan budget per category + #13 billable line items / claims. Money in
+// integer cents. See src/lib/billing-claims.ts (+ actions).
+model ParticipantBudget {
+  id             String    @id @default(cuid())
+  participantId  String
+  organisationId String?
+  category       String // e.g. core_daily_activities | capacity_building | capital
+  allocatedCents Int       @default(0)
+  periodStart    DateTime?
+  periodEnd      DateTime?
+  notes          String?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  @@index([participantId])
+}
+
+model BillableItem {
+  id             String   @id @default(cuid())
+  participantId  String
+  shiftId        String?
+  organisationId String?
+  category       String? // maps to a budget category
+  lineItemCode   String? // NDIS price-guide item number
+  description    String
+  quantity       Int      @default(1)
+  unitPriceCents Int      @default(0)
+  amountCents    Int      @default(0)
+  date           DateTime
+  status         String   @default("DRAFT") // DRAFT | CLAIMED | PAID | REJECTED
+  claimRef       String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([participantId, status])
+  @@index([organisationId, status])
+}
+
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a
 // tenant table: people on the waitlist are not users yet, so there is no userId /
 // organisationId (the same Rule 5/10 exception LearnedOption notes for global rows).

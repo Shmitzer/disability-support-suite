@@ -496,3 +496,54 @@ CREATE TABLE "WorkerCredential" (
     CONSTRAINT "WorkerCredential_pkey" PRIMARY KEY ("id"));
 CREATE INDEX "WorkerCredential_workerId_idx" ON "WorkerCredential"("workerId");
 CREATE INDEX "WorkerCredential_organisationId_expiresAt_idx" ON "WorkerCredential"("organisationId","expiresAt");
+
+CREATE TABLE "Notification" (
+  "id" TEXT NOT NULL, "userId" TEXT NOT NULL, "organisationId" TEXT, "type" TEXT NOT NULL,
+  "title" TEXT NOT NULL, "body" TEXT, "link" TEXT, "entityType" TEXT, "entityId" TEXT,
+  "readAt" TIMESTAMP(3), "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Notification_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "Notification_userId_readAt_idx" ON "Notification" ("userId","readAt");
+
+CREATE TABLE "Medication" (
+  "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "organisationId" TEXT, "name" TEXT NOT NULL,
+  "dose" TEXT, "route" TEXT, "frequency" TEXT, "scheduleTimes" JSONB, "prn" BOOLEAN NOT NULL DEFAULT false,
+  "prnProtocol" TEXT, "active" BOOLEAN NOT NULL DEFAULT true, "notes" TEXT, "createdById" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Medication_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "Medication_participantId_active_idx" ON "Medication" ("participantId","active");
+
+CREATE TABLE "MedicationAdministration" (
+  "id" TEXT NOT NULL, "medicationId" TEXT NOT NULL, "participantId" TEXT NOT NULL, "shiftId" TEXT,
+  "organisationId" TEXT, "status" TEXT NOT NULL, "scheduledAt" TIMESTAMP(3),
+  "administeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "administeredById" TEXT,
+  "witnessedById" TEXT, "dose" TEXT, "note" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "MedicationAdministration_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "MedicationAdministration_participantId_administeredAt_idx" ON "MedicationAdministration" ("participantId","administeredAt");
+CREATE INDEX "MedicationAdministration_medicationId_idx" ON "MedicationAdministration" ("medicationId");
+
+CREATE TABLE "VisitVerification" (
+  "id" TEXT NOT NULL, "shiftId" TEXT NOT NULL, "organisationId" TEXT, "event" TEXT NOT NULL,
+  "lat" DOUBLE PRECISION, "lng" DOUBLE PRECISION, "accuracy" DOUBLE PRECISION,
+  "method" TEXT NOT NULL DEFAULT 'gps', "capturedById" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "VisitVerification_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "VisitVerification_shiftId_idx" ON "VisitVerification" ("shiftId");
+
+CREATE TABLE "ParticipantBudget" (
+  "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "organisationId" TEXT, "category" TEXT NOT NULL,
+  "allocatedCents" INTEGER NOT NULL DEFAULT 0, "periodStart" TIMESTAMP(3), "periodEnd" TIMESTAMP(3),
+  "notes" TEXT, "createdById" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ParticipantBudget_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "ParticipantBudget_participantId_idx" ON "ParticipantBudget" ("participantId");
+
+CREATE TABLE "BillableItem" (
+  "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "shiftId" TEXT, "organisationId" TEXT,
+  "category" TEXT, "lineItemCode" TEXT, "description" TEXT NOT NULL, "quantity" INTEGER NOT NULL DEFAULT 1,
+  "unitPriceCents" INTEGER NOT NULL DEFAULT 0, "amountCents" INTEGER NOT NULL DEFAULT 0,
+  "date" TIMESTAMP(3) NOT NULL, "status" TEXT NOT NULL DEFAULT 'DRAFT', "claimRef" TEXT, "createdById" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "BillableItem_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "BillableItem_participantId_status_idx" ON "BillableItem" ("participantId","status");
+CREATE INDEX "BillableItem_organisationId_status_idx" ON "BillableItem" ("organisationId","status");
+

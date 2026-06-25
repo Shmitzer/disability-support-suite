@@ -9,6 +9,7 @@ import { getCurrentWorker } from "@/lib/session";
 import { getCurrentPrincipal } from "@/lib/access";
 import { can, Capability } from "@/lib/rbac";
 import { recordAudit } from "@/lib/audit";
+import { notifyOrgManagers } from "@/lib/notifications";
 import { revalidatePath } from "next/cache";
 
 const TYPES = new Set(["physical", "behavioural", "environmental", "medical", "other"]);
@@ -61,6 +62,14 @@ export async function reportIncident(input: {
       actorId: worker.id,
       organisationId: worker.organisationId,
       detail: { incidentId: incident.id, type: input.type, severity: input.severity, reportable: Boolean(input.reportable) },
+    });
+    await notifyOrgManagers(worker.organisationId, {
+      type: "incident",
+      title: `New ${input.severity} incident reported`,
+      body: input.description.slice(0, 140),
+      link: "/console/incidents",
+      entityType: "Incident",
+      entityId: incident.id,
     });
     revalidatePath("/console/incidents");
     return { ok: true, incidentId: incident.id };
