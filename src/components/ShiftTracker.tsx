@@ -13,7 +13,7 @@
 
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { categoryRequiresNote, findCategory, LOG_CATEGORIES } from "@/lib/log-categories";
 import {
@@ -21,6 +21,7 @@ import {
   extractNotePreview,
   commitExtractedEntries,
   getEntryQuestions,
+  getDraftQuestions,
   type NoteEntryDraft,
 } from "@/lib/log-actions";
 import { timeWindowWarning, minutesOfDay } from "@/lib/shift-time";
@@ -96,6 +97,9 @@ export function ShiftTracker({
   // logged. Fetched on demand; tapping one drops it into the note to answer.
   const [entryQuestions, setEntryQuestions] = useState<string[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
+  // The entryKey we've already auto-suggested for, so the auto-fetch fires at most once
+  // per entry (and never fights the worker who tapped the button or is mid-typing).
+  const autoSuggestedRef = useRef<string | null>(null);
   const [entryKey, setEntryKey] = useState("");
   // Voice mode: record → transcribe → editable note. `vstatus` drives the mic UI;
   // the MediaRecorder + its captured chunks live in refs (not state — they mustn't
@@ -116,6 +120,11 @@ export function ShiftTracker({
   const [drafts, setDrafts] = useState<NoteEntryDraft[] | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [committing, setCommitting] = useState(false);
+  // Per-draft AI prompts in the voice review (index → questions / loading), plus a ref
+  // so the auto-suggest pass runs once per extracted set.
+  const [draftQuestions, setDraftQuestions] = useState<Record<number, string[]>>({});
+  const [draftQLoading, setDraftQLoading] = useState<Record<number, boolean>>({});
+  const draftsAutoRef = useRef<NoteEntryDraft[] | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const noteBackupKey = (cat: string) => `dsw:note:${shiftId}:${cat}`;
@@ -169,6 +178,23 @@ export function ShiftTracker({
     setEntryQuestions((qs) => qs.filter((x) => x !== q));
   }
 
+  // Auto-suggest once per entry: when the worker has picked some detail but hasn't
+  // written much yet, fetch prompts unprompted (they can still tap the button to
+  // re-fetch). Guarded by entryKey so it fires at most once and never mid-typing.
+  const hasPicks = Object.values(groupValues).some((v) => v.length > 0);
+  useEffect(() => {
+    if (view !== "capture" || !selected) return;
+    if (autoSuggestedRef.current === entryKey) return;
+    if (!hasPicks || note.trim().length >= 12) return;
+    autoSuggestedRef.current = entryKey;
+    // Defer out of the effect body (the fetch sets state on resolve).
+    const t = setTimeout(() => void handleSuggestQuestions(), 0);
+    return () => clearTimeout(t);
+    // Intentionally keyed on the entry + picks only — not `note` (we read it at fire
+    // time) and not the handler (stable enough; the ref guard prevents re-firing).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, entryKey, hasPicks, view]);
+
   function gotoView(next: View) {
     // Leaving the mic tab mid-dictation: abort live recognition so it doesn't keep
     // listening in the background. (abort() won't fire a final result.)
@@ -215,6 +241,46 @@ export function ShiftTracker({
       return next.length ? next : null; // leaving none closes the review
     });
   }
+
+  // Fetch AI prompts for one extracted draft (tap-to-trigger; also used by auto-suggest).
+  async function suggestForDraft(index: number) {
+    const d = drafts?.[index];
+    if (!d || draftQLoading[index]) return;
+    setDraftQLoading((s) => ({ ...s, [index]: true }));
+    try {
+      const res = await getDraftQuestions(shiftId, d.category, d.detail, d.notes);
+      setDraftQuestions((s) => ({ ...s, [index]: res.questions }));
+    } catch {
+      setDraftQuestions((s) => ({ ...s, [index]: [] }));
+    } finally {
+      setDraftQLoading((s) => ({ ...s, [index]: false }));
+    }
+  }
+
+  // Drop a draft's suggested question into that draft's note, then remove it from the list.
+  function insertDraftQuestion(index: number, q: string) {
+    const cur = drafts?.[index]?.notes ?? "";
+    updateDraft(index, { notes: cur.trim() ? `${cur.trimEnd()}\n${q} ` : `${q} ` });
+    setDraftQuestions((s) => ({ ...s, [index]: (s[index] ?? []).filter((x) => x !== q) }));
+  }
+
+  // Auto-suggest once per extracted set: for drafts that came back with an empty note,
+  // fetch prompts so the worker sees them without tapping. Runs a single pass.
+  useEffect(() => {
+    if (!drafts || draftsAutoRef.current === drafts) return;
+    const set = drafts;
+    draftsAutoRef.current = set;
+    // Defer out of the effect body (these set state directly + on resolve).
+    const t = setTimeout(() => {
+      setDraftQuestions({});
+      setDraftQLoading({});
+      set.forEach((d, i) => {
+        if (!d.notes.trim()) void suggestForDraft(i);
+      });
+    }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drafts]);
 
   // Confirm: create the entries + keep the original note as their parent.
   async function handleConfirmExtraction() {
@@ -776,6 +842,31 @@ export function ShiftTracker({
                   placeholder="Add a note (optional)"
                   className="h-10 rounded-xl border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted focus:border-brand focus:outline-none"
                 />
+                {/* AI prompts for this entry — auto-suggested for empty notes; tap to
+                    re-ask anytime. Tapping a prompt drops it into this entry's note. */}
+                {(draftQuestions[i] ?? []).length > 0 ? (
+                  <div className="flex flex-col gap-1.5">
+                    {(draftQuestions[i] ?? []).map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => insertDraftQuestion(i, q)}
+                        className="rounded-xl border border-border bg-surface px-3 py-1.5 text-left text-[13px] text-foreground transition-colors hover:bg-surface-sunk"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => suggestForDraft(i)}
+                    disabled={draftQLoading[i]}
+                    className="self-start text-[12px] font-bold text-brand disabled:opacity-60"
+                  >
+                    {draftQLoading[i] ? "Thinking…" : "✨ Suggest what to add"}
+                  </button>
+                )}
               </div>
               );
             })}

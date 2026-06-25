@@ -337,6 +337,29 @@ export async function getEntryQuestions(
   groups: Record<string, string[]> | undefined,
   note: string,
 ): Promise<{ questions: string[]; error?: string }> {
+  // Rebuild the detail from the picked groups on the server (never trust the browser).
+  return entryQuestions(shiftId, category, buildDetailFromGroups(category, groups), note);
+}
+
+// Same, but for the voice-review path where we already have the assembled detail string
+// (the extracted draft) rather than the raw group picks.
+export async function getDraftQuestions(
+  shiftId: string,
+  category: string,
+  detail: string | null,
+  note: string,
+): Promise<{ questions: string[]; error?: string }> {
+  return entryQuestions(shiftId, category, detail, note);
+}
+
+// Shared core: validate the caller owns this active shift, then ask the AI for human,
+// entry-specific clarifying prompts. Suggestions are a nicety — failures return [].
+async function entryQuestions(
+  shiftId: string,
+  category: string,
+  detail: string | null,
+  note: string,
+): Promise<{ questions: string[]; error?: string }> {
   const worker = await getCurrentWorker();
   if (!worker || !shiftId) return { questions: [], error: "Not signed in." };
   if (!isLogCategory(category)) return { questions: [] };
@@ -349,20 +372,17 @@ export async function getEntryQuestions(
     return { questions: [], error: "This isn't an active shift you can log to." };
   }
 
-  const cat = findCategory(category);
-  // Rebuild the detail from the picked groups on the server (never trust the browser).
-  const detail = buildDetailFromGroups(category, groups);
   try {
     const questions = await suggestEntryQuestions({
-      label: cat?.label ?? category,
+      label: findCategory(category)?.label ?? category,
       detail,
       note: typeof note === "string" ? note : "",
       participantName: shift.participant.name,
     });
     return { questions };
   } catch (err) {
-    console.error("getEntryQuestions failed:", err);
-    return { questions: [] }; // suggestions are a nicety — fail quietly
+    console.error("entryQuestions failed:", err);
+    return { questions: [] };
   }
 }
 
