@@ -115,6 +115,21 @@ test("buildDetailFromGroups: Hygiene skin check is multi-select", () => {
   assert.equal(detail, "Shower · Prompted · Redness · Skin tear");
 });
 
+test("mapExtractedToEntries: timeEstimated defaults true unless explicitly false", () => {
+  const out = mapExtractedToEntries(
+    [
+      { category: "Meal", time: "08:00", groups: { meal: ["Breakfast"] } }, // no flag → estimated
+      { category: "Fluids", time: "09:00", timeEstimated: false, groups: { drink: ["Water"] } },
+      { category: "Activity", time: "10:00", timeEstimated: true, groups: { activity: ["Outing"] } },
+    ],
+    BASE,
+  );
+  const byCat = Object.fromEntries(out.map((e) => [e.category, e.timeEstimated]));
+  assert.equal(byCat.Meal, true);
+  assert.equal(byCat.Fluids, false);
+  assert.equal(byCat.Activity, true);
+});
+
 test("mapExtractedToEntries: tolerates non-array / empty input", () => {
   assert.deepEqual(mapExtractedToEntries([], BASE), []);
   // @ts-expect-error — exercising defensive runtime handling of bad input

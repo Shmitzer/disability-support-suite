@@ -224,7 +224,7 @@ export async function generateClarifyingQuestions(
 const EXTRACT_SYSTEM_PROMPT = `You convert a disability support worker's free-text shift note into a list of structured log entries.
 
 Return ONLY a JSON array. Each element has this shape:
-{ "category": <one category key below>, "time": "HH:MM" (24-hour), "note": <short factual observation in the worker's words>, "groups": { <groupKey>: [<option>, ...] }, "amountMl": <number, ONLY for Fluids> }
+{ "category": <one category key below>, "time": "HH:MM" (24-hour), "timeEstimated": <true|false>, "note": <short factual observation in the worker's words>, "groups": { <groupKey>: [<option>, ...] }, "amountMl": <number, ONLY for Fluids> }
 
 Categories and their allowed groups/options — use these EXACTLY; never invent a category, group, or option:
 {{CATALOGUE}}
@@ -233,6 +233,7 @@ Rules:
 - Map each distinct activity to the SINGLE best-fitting category. If something fits no category, omit it (it stays in the original note).
 - Use ONLY the listed option values for a group. For a group marked "or free text", you may use a short free-text value if none fit.
 - TIME: the note's start time is given. Resolve every relative reference into an absolute "HH:MM" in chronological order, never going backwards. If a time isn't stated, estimate a sensible time after the previous item.
+- timeEstimated: set TRUE when you inferred/guessed the time (it was not clearly stated in the note), FALSE when the note stated the time explicitly (e.g. "at 2pm", "around 14:30"). This tells the worker which times to double-check.
 - Keep "note" brief and factual — no opinions, no clinical judgements, no invented detail.
 - Output ONLY the JSON array. No preamble, no code fences.`;
 
@@ -258,6 +259,9 @@ export async function extractLogItems(
       .map((x) => ({
         category: x.category,
         time: typeof x.time === "string" ? x.time : "",
+        // Default to estimated when the model omits the flag — safer to prompt a check
+        // than to silently present a guessed time as confirmed.
+        timeEstimated: x.timeEstimated !== false,
         note: typeof x.note === "string" ? restore(x.note) : "",
         groups: sanitiseGroups(x.groups, restore),
         amountMl: typeof x.amountMl === "number" ? x.amountMl : undefined,

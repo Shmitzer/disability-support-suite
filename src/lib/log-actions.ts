@@ -325,6 +325,7 @@ export type NoteEntryDraft = {
   detail: string | null;
   notes: string;
   time: string;
+  timeEstimated: boolean; // true = model guessed the time; flag it for confirmation
 };
 
 // Read-only: parse the note into draft entries for review. Never writes.
@@ -360,6 +361,7 @@ export async function extractNotePreview(
         detail: m.detail,
         notes: m.notes,
         time: hhmm(m.timestamp),
+        timeEstimated: m.timeEstimated,
       })),
     };
   } catch (err) {

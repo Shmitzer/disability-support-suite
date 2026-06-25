@@ -16,6 +16,7 @@ import { LOG_CATEGORIES, findCategory } from "@/lib/log-categories";
 export type ExtractedItem = {
   category: string; // must be a LOG_CATEGORIES key (e.g. "Toileting")
   time: string; // absolute "HH:MM" (24h), already resolved from relative refs
+  timeEstimated?: boolean; // true = model inferred the time (worker should verify)
   note?: string; // short factual observation (the worker's words)
   groups?: Record<string, string[]>; // group key → chosen option(s), e.g. { drink: ["Coffee"] }
   amountMl?: number; // for categories with an amount (Fluids)
@@ -27,6 +28,7 @@ export type MappedEntry = {
   detail: string | null; // assembled "A · B · 250 mL" string, or null
   notes: string;
   timestamp: Date;
+  timeEstimated: boolean; // carried through so the review UI can flag it
 };
 
 // Categories the extractor may target. "Note" is the SOURCE (the narrative), not a
@@ -117,6 +119,8 @@ export function mapExtractedToEntries(items: ExtractedItem[], baseDate: Date): M
       detail: buildDetailFromGroups(cat.key, it.groups, it.amountMl),
       notes: typeof it.note === "string" ? it.note.trim() : "",
       timestamp: parseTimeOnDate(it.time, baseDate),
+      // A missing/non-false flag counts as estimated (prompt the worker to check).
+      timeEstimated: it.timeEstimated !== false,
     });
   }
   return mapped.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());

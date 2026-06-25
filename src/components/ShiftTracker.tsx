@@ -22,6 +22,7 @@ import {
   commitExtractedEntries,
   type NoteEntryDraft,
 } from "@/lib/log-actions";
+import { timeWindowWarning, minutesOfDay } from "@/lib/shift-time";
 import { DetailFields } from "@/components/DetailFields";
 import { PhotoInput } from "@/components/PhotoInput";
 import { PaperIcon, PaperDefs } from "@/components/PaperIcon";
@@ -59,6 +60,7 @@ export function ShiftTracker({
   timeline,
   visibleKeys,
   supportNeeds,
+  shiftStartISO,
 }: {
   shiftId: string;
   // Approved options for each self-learning group (e.g. { drink: [...] }).
@@ -70,13 +72,22 @@ export function ShiftTracker({
   visibleKeys?: string[];
   // The participant's support-need flags, for filtering need-gated sub-groups.
   supportNeeds?: string[] | null;
+  // When the shift was clocked on (ISO) — the start of the valid time window for
+  // entries. The end is "now" (logging only happens while the shift is in progress).
+  shiftStartISO?: string | null;
 }) {
+  // The shift window as "HH:MM" bounds for warning on out-of-window entry times.
+  const shiftStartHHMM = shiftStartISO ? hhmmLocal(new Date(shiftStartISO)) : null;
   // Tiles to show: the curated tile order, narrowed to what the profile enables.
   const tiles = visibleKeys ? TILE_KEYS.filter((k) => visibleKeys.includes(k)) : TILE_KEYS;
   const [view, setView] = useState<View>("capture");
   // Which category's detail panel is open (null = the tile grid).
   const [selected, setSelected] = useState<string | null>(null);
   const [adjusting, setAdjusting] = useState(false);
+  // The time the worker set for the entry being captured (controlled, so we can warn
+  // live if it falls outside the shift window). Empty until they tap "Set a time".
+  const [chipTime, setChipTime] = useState("");
+  const chipTimeWarning = adjusting ? timeWindowWarning(chipTime, shiftStartHHMM, nowHHMM()) : null;
   const [groupValues, setGroupValues] = useState<Record<string, string[]>>({});
   const [photos, setPhotos] = useState<string[]>([]);
   const [note, setNote] = useState("");
@@ -115,6 +126,7 @@ export function ShiftTracker({
   function openCategory(key: string | null) {
     setSelected(key);
     setAdjusting(false);
+    setChipTime("");
     setGroupValues({});
     setPhotos([]);
     if (key) {
@@ -341,6 +353,7 @@ export function ShiftTracker({
     formRef.current?.reset();
     setSelected(null);
     setAdjusting(false);
+    setChipTime("");
     setGroupValues({});
     setPhotos([]);
   }
@@ -490,30 +503,50 @@ export function ShiftTracker({
 
             <div className="flex items-center justify-between gap-2 text-sm">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-foreground">Time</span>
+                <span className="font-medium text-foreground">When did this happen?</span>
                 {adjusting ? (
                   <>
                     <input
                       type="time"
                       name="loggedTime"
-                      defaultValue={nowHHMM()}
+                      value={chipTime}
+                      onChange={(e) => setChipTime(e.target.value)}
                       className="rounded-lg border border-border bg-surface px-3 py-1.5 text-base text-foreground focus:border-brand focus:outline-none"
                     />
-                    <button type="button" onClick={() => setAdjusting(false)} className="font-medium text-brand">
-                      Use now
+                    <button
+                      type="button"
+                      onClick={() => setAdjusting(false)}
+                      className="font-medium text-brand"
+                    >
+                      Now
                     </button>
                   </>
                 ) : (
                   <>
                     <span className="text-muted">Now</span>
-                    <button type="button" onClick={() => setAdjusting(true)} className="font-medium text-brand">
-                      Adjust
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setChipTime(nowHHMM());
+                        setAdjusting(true);
+                      }}
+                      className="font-medium text-brand"
+                    >
+                      Set a time
                     </button>
                   </>
                 )}
               </div>
               <PhotoInput photos={photos} onChange={setPhotos} iconOnly />
             </div>
+            {/* Warn (don't block) when a back-logged time falls outside the shift. */}
+            {chipTimeWarning && (
+              <p className="text-[11px] font-semibold text-clay">
+                {chipTimeWarning === "before_start"
+                  ? "That's before this shift started — check the time."
+                  : "That's after now — check the time."}
+              </p>
+            )}
 
             <SubmitButton label={selectedCat?.label ?? selected} />
           </form>
@@ -616,11 +649,17 @@ export function ShiftTracker({
             </button>
           </div>
           <p className="text-[11px] font-semibold text-muted">
-            Check each entry — the original note is kept too.
+            Check each entry — especially times tagged{" "}
+            <span className="text-clay">estimated</span>. The original note is kept too.
           </p>
 
           <div className="flex flex-col gap-2.5">
-            {drafts.map((d, i) => (
+            {drafts.map((d, i) => {
+              const windowWarn = timeWindowWarning(d.time, shiftStartHHMM, nowHHMM());
+              const prev = i > 0 ? minutesOfDay(drafts[i - 1].time) : null;
+              const cur = minutesOfDay(d.time);
+              const outOfOrder = prev != null && cur != null && cur < prev;
+              return (
               <div key={i} className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3">
                 <div className="flex items-center gap-2">
                   <select
@@ -637,8 +676,14 @@ export function ShiftTracker({
                   <input
                     type="time"
                     value={d.time}
-                    onChange={(e) => updateDraft(i, { time: e.target.value })}
-                    className="h-10 rounded-xl border border-border bg-surface px-2 text-sm text-foreground focus:border-brand focus:outline-none"
+                    // Editing the time counts as the worker confirming it (clears the
+                    // "estimated" flag).
+                    onChange={(e) => updateDraft(i, { time: e.target.value, timeEstimated: false })}
+                    className={`h-10 rounded-xl border bg-surface px-2 text-sm text-foreground focus:outline-none ${
+                      d.timeEstimated || windowWarn || outOfOrder
+                        ? "border-clay focus:border-clay"
+                        : "border-border focus:border-brand"
+                    }`}
                   />
                   <button
                     type="button"
@@ -649,6 +694,18 @@ export function ShiftTracker({
                     ×
                   </button>
                 </div>
+                {/* Time confirmation cues (warn, never block). */}
+                {(d.timeEstimated || windowWarn || outOfOrder) && (
+                  <p className="text-[11px] font-semibold text-clay">
+                    {windowWarn === "before_start"
+                      ? "Before the shift started — check the time."
+                      : windowWarn === "after_end"
+                        ? "After now — check the time."
+                        : outOfOrder
+                          ? "Out of order — check the time."
+                          : "Estimated time — confirm it's right."}
+                  </p>
+                )}
                 {d.detail && (
                   <div className="text-[11px] font-bold text-brand">{d.detail}</div>
                 )}
@@ -659,7 +716,8 @@ export function ShiftTracker({
                   className="h-10 rounded-xl border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted focus:border-brand focus:outline-none"
                 />
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {vError && <p className="text-[11px] font-semibold text-clay">{vError}</p>}
@@ -699,7 +757,10 @@ function hasTile(key: string): boolean {
 }
 
 function nowHHMM(): string {
-  const d = new Date();
+  return hhmmLocal(new Date());
+}
+
+function hhmmLocal(d: Date): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 

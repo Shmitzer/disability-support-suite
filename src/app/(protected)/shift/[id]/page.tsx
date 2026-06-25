@@ -178,6 +178,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
           timeline={timelineEl}
           visibleKeys={visibleKeys}
           supportNeeds={supportNeeds}
+          shiftStartISO={shift.clockOnAt?.toISOString() ?? null}
         />
       ) : (
         <>
