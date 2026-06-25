@@ -34,9 +34,9 @@ import {
   type SpeechRecognitionLike,
 } from "@/lib/audio";
 
-// The six categories shown as Paper tiles, in design order. Note is reached via the
+// The categories shown as Paper tiles, in design order. Note is reached via the
 // voice/type free-text; Incident via its own button below the grid.
-const TILE_KEYS = ["Meal", "Fluids", "Hygiene", "Activity", "Toileting", "Meds"];
+const TILE_KEYS = ["Meal", "Fluids", "Hygiene", "Activity", "Sleep", "Toileting", "Meds"];
 
 type View = "capture" | "timeline" | "voice";
 

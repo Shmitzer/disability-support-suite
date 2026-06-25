@@ -54,6 +54,13 @@ const COLORS: Record<string, CatColor> = {
     dot: "border-[#962f63]/30 bg-[#f3c2d8] text-[#962f63]",
     card: "border-[#962f63]/15 bg-[#f3c2d8]/50",
   },
+  // Sleep — calm lavender (distinct from Hygiene's blue), for rest / overnight checks
+  Sleep: {
+    chipIdle: "border-[#5b4d8a]/20 bg-[#d7d0ec] text-[#5b4d8a] hover:brightness-95",
+    chipActive: "border-[#5b4d8a]/50 bg-[#d7d0ec] text-[#5b4d8a]",
+    dot: "border-[#5b4d8a]/30 bg-[#d7d0ec] text-[#5b4d8a]",
+    card: "border-[#5b4d8a]/15 bg-[#d7d0ec]/50",
+  },
   // Note — warm neutral paper (no spec tint; derived from ink/line)
   Note: {
     chipIdle: "border-[#7a6a55]/20 bg-[#efe6d6] text-[#7a6a55] hover:brightness-95",

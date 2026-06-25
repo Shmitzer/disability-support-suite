@@ -163,6 +163,34 @@ export const LOG_CATEGORIES: LogCategory[] = [
     ],
   },
   {
+    key: "Sleep",
+    label: "Sleep",
+    emoji: "😴",
+    notePlaceholder: "e.g. settled 10pm, brief wake at 2am, checked every 30 min",
+    // State at this check (single) + optional overnight observations (multi). No
+    // learning — sleep uses a fixed vocabulary. Common on SIL / overnight shifts.
+    groups: [
+      {
+        key: "state",
+        label: "state",
+        mode: "single",
+        options: ["Settled", "Asleep", "Awake", "Restless", "Up"],
+      },
+      {
+        key: "obs",
+        label: "observations",
+        mode: "multi",
+        options: [
+          "Repositioned",
+          "Continence check",
+          "Settled with support",
+          "Up to toilet",
+          "Distressed – see note",
+        ],
+      },
+    ],
+  },
+  {
     key: "Toileting",
     label: "Toilet",
     emoji: "🚻",

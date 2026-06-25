@@ -35,6 +35,7 @@ const ICONS: Record<string, { blob: string; fill: string; stroke: string; glyph:
   Activity:  { blob: BLOB.C, fill: "#aedcb6", stroke: "#256b3f", glyph: '<circle cx="13" cy="4.5" r="1.5"></circle><path d="M12 9l-2.5 4 3 2.5L11 21"></path><path d="M12 9l3.5 1.5L18 9"></path><path d="M12 9l-4 1"></path>' },
   Toileting: { blob: BLOB.B, fill: "#b9e0da", stroke: "#14756a", glyph: '<path d="M6 3v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"></path><path d="M9 17v3"></path><path d="M15 17v3"></path>' },
   Meds:      { blob: BLOB.A, fill: "#f3c2d8", stroke: "#962f63", glyph: '<rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"></rect><line x1="9" y1="9" x2="15" y2="15"></line>' },
+  Sleep:     { blob: BLOB.C, fill: "#d7d0ec", stroke: "#5b4d8a", glyph: '<path d="M18 13.5A7.5 7.5 0 1 1 9 4.2 6 6 0 0 0 18 13.5Z"></path>' },
 };
 
 export function hasPaperIcon(category: string): boolean {
