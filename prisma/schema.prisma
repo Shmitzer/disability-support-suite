@@ -656,6 +656,34 @@ model BillableItem {
   @@index([organisationId, status])
 }
 
+// #12 Care-team messaging (per participant) + shift handover.
+model Message {
+  id             String   @id @default(cuid())
+  participantId  String // scopes the thread to a participant's care team
+  organisationId String?
+  senderId       String?
+  body           String
+  createdAt      DateTime @default(now())
+
+  @@index([participantId, createdAt])
+}
+
+model ShiftHandover {
+  id             String    @id @default(cuid())
+  shiftId        String
+  participantId  String?
+  organisationId String?
+  fromWorkerId   String?
+  toWorkerId     String?
+  body           String
+  acknowledgedAt DateTime?
+  acknowledgedById String?
+  createdAt      DateTime  @default(now())
+
+  @@index([shiftId])
+  @@index([participantId, createdAt])
+}
+
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a
 // tenant table: people on the waitlist are not users yet, so there is no userId /
 // organisationId (the same Rule 5/10 exception LearnedOption notes for global rows).

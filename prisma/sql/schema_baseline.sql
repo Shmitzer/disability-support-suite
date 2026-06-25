@@ -547,3 +547,17 @@ CREATE TABLE "BillableItem" (
 CREATE INDEX "BillableItem_participantId_status_idx" ON "BillableItem" ("participantId","status");
 CREATE INDEX "BillableItem_organisationId_status_idx" ON "BillableItem" ("organisationId","status");
 
+CREATE TABLE "Message" (
+  "id" TEXT NOT NULL, "participantId" TEXT NOT NULL, "organisationId" TEXT, "senderId" TEXT,
+  "body" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Message_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "Message_participantId_createdAt_idx" ON "Message" ("participantId","createdAt");
+
+CREATE TABLE "ShiftHandover" (
+  "id" TEXT NOT NULL, "shiftId" TEXT NOT NULL, "participantId" TEXT, "organisationId" TEXT,
+  "fromWorkerId" TEXT, "toWorkerId" TEXT, "body" TEXT NOT NULL, "acknowledgedAt" TIMESTAMP(3),
+  "acknowledgedById" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ShiftHandover_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "ShiftHandover_shiftId_idx" ON "ShiftHandover" ("shiftId");
+CREATE INDEX "ShiftHandover_participantId_createdAt_idx" ON "ShiftHandover" ("participantId","createdAt");
+

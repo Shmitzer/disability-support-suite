@@ -45,6 +45,12 @@ P0 in order **3 → 1 → 2 → 4 → 5** (approval is small and finishes an exi
 then tasks, incidents, the record, notifications). Then P1 starting **7 (credentials →
 unblocks competency gating) → 6 (eMAR) → 10 (reporting) → 8 → 9**.
 
+## Done in batches (logic only; cd builds UI)
+- ✅ #5 notifications (in-app) · ✅ #6 medication chart/eMAR · ✅ #11 EVV (AU) ·
+  ✅ #8/#13 budget+claims · ✅ #10 reporting stats + CSV exports · ✅ #12 messaging + handover.
+- Remaining: #9 offline (mostly cd/client), NDIS price-guide feed, embeddings (deferred),
+  server TTS (deferred).
+
 ## CC logic-only items — STATUS
 - ✅ **#3 supervisor approval** — `NoteApprove` cap + supervisorApprove/Reopen actions.
 - ✅ **#1 task/ADL checklist** — CareTask + ShiftTaskCompletion; care-task-actions.ts.
