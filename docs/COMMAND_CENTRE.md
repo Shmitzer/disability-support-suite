@@ -6,7 +6,46 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/sharp-hypatia-6zdy2h` (Caira overnight build)
-- **Last updated:** 2026-06-25 (AI entry prompts + admin cap; timestamp accuracy; care-profile chips)
+- **Last updated:** 2026-06-25 night (SOFT LAUNCH — Supabase live, seeded, build fixed; handoff to Cowork)
+
+---
+
+## 🚀 SOFT LAUNCH — live handoff to Cowork (2026-06-25 night)
+
+Goal: **5 real testers logging in tonight on dummy data**, behind `AUTH_ALLOWLIST`. Hard
+rule still holds: **no real participant data** until the privacy/legal gate clears.
+
+**DONE (this session, on `main`):**
+- PR #3 (logic build-out) + PR #4 (RLS v2 + design-kit rescue + soft-launch docs) merged to `main`.
+- Supabase project stood up + all SQL applied **in order**: `schema_baseline` → `grant_api_roles`
+  → `search_vector` → `auth_hook` → `rls_policies` → `rls_policies_v2`. (Schema was reset with
+  `drop schema public cascade` first — one-shot baseline, not idempotent.)
+- Dummy data seeded: **3 participants, 3 workers, 6 shifts, 15 events**
+  (`npx tsx --env-file=.env prisma/seed.ts` — note `--env-file`; seed.ts does NOT load dotenv).
+- **Build fix on `main` (`c3b6f1d`)**: `build` now runs `prisma generate && next build` — Vercel
+  was failing on `Can't resolve '@/generated/prisma/client'` (client is gitignored).
+- Domain **`caira.net.au` registered** (sole-trader ABN). `.com` + `.com.au` for "caira" are taken.
+
+**IN FLIGHT / NEXT (Cowork to verify + finish):**
+1. **Confirm the Vercel build went green** after `c3b6f1d` (redeploy if it cached the old commit).
+2. **Vercel env vars (Production):** `DATABASE_URL` (pooler `:6543` `?pgbouncer=true`), `DIRECT_URL`
+   (`:5432`), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_ALLOWLIST` (5 tester emails). Do NOT set `DEV_AUTH`.
+3. **Supabase dashboard toggle:** Authentication → Hooks → enable `public.custom_access_token_hook`
+   (SQL created the fn; toggle activates it — logins lack the org claim without it).
+4. **Supabase Auth → URL config:** Site URL = the Vercel URL (or `https://caira.net.au` once DNS
+   is wired); add `…/auth/confirm` to redirect URLs. Built-in email is fine for 5 users.
+5. **Smoke test:** signed out → marketing; allowlisted email → in, dummy data shows;
+   non-allowlisted → `/auth/denied`. Optional `npm run verify:rls`.
+6. **Invite the 5 testers** (URL + "dummy data only" warning).
+7. Optional: point `caira.net.au` at Vercel (Domains → add → DNS records), then update Supabase URLs.
+
+**Open notes for Cowork:**
+- Laptop has an uncommitted local `package.json` change predating the build fix — `git stash` then
+  `git pull` to avoid a conflict with `c3b6f1d`.
+- Design gaps remain (Modules/Pricing/admin/auth routes undesigned; marketing `.dc.html` never
+  existed — HANDOFF reconciled). cd owns that UI work.
+- Full checklist: `docs/SOFT_LAUNCH_TONIGHT.md`; detail in `docs/SOFT_RELEASE.md`.
 
 ---
 
