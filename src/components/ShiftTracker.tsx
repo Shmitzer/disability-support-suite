@@ -15,8 +15,13 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { categoryRequiresNote, findCategory } from "@/lib/log-categories";
-import { addLogEntry } from "@/lib/log-actions";
+import { categoryRequiresNote, findCategory, LOG_CATEGORIES } from "@/lib/log-categories";
+import {
+  addLogEntry,
+  extractNotePreview,
+  commitExtractedEntries,
+  type NoteEntryDraft,
+} from "@/lib/log-actions";
 import { DetailFields } from "@/components/DetailFields";
 import { PhotoInput } from "@/components/PhotoInput";
 import { PaperIcon, PaperDefs } from "@/components/PaperIcon";
@@ -68,6 +73,11 @@ export function ShiftTracker({
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const baseRef = useRef("");
   const finalRef = useRef("");
+  // Note → entries: drafts is the review list (null = not in review); the flags drive
+  // the "analysing" / "creating" button states.
+  const [drafts, setDrafts] = useState<NoteEntryDraft[] | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [committing, setCommitting] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const noteBackupKey = (cat: string) => `dsw:note:${shiftId}:${cat}`;
@@ -103,6 +113,7 @@ export function ShiftTracker({
     }
     setView(next);
     setSelected(null);
+    setDrafts(null);
     if (next === "voice") {
       setEntryKey(crypto.randomUUID());
       setVoiceNote(lsGet(voiceBackupKey));
@@ -110,6 +121,52 @@ export function ShiftTracker({
       setVError("");
     } else if (vstatus !== "transcribing") {
       setVstatus("idle");
+    }
+  }
+
+  // Note → entries: analyse the note into draft entries (read-only) for review.
+  async function handleExtract() {
+    setVError("");
+    setExtracting(true);
+    try {
+      const res = await extractNotePreview(shiftId, voiceNote);
+      if (res.error) setVError(res.error);
+      else if (res.items.length === 0)
+        setVError("No loggable activities found — save it as a single note instead.");
+      else setDrafts(res.items);
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  function updateDraft(index: number, patch: Partial<NoteEntryDraft>) {
+    setDrafts((d) => d?.map((item, i) => (i === index ? { ...item, ...patch } : item)) ?? null);
+  }
+
+  function removeDraft(index: number) {
+    setDrafts((d) => {
+      const next = (d ?? []).filter((_, i) => i !== index);
+      return next.length ? next : null; // leaving none closes the review
+    });
+  }
+
+  // Confirm: create the entries + keep the original note as their parent.
+  async function handleConfirmExtraction() {
+    if (!drafts) return;
+    setCommitting(true);
+    try {
+      const res = await commitExtractedEntries(shiftId, voiceNote, drafts);
+      if (res.error) {
+        setVError(res.error);
+        return;
+      }
+      lsRemove(voiceBackupKey);
+      setVoiceNote("");
+      setDrafts(null);
+      setVError("");
+      setView("timeline"); // show the freshly-created entries
+    } finally {
+      setCommitting(false);
     }
   }
 
@@ -440,7 +497,7 @@ export function ShiftTracker({
         ))}
 
       {/* VOICE — record → transcribe → editable free-text that saves as a Note */}
-      {view === "voice" && (
+      {view === "voice" && drafts === null && (
         <div className="flex flex-1 flex-col items-center gap-4 pt-2">
           <button
             type="button"
@@ -495,6 +552,17 @@ export function ShiftTracker({
               placeholder="Transcript appears here — or type a note…"
               className="h-28 resize-none rounded-2xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-brand focus:outline-none read-only:opacity-90"
             />
+            {/* Split a narrative note into structured, categorised entries (review first). */}
+            {voiceNote.trim() && vstatus === "idle" && (
+              <button
+                type="button"
+                onClick={handleExtract}
+                disabled={extracting}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] border border-brand bg-brand-tint text-sm font-bold text-brand transition-colors hover:bg-brand-tint/70 disabled:opacity-60"
+              >
+                {extracting ? "Analysing…" : "✨ Split into log entries"}
+              </button>
+            )}
             <div className="flex gap-2.5">
               <button
                 type="button"
@@ -506,6 +574,90 @@ export function ShiftTracker({
               <SubmitButton label="voice note" full />
             </div>
           </form>
+        </div>
+      )}
+
+      {/* VOICE → REVIEW the extracted entries before creating them (Rule 11). */}
+      {view === "voice" && drafts !== null && (
+        <div className="flex flex-1 flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="font-display text-base font-bold text-foreground">
+              Review {drafts.length} {drafts.length === 1 ? "entry" : "entries"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setDrafts(null)}
+              className="flex min-h-[44px] items-center rounded-full px-3 text-sm font-medium text-muted"
+            >
+              ← Back
+            </button>
+          </div>
+          <p className="text-[11px] font-semibold text-muted">
+            Check each entry — the original note is kept too.
+          </p>
+
+          <div className="flex flex-col gap-2.5">
+            {drafts.map((d, i) => (
+              <div key={i} className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3">
+                <div className="flex items-center gap-2">
+                  <select
+                    value={d.category}
+                    onChange={(e) => updateDraft(i, { category: e.target.value })}
+                    className="h-10 flex-1 rounded-xl border border-border bg-surface px-2 text-sm font-semibold text-foreground focus:border-brand focus:outline-none"
+                  >
+                    {LOG_CATEGORIES.filter((c) => c.key !== "Note").map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="time"
+                    value={d.time}
+                    onChange={(e) => updateDraft(i, { time: e.target.value })}
+                    className="h-10 rounded-xl border border-border bg-surface px-2 text-sm text-foreground focus:border-brand focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeDraft(i)}
+                    aria-label="Remove entry"
+                    className="flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-border text-lg text-muted"
+                  >
+                    ×
+                  </button>
+                </div>
+                {d.detail && (
+                  <div className="text-[11px] font-bold text-brand">{d.detail}</div>
+                )}
+                <input
+                  value={d.notes}
+                  onChange={(e) => updateDraft(i, { notes: e.target.value })}
+                  placeholder="Add a note (optional)"
+                  className="h-10 rounded-xl border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted focus:border-brand focus:outline-none"
+                />
+              </div>
+            ))}
+          </div>
+
+          {vError && <p className="text-[11px] font-semibold text-clay">{vError}</p>}
+
+          <div className="mt-1 flex gap-2.5">
+            <button
+              type="button"
+              onClick={() => setDrafts(null)}
+              className="h-12 w-28 rounded-[14px] border border-[#e3d6c1] bg-surface text-sm font-bold text-muted"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmExtraction}
+              disabled={committing}
+              className="h-12 flex-1 rounded-[14px] bg-brand px-5 text-base font-bold text-white transition-colors hover:bg-brand-strong disabled:opacity-60"
+            >
+              {committing ? "Creating…" : `Create ${drafts.length} ${drafts.length === 1 ? "entry" : "entries"}`}
+            </button>
+          </div>
         </div>
       )}
 

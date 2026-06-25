@@ -195,10 +195,19 @@ model LogEntry {
   photos         String? // JSON array of small image data URLs (DEV/DUMMY photos only until Phase 5)
   timestamp      DateTime // when the event happened (not when it was logged)
   idempotencyKey String? @unique // client-generated; prevents duplicate entries on mobile (Rule 12)
+  // When an entry was AI-extracted from a free-text Note, this links it back to that
+  // source Note (also a LogEntry, category="Note") for provenance/audit. Null for
+  // entries captured directly via the chips. Nullable so it doesn't disturb existing
+  // rows; the column lands via prisma/sql/note_extraction.sql (NOT auto-applied) —
+  // the extraction writer (log-actions.ts) sets it when present and degrades
+  // gracefully (entries created unlinked) until that migration is applied.
+  derivedFromId  String?
   userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([derivedFromId])
 }
 
 // An AI-generated progress report for one completed shift (task 1g).

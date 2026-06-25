@@ -144,6 +144,7 @@ CREATE TABLE "LogEntry" (
     "photos" TEXT,
     "timestamp" TIMESTAMP(3) NOT NULL,
     "idempotencyKey" TEXT,
+    "derivedFromId" TEXT, -- source Note for AI-extracted entries (prisma/sql/note_extraction.sql)
     "userId" TEXT NOT NULL,
     "organisationId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -151,6 +152,9 @@ CREATE TABLE "LogEntry" (
 
     CONSTRAINT "LogEntry_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE INDEX "LogEntry_derivedFromId_idx" ON "LogEntry"("derivedFromId");
 
 -- CreateTable
 CREATE TABLE "ShiftReport" (

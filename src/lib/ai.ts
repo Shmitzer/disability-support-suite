@@ -7,6 +7,7 @@
 
 import { DETAIL_LEVEL, GLOSSARY } from "@/lib/note-config";
 import { scrubPII } from "@/lib/pii";
+import { extractionCatalogue, type ExtractedItem } from "@/lib/note-extraction";
 
 // Instructions that tell the AI HOW to write the note. This is the "system prompt".
 const SYSTEM_PROMPT = `You are an assistant for Disability Support Workers (DSWs) in New South Wales, Australia.
@@ -210,6 +211,77 @@ export async function generateClarifyingQuestions(
     // If the model didn't return clean JSON, treat it as "no questions".
   }
   return [];
+}
+
+// --- Note → structured log entries (extraction) -----------------------------
+//
+// Turn a free-text shift note into a list of categorised log items mapped EXACTLY
+// onto the capture chips. The category catalogue is generated from LOG_CATEGORIES
+// (note-extraction.ts) so the prompt can't drift from the real chips. The model
+// resolves relative times ("then", "after", "about 7:30") into absolute HH:MM,
+// anchored to the note's start time. Mapping/validation of the result is pure (see
+// mapExtractedToEntries); this function only does the model call + PII handling.
+const EXTRACT_SYSTEM_PROMPT = `You convert a disability support worker's free-text shift note into a list of structured log entries.
+
+Return ONLY a JSON array. Each element has this shape:
+{ "category": <one category key below>, "time": "HH:MM" (24-hour), "note": <short factual observation in the worker's words>, "groups": { <groupKey>: [<option>, ...] }, "amountMl": <number, ONLY for Fluids> }
+
+Categories and their allowed groups/options — use these EXACTLY; never invent a category, group, or option:
+{{CATALOGUE}}
+
+Rules:
+- Map each distinct activity to the SINGLE best-fitting category. If something fits no category, omit it (it stays in the original note).
+- Use ONLY the listed option values for a group. For a group marked "or free text", you may use a short free-text value if none fit.
+- TIME: the note's start time is given. Resolve every relative reference into an absolute "HH:MM" in chronological order, never going backwards. If a time isn't stated, estimate a sensible time after the previous item.
+- Keep "note" brief and factual — no opinions, no clinical judgements, no invented detail.
+- Output ONLY the JSON array. No preamble, no code fences.`;
+
+export async function extractLogItems(
+  noteText: string,
+  startTime: string,
+  people: string[] = [],
+): Promise<ExtractedItem[]> {
+  const system = EXTRACT_SYSTEM_PROMPT.replace("{{CATALOGUE}}", extractionCatalogue());
+  // Scrub PII before the note leaves the app (Rule 2); restore in returned strings.
+  const { text, restore } = scrubPII(`Note start time: ${startTime}\n\nNote:\n${noteText}`, people);
+  const raw = await callGemini(system, text, { responseMimeType: "application/json" });
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (x): x is { category: string } & Record<string, unknown> =>
+          !!x && typeof x === "object" && typeof (x as { category?: unknown }).category === "string",
+      )
+      .map((x) => ({
+        category: x.category,
+        time: typeof x.time === "string" ? x.time : "",
+        note: typeof x.note === "string" ? restore(x.note) : "",
+        groups: sanitiseGroups(x.groups, restore),
+        amountMl: typeof x.amountMl === "number" ? x.amountMl : undefined,
+      }));
+  } catch {
+    // Model didn't return clean JSON — treat as "nothing extracted".
+    return [];
+  }
+}
+
+// Coerce the model's `groups` object into Record<string, string[]>, restoring any
+// scrubbed names in free-text values (fixed options carry no tokens, so it's a no-op
+// for them).
+function sanitiseGroups(
+  groups: unknown,
+  restore: (s: string) => string,
+): Record<string, string[]> | undefined {
+  if (!groups || typeof groups !== "object") return undefined;
+  const out: Record<string, string[]> = {};
+  for (const [key, value] of Object.entries(groups as Record<string, unknown>)) {
+    if (Array.isArray(value)) {
+      out[key] = value.filter((s): s is string => typeof s === "string").map((s) => restore(s));
+    }
+  }
+  return out;
 }
 
 // The one function that actually calls Gemini. All note features share it so the
