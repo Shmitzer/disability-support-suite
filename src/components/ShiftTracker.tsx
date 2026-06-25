@@ -1,8 +1,9 @@
 // ShiftTracker.tsx — Caira in-shift capture (rebuilt to match the design source of
 // truth: docs/design/Caira Tracker.dc.html + screenshots). One client island with
 // three views via a segmented control:
-//   • Mic      → voice mode: a (stubbed) record button + a free-text box that saves
-//                as a Note (real audio is out of scope).
+//   • Mic      → voice mode: record audio (MediaRecorder) → transcribe via
+//                /api/transcribe → editable note box that saves as a Note. The
+//                worker reviews the transcript before saving (Rule 11).
 //   • Capture  → the 3-across Paper-icon tile grid; tapping a tile opens that
 //                category's detail panel (quick-options + note) → saves an entry.
 //   • Timeline → the shift's history (passed in, rendered as-is).
@@ -19,6 +20,7 @@ import { addLogEntry } from "@/lib/log-actions";
 import { DetailFields } from "@/components/DetailFields";
 import { PhotoInput } from "@/components/PhotoInput";
 import { PaperIcon, PaperDefs } from "@/components/PaperIcon";
+import { blobToWavBase64, canRecordAudio, pickRecordingMimeType } from "@/lib/audio";
 
 // The six categories shown as Paper tiles, in design order. Note is reached via the
 // voice/type free-text; Incident via its own button below the grid.
@@ -45,9 +47,14 @@ export function ShiftTracker({
   const [photos, setPhotos] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [entryKey, setEntryKey] = useState("");
-  // Voice mode: a visual recording toggle (no real audio) + a typed note.
-  const [recording, setRecording] = useState(false);
+  // Voice mode: record → transcribe → editable note. `vstatus` drives the mic UI;
+  // the MediaRecorder + its captured chunks live in refs (not state — they mustn't
+  // trigger re-renders mid-recording).
+  const [vstatus, setVstatus] = useState<"idle" | "recording" | "transcribing">("idle");
+  const [vError, setVError] = useState("");
   const [voiceNote, setVoiceNote] = useState("");
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
 
   const noteBackupKey = (cat: string) => `dsw:note:${shiftId}:${cat}`;
@@ -79,7 +86,68 @@ export function ShiftTracker({
     if (next === "voice") {
       setEntryKey(crypto.randomUUID());
       setVoiceNote(lsGet(voiceBackupKey));
-      setRecording(false);
+      setVstatus("idle");
+      setVError("");
+    }
+  }
+
+  // Tap to start recording; tap again to stop → transcribe → fill the note box.
+  async function toggleRecording() {
+    if (vstatus === "recording") {
+      recorderRef.current?.stop(); // → onstop handler below transcribes
+      return;
+    }
+    if (vstatus === "transcribing") return;
+
+    setVError("");
+    if (!canRecordAudio()) {
+      setVError("Recording isn't available on this device — type your note below.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = pickRecordingMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop()); // release the mic
+        setVstatus("transcribing");
+        try {
+          const recorded = new Blob(chunksRef.current, { type: recorder.mimeType || mimeType });
+          const { base64, mimeType: outMime } = await blobToWavBase64(recorded);
+          const res = await fetch("/api/transcribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ audio: base64, mimeType: outMime }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Transcription failed.");
+          const transcript = String(data.transcript ?? "").trim();
+          if (transcript) {
+            setVoiceNote((prev) => {
+              const next = prev ? `${prev.trimEnd()} ${transcript}` : transcript;
+              lsSet(voiceBackupKey, next);
+              return next;
+            });
+          } else {
+            setVError("No speech detected — try again, or type your note.");
+          }
+        } catch (err) {
+          setVError(err instanceof Error ? err.message : "Couldn't transcribe — type your note.");
+        } finally {
+          setVstatus("idle");
+        }
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setVstatus("recording");
+    } catch {
+      setVError("Microphone blocked. Allow mic access, or type your note below.");
+      setVstatus("idle");
     }
   }
 
@@ -101,7 +169,8 @@ export function ShiftTracker({
     await addLogEntry(formData);
     lsRemove(voiceBackupKey);
     setVoiceNote("");
-    setRecording(false);
+    setVstatus("idle");
+    setVError("");
     setView("capture");
   }
 
@@ -268,29 +337,38 @@ export function ShiftTracker({
           </form>
         ))}
 
-      {/* VOICE — record (stub) + free-text that saves as a Note */}
+      {/* VOICE — record → transcribe → editable free-text that saves as a Note */}
       {view === "voice" && (
         <div className="flex flex-1 flex-col items-center gap-4 pt-2">
           <button
             type="button"
-            onClick={() => setRecording((r) => !r)}
-            aria-pressed={recording}
-            className="flex h-24 w-24 items-center justify-center rounded-full text-white transition-shadow"
+            onClick={toggleRecording}
+            disabled={vstatus === "transcribing"}
+            aria-pressed={vstatus === "recording"}
+            aria-label={vstatus === "recording" ? "Stop recording" : "Start recording"}
+            className="flex h-24 w-24 items-center justify-center rounded-full text-white transition-shadow disabled:opacity-70"
             style={{
-              background: recording ? "#b23a28" : "var(--clay)",
-              boxShadow: recording
-                ? "0 0 0 10px rgba(223,91,64,.16)"
-                : "0 12px 24px rgba(223,91,64,.40)",
+              background: vstatus === "recording" ? "#b23a28" : "var(--clay)",
+              boxShadow:
+                vstatus === "recording"
+                  ? "0 0 0 10px rgba(223,91,64,.16)"
+                  : "0 12px 24px rgba(223,91,64,.40)",
             }}
           >
-            <MicIcon size={34} />
+            {vstatus === "transcribing" ? <Spinner /> : <MicIcon size={34} />}
           </button>
           <div className="text-center">
             <div className="font-display text-base font-bold text-foreground">
-              {recording ? "Recording…" : "Tap to record"}
+              {vstatus === "recording"
+                ? "Recording… tap to stop"
+                : vstatus === "transcribing"
+                  ? "Transcribing…"
+                  : "Tap to record"}
             </div>
             <div className="mt-1 text-[11px] font-semibold text-muted">
-              Voice transcription is coming soon — type your note below.
+              {vError
+                ? vError
+                : "Speak your note, then review the transcript before saving."}
             </div>
           </div>
 
@@ -354,6 +432,23 @@ function SubmitButton({ label, full }: { label: string; full?: boolean }) {
     >
       {pending ? "Saving…" : `Save ${label}`}
     </button>
+  );
+}
+
+// Spinning ring shown on the record button while a recording is being transcribed.
+function Spinner({ size = 32 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      className="animate-spin"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
   );
 }
 

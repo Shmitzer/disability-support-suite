@@ -220,6 +220,18 @@ async function callGemini(
   userPrompt: string,
   extraConfig: Record<string, unknown> = {},
 ): Promise<string> {
+  return geminiGenerate(systemPrompt, [{ text: userPrompt }], { extraConfig });
+}
+
+// Core Gemini call shared by the text features (callGemini) and audio transcription
+// (transcribeAudio). Takes the raw `parts` array so a caller can mix text +
+// inlineData (audio). `allowEmpty` lets transcription return "" for silence instead
+// of treating an empty response as an error.
+async function geminiGenerate(
+  systemPrompt: string,
+  parts: unknown[],
+  opts: { extraConfig?: Record<string, unknown>; allowEmpty?: boolean } = {},
+): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 
@@ -235,8 +247,8 @@ async function callGemini(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: systemPrompt }] },
-    contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-    generationConfig: { temperature: 0.4, ...extraConfig },
+    contents: [{ role: "user", parts }],
+    generationConfig: { temperature: 0.4, ...(opts.extraConfig ?? {}) },
   });
 
   const MAX_ATTEMPTS = 4;
@@ -265,11 +277,63 @@ async function callGemini(
       ?.map((p: { text?: string }) => p.text ?? "")
       .join("") ?? "";
 
-  if (!text.trim()) {
+  if (!text.trim() && !opts.allowEmpty) {
     throw new Error("The AI returned an empty response. Please try again.");
   }
 
   return text.trim();
+}
+
+// Is an AI provider configured? Lets API routes degrade gracefully (e.g. tell the
+// worker transcription is unavailable) instead of throwing when no key is set.
+export function aiConfigured(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY);
+}
+
+// --- Voice transcription ----------------------------------------------------
+//
+// Turn a recording of a worker's spoken shift note into text, which they then
+// review/edit before saving (the typed note stays the source of truth — Rule 11).
+//
+// ⚠️ PII / Rule 2 caveat: we scrub TEXT before sending it to the model, but audio
+// can't be scrubbed first — the recording (which may name people) goes to the AI
+// provider to be transcribed. That's an unavoidable cross-border disclosure for any
+// cloud transcription; it's gated behind GEMINI_API_KEY and the worker choosing to
+// record. Note GENERATION still scrubs the transcript downstream. Revisit with a
+// DPA / on-device transcription before real participant data (see Drive
+// "cross-border data disclosure").
+const TRANSCRIBE_SYSTEM_PROMPT = `You transcribe an audio recording of a disability support worker's spoken shift note.
+Rules:
+- Output ONLY the verbatim transcript as plain text. No preamble, no speaker labels, no timestamps, no commentary.
+- Use Australian English spelling. Add sensible punctuation and capitalisation.
+- Do NOT summarise, correct, or add anything that was not said.
+- If the audio is silent or unintelligible, output nothing at all.`;
+
+export async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
+  const parts = [
+    { text: "Transcribe the following audio recording." },
+    { inlineData: { mimeType, data: audioBase64 } },
+  ];
+  const raw = await geminiGenerate(TRANSCRIBE_SYSTEM_PROMPT, parts, {
+    extraConfig: { temperature: 0 },
+    allowEmpty: true,
+  });
+  return cleanTranscript(raw);
+}
+
+// Strip the boilerplate models sometimes wrap a transcript in ("Sure, here's the
+// transcript:", surrounding quotes) so we store just the spoken words. Pure —
+// unit-tested.
+export function cleanTranscript(raw: string): string {
+  let t = raw.trim();
+  t = t.replace(
+    /^(sure[,.!]?\s*)?(here(?:'s| is)\s+)?(the\s+)?(verbatim\s+)?transcript\s*[:\-—]\s*/i,
+    "",
+  );
+  if (t.length >= 2 && t.startsWith('"') && t.endsWith('"')) {
+    t = t.slice(1, -1).trim();
+  }
+  return t;
 }
 
 // The model name (so we can record which model produced a saved report).
