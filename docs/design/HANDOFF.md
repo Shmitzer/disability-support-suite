@@ -12,10 +12,26 @@ Front-end design prototype for **Caira**, a disability-support shift-logging app
 - `Caira Logo Final.dc.html` — logo system (lockups, app icons, colourways).
 
 ### Marketing site (new — same brand, separate from the product app)
-- `Caira Home.dc.html` — **Shift-Tracker-led landing page** (1200px). Hero with live phone mock, "accessible by design" strip, "behind every log is a person" mission band, feature rows (quick capture / voice notes), stat band, roadmap teaser, testimonial, pricing peek ($9/worker), final CTA, footer. Tweak prop `showRoadmap` (boolean). **GTM strategy: lead with Shift Tracker, earn trust, introduce modules later** — the page reflects this (modules shown as "Soon").
-- `Caira Modules.dc.html` — **module gallery + Shift Tracker detail** (1200px). Six-module grid (Shift Tracker = Available now; Incident Reporting, Medication, Messaging & On-call, Coordinator Dashboard, Reporting & Compliance = Soon), "one connected record" flow band, "Inside Shift Tracker" feature cards, CTA. Module icons are drawn via `React.createElement` in the logic class — fine to render, but rebuild as normal SVG markup in React.
-- `Caira Site Wireframe.dc.html` — low-fi structure for Home + Pricing + Module flow (reference only; Home & Modules are the hi-fi successors). Pricing page is still wireframe — not yet designed in full brand.
-- Palette/logo exploration files (`Caira *.dc.html`) — reference only.
+
+> **Status (reconciled 2026-06-25):** the three `.dc.html` files this section used to
+> list as existing — `Caira Home.dc.html`, `Caira Modules.dc.html`,
+> `Caira Site Wireframe.dc.html` — were **never created** (confirmed: absent from the
+> repo, all git history, and the original `caira_fe` bundle). The descriptions below are
+> kept as the **design spec / intent** for those pages, not as references to real files.
+> What actually exists today:
+> - `mockups/caira-home.html` — a rescued standalone mockup of the landing page (closest
+>   artifact to the `Caira Home` spec below; not in `.dc.html` Design-Component format).
+> - `src/app/(public)/page.tsx` — the landing page was **built in React** to roughly this
+>   spec without a committed prototype.
+> - No mockup or prototype exists for the **Modules** gallery or a **Pricing** page yet.
+
+**Intended `Caira Home` (landing) spec** — Shift-Tracker-led landing page (1200px). Hero with live phone mock, "accessible by design" strip, "behind every log is a person" mission band, feature rows (quick capture / voice notes), stat band, roadmap teaser, testimonial, pricing peek ($9/worker), final CTA, footer. **GTM strategy: lead with Shift Tracker, earn trust, introduce modules later** — modules shown as "Soon".
+
+**Intended `Caira Modules` spec** — module gallery + Shift Tracker detail (1200px). Six-module grid (Shift Tracker = Available now; Incident Reporting, Medication, Messaging & On-call, Coordinator Dashboard, Reporting & Compliance = Soon), "one connected record" flow band, "Inside Shift Tracker" feature cards, CTA. *Not yet prototyped or built.*
+
+**Intended Pricing page** — low-fi only; plans + FAQ + CTA. *Not yet designed in full brand.*
+
+- Palette/logo exploration files (`Caira Logo *.dc.html`, `Caira Icons.dc.html`, `Caira Warm Schemes.dc.html`, etc.) and the `Caira Tracker Wireframe.dc.html` — reference only; restored from the original bundle and now present in this folder.
 
 > `.dc.html` files are Design Components: markup in `<x-dc>`, logic in the `class Component extends DCLogic` block, tweak props in the `data-props` JSON. Treat them as design reference, not production code — rebuild as React components.
 
