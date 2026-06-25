@@ -40,6 +40,30 @@ export const SupportNeed = {
 } as const;
 export type SupportNeed = (typeof SupportNeed)[keyof typeof SupportNeed];
 
+// Human-readable labels for the flags (for the care-profile editor UI).
+export const NEED_LABELS: Record<SupportNeed, string> = {
+  [SupportNeed.Dysphagia]: "Dysphagia / thickened fluids",
+  [SupportNeed.EnteralFeeding]: "Enteral / PEG feeding",
+  [SupportNeed.Seizures]: "Seizures / epilepsy",
+  [SupportNeed.Continence]: "Continence support",
+  [SupportNeed.ComplexBowelCare]: "Complex bowel care",
+  [SupportNeed.Catheter]: "Catheter",
+  [SupportNeed.MobilityTransfer]: "Mobility / transfers",
+  [SupportNeed.PressureCare]: "Repositioning / pressure care",
+  [SupportNeed.SkinIntegrity]: "Skin integrity",
+  [SupportNeed.BehaviourSupportPlan]: "Behaviour support plan",
+  [SupportNeed.RestrictivePractices]: "Restrictive practices",
+  [SupportNeed.Psychosocial]: "Mental health / psychosocial",
+  [SupportNeed.Diabetes]: "Diabetes",
+  [SupportNeed.Pain]: "Pain",
+  [SupportNeed.Respiratory]: "Respiratory / tracheostomy / ventilation",
+  [SupportNeed.CommunicationAac]: "Communication / AAC",
+  [SupportNeed.SleepMonitoring]: "Sleep monitoring",
+  [SupportNeed.NutritionWeight]: "Nutrition / weight",
+  [SupportNeed.FoodSecurity]: "Food security",
+  [SupportNeed.Sensory]: "Sensory supports",
+};
+
 // The curated condition tags (research §1). Free text is NOT used — tags must be from
 // this list so the suggestion mapping is deterministic.
 export const CONDITIONS = [

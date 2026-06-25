@@ -39,6 +39,8 @@ export const Capability = {
   BillingManage: "billing:manage",
   // Read the organisation's audit trail.
   AuditRead: "audit:read",
+  // Manage a participant's care profile (condition tags + support-need flags).
+  CareProfileManage: "care_profile:manage",
 
   // Participant-scoped capabilities (used by external/family carer + guardian
   // grants, see GRANT_ROLE_CAPABILITIES). These are only ever held against a
@@ -71,6 +73,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
     Capability.BillingManage,
     Capability.ShiftReadOrg,
     Capability.AuditRead,
+    Capability.CareProfileManage,
   ],
   SUPERADMIN: [],
 };
