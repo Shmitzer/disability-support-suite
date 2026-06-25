@@ -5,7 +5,9 @@ the existing `prisma/sql/rls_policies.sql` (org-claim + owner pattern). RLS is a
 by hand at cutover (order-sensitive; see `docs/PRODUCTION_CUTOVER.md`). This branch adds
 the policies + verification; it does **not** change app code.
 
-Pending the decisions below — this plan is the proposal.
+**STATUS: DELIVERED.** Decisions resolved (see below); `prisma/sql/rls_policies_v2.sql`
+written, `verify_rls.sql` extended (checks 7–8), and verification run against a local
+Postgres with the Supabase shims — **all 8 RLS checks pass**.
 
 ## Pattern (existing)
 - Enable RLS on every `public` table.
@@ -46,18 +48,19 @@ Notes:
 - `_prisma_migrations`, service-role grants, and the deny-by-default for `anon` are
   already handled in the existing file — this extends, doesn't replace.
 
-## Decisions (asked up front, before implementing)
-1. **Enforcement model** — keep Option A (privileged app role; RLS = Data-API defence)
-   vs move to Option B (app runs as authenticated role; RLS enforces every query).
-2. **Participant-scoped rows** — org-only policies (simpler) vs grant-aware policies
-   (RLS joins `ParticipantAccessGrant` so family/guardian only see their participant).
-3. **Solo / null-org rows** — owner-only via `userId = auth.uid()` when `organisationId`
-   is null, vs require an org always.
-4. **Verification** — extend `verify_rls.sql` + `npm run verify:rls` with cross-tenant
-   checks for the new tables, vs skip automated verification this batch.
+## Decisions (resolved)
+1. **Enforcement model** → **Option A** (privileged app role via `DATABASE_URL`
+   bypasses RLS; RLS = tenant-isolation defence-in-depth for the Supabase Data API).
+2. **Participant-scoped rows** → **org-only policies** (the app enforces fine-grained
+   participant/grant access in code via `canAccessParticipant`; RLS stays org-scoped).
+3. **Solo / null-org rows** → **owner-fallback** (`userId = auth.uid()` OR org claim)
+   on the tables that have a `userId` (AssistantContext/Message, Document, Notification).
+4. **Verification** → **extend `verify_rls.sql` + run** (checks 7–8 added).
 
-## Deliverables (the batch, after decisions)
-- `prisma/sql/rls_policies_v2.sql` (or extend the existing file) — ENABLE RLS + policies
-  for all tables above, per the chosen model.
-- (if chosen) `verify_rls.sql` additions + a short test asserting cross-tenant denial.
-- Doc note in `PRODUCTION_CUTOVER.md` apply-order.
+## Deliverables (DONE)
+- ✅ `prisma/sql/rls_policies_v2.sql` — ENABLE RLS + `tenant_isolation` on all 19 new
+  tables: 15 org-only + 4 owner-fallback. Idempotent (same DO-loop pattern as v1).
+- ✅ `verify_rls.sql` — check 7 (org-only Incident isolates tenants) + check 8
+  (owner-fallback Notification: own org + own solo row, no cross-tenant leak). Existing
+  check 6 (every `public` table has RLS) already guards the rest. Verified: ALL PASS.
+- ✅ `PRODUCTION_CUTOVER.md` — apply-order row #7 (run LAST, after v1 + per-feature files).
