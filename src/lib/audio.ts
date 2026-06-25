@@ -35,6 +35,48 @@ export function canRecordAudio(): boolean {
   );
 }
 
+// --- Live transcription (Web Speech API) ------------------------------------
+//
+// SpeechRecognition streams interim text as the worker speaks — true live capture,
+// no backend. Chrome/Edge support it (`webkitSpeechRecognition`), Safari partially;
+// Firefox not at all. So it's used when present, and we fall back to the Gemini
+// batch path (record → /api/transcribe) otherwise. TS has no built-in types for it,
+// so we declare the minimal surface we use.
+export interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  0: { transcript: string };
+}
+export interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+export interface SpeechRecognitionLike {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
+export function getSpeechRecognition(): SpeechRecognitionCtor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionCtor;
+    webkitSpeechRecognition?: SpeechRecognitionCtor;
+  };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
+
+// Does this browser support live (streaming) transcription?
+export function supportsLiveSpeech(): boolean {
+  return getSpeechRecognition() !== null;
+}
+
 // Decode a recorded Blob and re-encode it as base64 16 kHz mono WAV.
 export async function blobToWavBase64(blob: Blob): Promise<{ base64: string; mimeType: string }> {
   const arrayBuffer = await blob.arrayBuffer();

@@ -20,7 +20,14 @@ import { addLogEntry } from "@/lib/log-actions";
 import { DetailFields } from "@/components/DetailFields";
 import { PhotoInput } from "@/components/PhotoInput";
 import { PaperIcon, PaperDefs } from "@/components/PaperIcon";
-import { blobToWavBase64, canRecordAudio, pickRecordingMimeType } from "@/lib/audio";
+import {
+  blobToWavBase64,
+  canRecordAudio,
+  pickRecordingMimeType,
+  getSpeechRecognition,
+  supportsLiveSpeech,
+  type SpeechRecognitionLike,
+} from "@/lib/audio";
 
 // The six categories shown as Paper tiles, in design order. Note is reached via the
 // voice/type free-text; Incident via its own button below the grid.
@@ -55,6 +62,12 @@ export function ShiftTracker({
   const [voiceNote, setVoiceNote] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  // Live (Web Speech) transcription: the recognition instance, the text that was
+  // already in the box when recording started (baseRef), and the finalised
+  // (non-interim) words so far (finalRef).
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const baseRef = useRef("");
+  const finalRef = useRef("");
   const formRef = useRef<HTMLFormElement>(null);
 
   const noteBackupKey = (cat: string) => `dsw:note:${shiftId}:${cat}`;
@@ -81,6 +94,13 @@ export function ShiftTracker({
   }
 
   function gotoView(next: View) {
+    // Leaving the mic tab mid-dictation: abort live recognition so it doesn't keep
+    // listening in the background. (abort() won't fire a final result.)
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null;
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+    }
     setView(next);
     setSelected(null);
     if (next === "voice") {
@@ -88,23 +108,97 @@ export function ShiftTracker({
       setVoiceNote(lsGet(voiceBackupKey));
       setVstatus("idle");
       setVError("");
+    } else if (vstatus !== "transcribing") {
+      setVstatus("idle");
     }
   }
 
-  // Tap to start recording; tap again to stop → transcribe → fill the note box.
+  // Tap to start; tap again to stop. Uses live Web Speech transcription when the
+  // browser supports it (text streams into the box as you speak), otherwise falls
+  // back to the record → /api/transcribe batch path.
   async function toggleRecording() {
     if (vstatus === "recording") {
-      recorderRef.current?.stop(); // → onstop handler below transcribes
+      stopRecording();
       return;
     }
     if (vstatus === "transcribing") return;
 
     setVError("");
+    if (supportsLiveSpeech()) {
+      startLiveRecognition();
+    } else {
+      await startBatchRecording();
+    }
+  }
+
+  // Stop whichever capture is active.
+  function stopRecording() {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop(); // → onend finalises
+    } else {
+      recorderRef.current?.stop(); // → onstop transcribes
+    }
+  }
+
+  // LIVE: Web Speech API streams interim words straight into the note box. The box
+  // is read-only while recording so a stream update can't clobber a manual edit.
+  function startLiveRecognition() {
+    const SpeechRecognition = getSpeechRecognition();
+    if (!SpeechRecognition) {
+      void startBatchRecording();
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-AU";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    // Append to whatever is already in the box (a previous dictation or typing).
+    baseRef.current = voiceNote ? `${voiceNote.trimEnd()} ` : "";
+    finalRef.current = "";
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) finalRef.current += result[0].transcript;
+        else interim += result[0].transcript;
+      }
+      setVoiceNote(baseRef.current + finalRef.current + interim);
+    };
+    recognition.onerror = (event) => {
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        setVError("Microphone blocked. Allow mic access, or type your note below.");
+      } else if (event.error === "no-speech") {
+        setVError("No speech detected — try again, or type your note.");
+      }
+      // other errors (e.g. "aborted", "network") fall through to onend
+    };
+    recognition.onend = () => {
+      const text = (baseRef.current + finalRef.current).trim();
+      setVoiceNote(text);
+      if (text) lsSet(voiceBackupKey, text);
+      recognitionRef.current = null;
+      setVstatus("idle");
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+      setVstatus("recording");
+    } catch {
+      recognitionRef.current = null;
+      setVError("Couldn't start the microphone. Try again, or type your note.");
+      setVstatus("idle");
+    }
+  }
+
+  // BATCH fallback: record the whole clip, then transcribe via the server.
+  async function startBatchRecording() {
     if (!canRecordAudio()) {
       setVError("Recording isn't available on this device — type your note below.");
       return;
     }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = pickRecordingMimeType();
@@ -115,6 +209,7 @@ export function ShiftTracker({
       };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop()); // release the mic
+        recorderRef.current = null;
         setVstatus("transcribing");
         try {
           const recorded = new Blob(chunksRef.current, { type: recorder.mimeType || mimeType });
@@ -368,7 +463,9 @@ export function ShiftTracker({
             <div className="mt-1 text-[11px] font-semibold text-muted">
               {vError
                 ? vError
-                : "Speak your note, then review the transcript before saving."}
+                : vstatus === "recording"
+                  ? "Listening — the transcript appears below as you speak."
+                  : "Speak your note, then review the transcript before saving."}
             </div>
           </div>
 
@@ -381,12 +478,15 @@ export function ShiftTracker({
               name="notes"
               required
               value={voiceNote}
+              // Read-only while live dictation is streaming in, so an interim update
+              // can't clobber a mid-recording edit. Editable again once stopped.
+              readOnly={vstatus === "recording"}
               onChange={(e) => {
                 setVoiceNote(e.target.value);
                 lsSet(voiceBackupKey, e.target.value);
               }}
               placeholder="Transcript appears here — or type a note…"
-              className="h-28 resize-none rounded-2xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-brand focus:outline-none"
+              className="h-28 resize-none rounded-2xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-brand focus:outline-none read-only:opacity-90"
             />
             <div className="flex gap-2.5">
               <button
