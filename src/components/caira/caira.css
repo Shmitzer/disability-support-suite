@@ -1,0 +1,134 @@
+/*
+  Caira character system — keyframe animations.
+  Pure CSS, no dependencies. Imported once from the root layout.
+  These keyframes are referenced by the Caira components via inline
+  `animation:` styles or the className hooks defined at the bottom.
+*/
+
+/* Body: gentle idle up/down */
+@keyframes floatBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* Body: side-to-side tilt while thinking */
+@keyframes thinkNod {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+
+/* Body: squash/stretch bounce (waving + excited) */
+@keyframes excitedBounce {
+  0%, 100% { transform: translateY(0) scaleY(1) scaleX(1); }
+  30%      { transform: translateY(-10px) scaleY(1.06) scaleX(0.96); }
+  60%      { transform: translateY(0) scaleY(0.94) scaleX(1.05); }
+}
+
+/* Body: slow sway with rotation (sleeping) */
+@keyframes sleepDrift {
+  0%, 100% { transform: translateX(0) rotate(-2deg); }
+  50%      { transform: translateX(4px) rotate(2deg); }
+}
+
+/* Body: rapid shake (error) */
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+
+/* Raised arm waving */
+@keyframes armWave {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+/* Sleeping Zs float up + fade */
+@keyframes zzz {
+  0%   { opacity: 0; transform: translateY(0) scale(0.7); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-22px) scale(1.1); }
+}
+
+/* Speech bubble pop + fade */
+@keyframes bubbleIn {
+  0%   { opacity: 0; transform: scale(0.8) translateY(6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Expanding + fading ring (recording mode) */
+@keyframes ripple {
+  0%   { transform: scale(0.7); opacity: 0.55; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Voice waveform bar height oscillation */
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.35); }
+  50%      { transform: scaleY(1); }
+}
+
+/* Pulsing red box-shadow (record button) */
+@keyframes recPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(223, 91, 64, 0.5); }
+  50%      { box-shadow: 0 0 0 8px rgba(223, 91, 64, 0); }
+}
+
+/* AI overlay character entry */
+@keyframes dropIn {
+  0%   { opacity: 0; transform: scale(0.28) translateY(-70px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Recording overlay character entry */
+@keyframes helperDrop {
+  0%   { opacity: 0; transform: scale(0.22) translateY(-80px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Bottom panel slide-up */
+@keyframes panelRise {
+  0%   { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+
+/* Staggered fade + rise */
+@keyframes fadeUp {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Quick-action chip entry */
+@keyframes chipIn {
+  0%   { opacity: 0; transform: scale(0.94); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Head-only logo tiny float (nav bar) */
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2.5px); }
+}
+
+/* Thinking dots staggered opacity pulse */
+@keyframes dp1 {
+  0%, 100% { opacity: 0.2; }
+  40%      { opacity: 1; }
+}
+@keyframes dp2 {
+  0%, 100% { opacity: 0.2; }
+  60%      { opacity: 1; }
+}
+@keyframes dp3 {
+  0%, 100% { opacity: 0.2; }
+  80%      { opacity: 1; }
+}
+
+/* className hook: raised arm wave (applied to a <g> in CairaFull) */
+.arm-wave {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: armWave 0.6s ease-in-out 3;
+}

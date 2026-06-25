@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
+import "@/components/caira/caira.css";
 import { APP_NAME } from "@/lib/brand";
 import { sectorLabels } from "@/lib/sector-config";
 import { PostHogInit } from "@/components/PostHogInit";
+import { CairaProvider } from "@/components/caira/CairaContext";
+import CairaBar from "@/components/caira/CairaBar";
+import CairaAIOverlay from "@/components/caira/CairaAIOverlay";
+import CairaRecordingOverlay from "@/components/caira/CairaRecordingOverlay";
 
 // Caira type system: Bricolage Grotesque for display/headings, Figtree for body.
 const display = Bricolage_Grotesque({
@@ -37,9 +42,14 @@ export default function RootLayout({
       lang="en"
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col pt-[58px]">
         <PostHogInit />
-        {children}
+        <CairaProvider>
+          <CairaBar />
+          {children}
+          <CairaAIOverlay />
+          <CairaRecordingOverlay />
+        </CairaProvider>
       </body>
     </html>
   );

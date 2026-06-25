@@ -59,6 +59,15 @@
   --color-border: var(--border);
   --font-sans: var(--font-sans-base);
   --font-display: var(--font-display);
+
+  /* Caira character system palette (kebab utilities: e.g. text-caira-teal-dk) */
+  --color-caira-teal: #4db8b0;
+  --color-caira-teal-dk: #2d9b93;
+  --color-caira-teal-lt: #e8f7f5;
+  --color-caira-rose: #e8a8a0;
+  --color-caira-rose-lt: #fdf0ee;
+  --color-caira-cream: #f7f2ec;
+  --color-caira-soft: #6ba8a2;
 }
 
 body {

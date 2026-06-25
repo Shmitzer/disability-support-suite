@@ -7,6 +7,7 @@ import { NoteGenerator } from "@/components/NoteGenerator";
 import { getCurrentUser, getCurrentSector } from "@/lib/session";
 import { tenantScope } from "@/lib/tenant";
 import { sectorLabels } from "@/lib/sector-config";
+import CairaEmpty from "@/components/caira/CairaEmpty";
 
 // Always read fresh data from the database on each request.
 export const dynamic = "force-dynamic";
@@ -50,9 +51,10 @@ export default async function NotesPage() {
         {participants.length > 0 ? (
           <NoteGenerator participants={participants} sector={sector} />
         ) : (
-          <p className="text-zinc-600">
-            No {labels.participantPlural} yet. Run the seed script to add sample data.
-          </p>
+          <CairaEmpty
+            message={`No ${labels.participantPlural} yet`}
+            submessage="Run the seed script to add sample data."
+          />
         )}
       </section>
 

@@ -10,6 +10,7 @@ import { isRosteringRole } from "@/lib/enums";
 import { sectorLabels } from "@/lib/sector-config";
 import { getWorkerHome } from "@/lib/shifts";
 import { getRosterData } from "@/lib/roster";
+import CairaEmpty from "@/components/caira/CairaEmpty";
 import { tenantScope } from "@/lib/tenant";
 import { acceptShift, declineShift } from "@/lib/shift-actions";
 import { clockOn, clockOff } from "@/lib/clock-actions";
@@ -39,8 +40,11 @@ export default async function Home() {
 
   if (!worker) {
     return (
-      <main className="mx-auto w-full max-w-md px-6 py-16 text-center text-zinc-600">
-        No worker found. Run the seed script to add sample data.
+      <main className="mx-auto w-full max-w-md px-6 py-16">
+        <CairaEmpty
+          message="No worker found"
+          submessage="Run the seed script to add sample data."
+        />
       </main>
     );
   }

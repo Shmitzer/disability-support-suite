@@ -11,6 +11,7 @@ import {
 } from "@/lib/roster-actions";
 import { approveAmendment, rejectAmendment } from "@/lib/clock-actions";
 import { sectorLabels } from "@/lib/sector-config";
+import CairaEmpty from "@/components/caira/CairaEmpty";
 
 // How each status looks (Option A: calm, soft colours).
 const STATUS_BADGE: Record<string, string> = {
@@ -95,7 +96,10 @@ export function RosterView({
       <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold text-zinc-900">Create a shift</h2>
         {participants.length === 0 ? (
-          <p className="text-sm text-zinc-500">No {labels.participantPlural} yet — run the seed script.</p>
+          <CairaEmpty
+            message={`No ${labels.participantPlural} yet`}
+            submessage="Run the seed script to add sample data."
+          />
         ) : (
           <form action={createShift} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
@@ -149,7 +153,7 @@ export function RosterView({
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-zinc-900">All shifts</h2>
         {shifts.length === 0 ? (
-          <p className="text-sm text-zinc-500">No shifts yet. Create one above.</p>
+          <CairaEmpty message="No shifts yet" submessage="Create one above." />
         ) : (
           <ul className="flex flex-col gap-3">
             {shifts.map((s) => (
