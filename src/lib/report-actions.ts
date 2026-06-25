@@ -15,6 +15,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
+import { getCurrentPrincipal } from "@/lib/access";
+import { can, Capability } from "@/lib/rbac";
 import { tenantOwner } from "@/lib/tenant";
 import { recordAudit } from "@/lib/audit";
 import { buildShiftSourceLog } from "@/lib/report";
@@ -270,4 +272,76 @@ export async function reopenReport(formData: FormData) {
   });
 
   revalidatePath(`/shift/${shiftId}`);
+}
+
+// --- Supervisor sign-off (a SECOND person approves a worker's note) ----------
+//
+// Distinct from the worker self-finalise above: capability-gated (NoteApprove) and
+// org-scoped, records WHO approved (approvedBy = supervisor) for the practice-standard
+// trail. cd provides the approve/reopen controls on a coordinator review screen.
+
+async function loadReportForOrgApproval(reportId: string) {
+  if (!reportId) return null;
+  return prisma.shiftReport.findUnique({
+    where: { id: reportId },
+    select: { id: true, shiftId: true, status: true, organisationId: true },
+  });
+}
+
+async function authorizeApproval(organisationId: string | null) {
+  const worker = await getCurrentWorker();
+  if (!worker) return null;
+  const principal = await getCurrentPrincipal();
+  if (!principal || !can(principal, Capability.NoteApprove, { organisationId })) return null;
+  return worker;
+}
+
+export async function supervisorApproveReport(formData: FormData): Promise<ReportState> {
+  const reportId = String(formData.get("reportId") ?? "");
+  const notes = String(formData.get("approvalNotes") ?? "").trim() || null;
+  const report = await loadReportForOrgApproval(reportId);
+  if (!report) return { error: "Report not found." };
+
+  const supervisor = await authorizeApproval(report.organisationId);
+  if (!supervisor) return { error: "You don't have permission to approve notes." };
+
+  await prisma.shiftReport.update({
+    where: { id: report.id },
+    data: { status: "APPROVED", approvedAt: new Date(), approvedBy: supervisor.id, approvalNotes: notes },
+  });
+  await recordAudit({
+    action: "REPORT_APPROVED",
+    targetType: "ShiftReport",
+    targetId: report.id,
+    actorId: supervisor.id,
+    organisationId: report.organisationId,
+    detail: { reportId: report.id, shiftId: report.shiftId, supervisor: true },
+  });
+  revalidatePath(`/shift/${report.shiftId}`);
+  return { info: "Note approved." };
+}
+
+export async function supervisorReopenReport(formData: FormData): Promise<ReportState> {
+  const reportId = String(formData.get("reportId") ?? "");
+  const notes = String(formData.get("approvalNotes") ?? "").trim() || null;
+  const report = await loadReportForOrgApproval(reportId);
+  if (!report) return { error: "Report not found." };
+
+  const supervisor = await authorizeApproval(report.organisationId);
+  if (!supervisor) return { error: "You don't have permission to reopen notes." };
+
+  await prisma.shiftReport.update({
+    where: { id: report.id },
+    data: { status: "DRAFT", approvedAt: null, approvedBy: null, approvalNotes: notes },
+  });
+  await recordAudit({
+    action: "REPORT_REOPENED",
+    targetType: "ShiftReport",
+    targetId: report.id,
+    actorId: supervisor.id,
+    organisationId: report.organisationId,
+    detail: { reportId: report.id, shiftId: report.shiftId, supervisor: true },
+  });
+  revalidatePath(`/shift/${report.shiftId}`);
+  return { info: "Note reopened." };
 }

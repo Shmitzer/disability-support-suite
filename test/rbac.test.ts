@@ -38,8 +38,14 @@ test("can: deny-by-default for null / unknown roles and unseeded roles", () => {
   assert.equal(can(null, Capability.ShiftWork), false);
   assert.equal(can(undefined, Capability.RosterManage), false);
   assert.equal(can("NOT_A_ROLE", Capability.RosterManage), false);
-  // SUPERVISOR / PARTICIPANT / SUPERADMIN are reserved seats with nothing granted yet.
+  // SUPERVISOR now holds oversight + note sign-off (its stated purpose), but not rostering.
+  assert.equal(can(Role.SUPERVISOR, Capability.NoteApprove), true);
+  assert.equal(can(Role.SUPERVISOR, Capability.ShiftReadOrg), true);
   assert.equal(can(Role.SUPERVISOR, Capability.RosterManage), false);
+  // ADMIN can also approve notes; front-line workers cannot.
+  assert.equal(can(Role.ADMIN, Capability.NoteApprove), true);
+  assert.equal(can(Role.WORKER, Capability.NoteApprove), false);
+  // PARTICIPANT / SUPERADMIN remain reserved seats here.
   assert.equal(can(Role.PARTICIPANT, Capability.ShiftWork), false);
   assert.equal(can(Role.SUPERADMIN, Capability.AuditRead), false);
 });
