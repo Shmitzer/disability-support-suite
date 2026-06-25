@@ -93,6 +93,14 @@ export const LOG_CATEGORIES: LogCategory[] = [
         mode: "single",
         options: ["All", "Most", "About half", "A little", "None"],
       },
+      // Standard assistance scale (shared with Hygiene/Toilet) — meal assistance is
+      // clinically relevant (choking/dysphagia, mealtime management plans).
+      {
+        key: "assist",
+        label: "assistance",
+        mode: "single",
+        options: ["Independent", "Prompted", "Assisted", "Full assistance"],
+      },
     ],
   },
   {
@@ -110,6 +118,14 @@ export const LOG_CATEGORIES: LogCategory[] = [
         options: ["Water", "Tea", "Coffee", "Juice"],
         allowOther: true,
         learn: true,
+      },
+      // Consistency — thickened fluids are an aspiration/dysphagia safety flag and
+      // must be recordable. Fixed vocabulary (no learning).
+      {
+        key: "consistency",
+        label: "consistency",
+        mode: "single",
+        options: ["Thin", "Thickened"],
       },
     ],
     amount: {
@@ -157,8 +173,16 @@ export const LOG_CATEGORIES: LogCategory[] = [
         key: "duration",
         label: "duration",
         mode: "single",
-        options: ["<5 min", "5 min", "10 min", "30 min", "1 hr"],
+        options: ["<5 min", "5 min", "10 min", "15 min", "30 min", "45 min", "1 hr", "2 hr"],
         allowOther: true,
+      },
+      // Engagement/participation — what turns an activity entry into useful NDIS
+      // goal/progress evidence rather than just "did X". Observational, not a mood.
+      {
+        key: "engagement",
+        label: "engagement",
+        mode: "single",
+        options: ["Engaged", "Participated with support", "Reluctant", "Declined"],
       },
     ],
   },
@@ -298,6 +322,15 @@ export const LOG_CATEGORIES: LogCategory[] = [
         label: "status",
         mode: "single",
         options: ["Given", "Witnessed", "Self-administered", "PRN", "Refused", "Missed"],
+      },
+      // PRN follow-up: recording a PRN dose without its effect is a known audit gap.
+      // Only shown when the status is PRN.
+      {
+        key: "prnEffect",
+        label: "PRN effect",
+        mode: "single",
+        options: ["Effective", "Partial", "No effect", "Too soon to tell"],
+        showWhen: { group: "status", in: ["PRN"] },
       },
     ],
     textFields: [{ key: "dose", label: "Dose", placeholder: "e.g. 1 tablet, 5 mg" }],
