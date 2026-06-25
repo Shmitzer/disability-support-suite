@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import CairaHead from "./CairaHead";
 import CairaFlagBadge from "./CairaFlagBadge";
+import CairaAudioToggle from "./CairaAudioToggle";
 import { useCaira } from "./CairaContext";
 
 /**
@@ -48,17 +49,21 @@ export default function CairaBar() {
           caira
         </span>
 
-        {mode === "logo" ? (
-          <span className="text-xs text-gray-400">tap me ↑</span>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setMode("logo")}
-            className="text-xs text-gray-400 hover:text-caira-teal-dk"
-          >
-            ✕ dismiss
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {mode === "logo" ? (
+            <span className="text-xs text-gray-400">tap me ↑</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setMode("logo")}
+              className="text-xs text-gray-400 hover:text-caira-teal-dk"
+            >
+              ✕ dismiss
+            </button>
+          )}
+          {/* Mute toggle — always accessible. */}
+          <CairaAudioToggle />
+        </div>
 
         {mode === "logo" && (
           <div

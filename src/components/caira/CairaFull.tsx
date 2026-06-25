@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { useCaira } from "./CairaContext";
+import { useCairaAudio } from "./useCairaAudio";
 
 export type CairaMood =
   | "idle"
@@ -33,6 +35,10 @@ export default function CairaFull({
   size?: number;
 }) {
   const [blink, setBlink] = useState(false);
+
+  // State sounds: play Caira's soft tones as her mood/mode change.
+  const { mode } = useCaira();
+  useCairaAudio(mood, mode);
 
   // Gradient ids are SVG-scoped — make them unique per instance.
   const uid = useId().replace(/:/g, "");
