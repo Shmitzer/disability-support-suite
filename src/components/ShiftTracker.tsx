@@ -36,7 +36,6 @@ import {
   supportsLiveSpeech,
   type SpeechRecognitionLike,
 } from "@/lib/audio";
-import { useCaira } from "@/components/caira/CairaContext";
 import CairaEmpty from "@/components/caira/CairaEmpty";
 
 // The categories shown as Paper tiles, in design order. Note is reached via the
@@ -115,15 +114,22 @@ export function ShiftTracker({
   // the MediaRecorder + its captured chunks live in refs (not state — they mustn't
   // trigger re-renders mid-recording).
   const [vstatus, setVstatus] = useState<"idle" | "recording" | "transcribing">("idle");
-  // Mirror the live recording state onto the global Caira "listening" overlay so
-  // the character reacts while dictating. Driven by vstatus so it stays in sync
-  // with the real MediaRecorder / Web Speech flow rather than replacing it.
-  const { setMode: setCairaMode } = useCaira();
-  useEffect(() => {
-    setCairaMode(vstatus === "recording" ? "recording" : "logo");
-  }, [vstatus, setCairaMode]);
   const [vError, setVError] = useState("");
   const [voiceNote, setVoiceNote] = useState("");
+  // Caira recording overlay hand-off: when the worker dictates via Caira and taps
+  // "Save to note", the overlay emits caira:voice-note with the formatted draft. Drop
+  // it into the voice-note box and open that tab so they can review and commit it.
+  useEffect(() => {
+    function onVoiceNote(e: Event) {
+      const text = (e as CustomEvent<{ text?: string }>).detail?.text?.trim();
+      if (!text) return;
+      setView("voice");
+      setVoiceNote(text);
+      setVstatus("idle");
+    }
+    window.addEventListener("caira:voice-note", onVoiceNote);
+    return () => window.removeEventListener("caira:voice-note", onVoiceNote);
+  }, []);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   // Live (Web Speech) transcription: the recognition instance, the text that was

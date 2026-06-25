@@ -73,6 +73,18 @@ model Worker {
   trialEndsAt        DateTime?
   lastSeenVersion    String?
 
+  // Caira AI: a participant-user's language level ("simple" | "adjusted"). Only
+  // meaningful for role=PARTICIPANT; ignored for staff. See lib/caira/systemPrompts.ts.
+  participantAILevel String @default("simple")
+
+  // Caira web access (off by default). Granted per-user by an admin/supervisor; the
+  // grant timestamp + granter id are a lightweight audit trail. Participants are NEVER
+  // granted web access — enforced in code (/api/caira + /api/admin/caira-access), not
+  // just by this default. See lib/caira/roles.ts.
+  cairaWebAccess          Boolean   @default(false)
+  cairaWebAccessGrantedAt DateTime?
+  cairaWebAccessGrantedBy String?
+
   // Which participants this worker is linked to (controls auction visibility).
   participantLinks WorkerParticipant[]
 
@@ -686,6 +698,28 @@ model ShiftHandover {
 
   @@index([shiftId])
   @@index([participantId, createdAt])
+}
+
+// Caira safety flag — raised when a participant message trips the safety pre-check
+// (lib/caira/safetyDetect.ts) or Gemini's safety assessment. Shown to the assigned
+// worker (and supervisors) via the CairaFlagBadge so a human can follow up. Holds a
+// denormalised participantName/triggerMessage so the badge needs no joins. NOT
+// auto-applied (prisma/sql/caira_ai.sql) — see the prisma/sql convention.
+model CairaFlag {
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now())
+  participantId   String
+  participantName String
+  triggerMessage  String // the message that triggered the flag
+  flagReason      String? // brief reason from AI / keyword assessment
+  seenByWorker    Boolean   @default(false)
+  seenAt          DateTime?
+  shiftId         String?
+  workerId        String? // the assigned worker at time of flag
+  organisationId  String?
+
+  @@index([workerId, seenByWorker])
+  @@index([organisationId, seenByWorker])
 }
 
 // Pre-launch waitlist capture from the public landing page. Deliberately NOT a

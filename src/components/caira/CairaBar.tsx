@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CairaHead from "./CairaHead";
+import CairaFlagBadge from "./CairaFlagBadge";
 import { useCaira } from "./CairaContext";
 
 /**
@@ -60,10 +61,7 @@ export default function CairaBar() {
         )}
 
         {mode === "logo" && (
-          <button
-            type="button"
-            aria-label="Open Caira assistant"
-            onClick={() => setMode("expanded")}
+          <div
             className="absolute"
             style={{
               left: `${logoX}%`,
@@ -72,16 +70,21 @@ export default function CairaBar() {
               transition: "left 0.09s linear",
             }}
           >
-            <div
-              className="rounded-full"
+            <button
+              type="button"
+              aria-label="Open Caira assistant"
+              onClick={() => setMode("expanded")}
+              className="block rounded-full"
               style={{
                 background:
                   "radial-gradient(circle, rgba(77,184,176,0.2) 0%, rgba(77,184,176,0) 70%)",
               }}
             >
               <CairaHead size={38} blink={blink} />
-            </div>
-          </button>
+            </button>
+            {/* Unreviewed safety-flag badge (worker/supervisor only), over the antenna. */}
+            <CairaFlagBadge />
+          </div>
         )}
       </div>
     </div>

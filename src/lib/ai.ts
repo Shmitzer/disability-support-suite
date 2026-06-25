@@ -467,6 +467,77 @@ export function aiConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
 }
 
+// --- Caira chat (role-based assistant) --------------------------------------
+//
+// Multi-turn chat used by /api/caira. Unlike the note features (single-shot,
+// JSON-or-text), this carries a conversation `history` and an optional Google Search
+// grounding tool. The system prompt is built per-role in lib/caira/systemPrompts.ts
+// with live, on-screen context injected; this function just performs the call.
+//
+// DUMMY-DATA GUARDRAIL: the system prompt already contains only the names/shift facts
+// the caller's session legitimately exposes (Rule 5/10 + the project's dummy-data rule
+// until the privacy gate). We do not independently fetch personal data here.
+
+// Gemini conversation turn shape (matches the API's `contents` entries).
+export type GeminiTurn = { role: "user" | "model"; parts: { text: string }[] };
+
+export async function cairaChat(opts: {
+  systemPrompt: string;
+  history: GeminiTurn[];
+  message: string;
+  webEnabled?: boolean;
+  maxOutputTokens?: number;
+  temperature?: number;
+}): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  // gemini-2.5-flash (the app default) is fast/cheap and supports google_search
+  // grounding. CAIRA_CHAT_MODEL can override it without touching the note features.
+  const model = process.env.CAIRA_CHAT_MODEL ?? process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+  if (!apiKey) {
+    throw new Error("No GEMINI_API_KEY found. Add it to .env.local and restart the app.");
+  }
+
+  // Tools are added ONLY when web access is enabled — otherwise Caira has no internet
+  // (the default for every user). `google_search` is the v1beta grounding tool.
+  const tools = opts.webEnabled ? [{ google_search: {} }] : [];
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: opts.systemPrompt }] },
+    contents: [...opts.history, { role: "user", parts: [{ text: opts.message }] }],
+    ...(tools.length ? { tools } : {}),
+    generationConfig: {
+      maxOutputTokens: opts.maxOutputTokens ?? 400,
+      temperature: opts.temperature ?? 0.4,
+    },
+  });
+
+  const MAX_ATTEMPTS = 4;
+  let response: Response | undefined;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+    if (response.ok) break;
+    const retryable = response.status === 503 || response.status === 429;
+    if (retryable && attempt < MAX_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, attempt * 1500));
+      continue;
+    }
+    const detail = await response.text();
+    throw new Error(`Caira chat failed (${response.status}): ${detail}`);
+  }
+
+  const data = await response!.json();
+  const text: string =
+    data?.candidates?.[0]?.content?.parts
+      ?.map((p: { text?: string }) => p.text ?? "")
+      .join("") ?? "";
+  return text.trim();
+}
+
 // --- Voice transcription ----------------------------------------------------
 //
 // Turn a recording of a worker's spoken shift note into text, which they then

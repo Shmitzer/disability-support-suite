@@ -7,6 +7,7 @@ import { sectorLabels } from "@/lib/sector-config";
 import { PostHogInit } from "@/components/PostHogInit";
 import { getCurrentUser } from "@/lib/session";
 import { getOrgCairaEnabled } from "@/lib/org-settings";
+import { cairaPersona } from "@/lib/caira/roles";
 import { CairaProvider } from "@/components/caira/CairaContext";
 import CairaBar from "@/components/caira/CairaBar";
 import CairaAIOverlay from "@/components/caira/CairaAIOverlay";
@@ -44,6 +45,11 @@ export default async function RootLayout({
   // protected layout. Unknown org (e.g. pre-auth) falls back to the default (on).
   const user = await getCurrentUser();
   const cairaEnabled = await getOrgCairaEnabled(user?.organisationId);
+  const persona = cairaPersona(user?.role);
+  const aiLevel =
+    (user as { participantAILevel?: string } | null)?.participantAILevel === "adjusted"
+      ? "adjusted"
+      : "simple";
 
   return (
     <html
@@ -52,7 +58,7 @@ export default async function RootLayout({
     >
       <body className={`flex min-h-full flex-col ${cairaEnabled ? "pt-[58px]" : ""}`}>
         <PostHogInit />
-        <CairaProvider enabled={cairaEnabled}>
+        <CairaProvider enabled={cairaEnabled} persona={persona} initialAiLevel={aiLevel}>
           {cairaEnabled && <CairaBar />}
           {children}
           {cairaEnabled && <CairaAIOverlay />}

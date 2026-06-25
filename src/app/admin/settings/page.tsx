@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/session";
 import { can, Capability } from "@/lib/rbac";
 import { getOrgAutoSuggestCap, getOrgCairaEnabled } from "@/lib/org-settings";
 import { OrgSettingsForm } from "@/components/OrgSettingsForm";
+import CairaAccessList from "@/components/admin/CairaAccessList";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: `${APP_NAME} — Settings` };
@@ -32,6 +33,7 @@ export default async function AdminSettingsPage() {
         </Link>
       </div>
       <OrgSettingsForm initialCap={autoSuggestCap} initialCairaEnabled={cairaEnabled} />
+      <CairaAccessList viewer={worker} />
     </main>
   );
 }

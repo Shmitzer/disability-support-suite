@@ -51,6 +51,10 @@ CREATE TABLE "Worker" (
     "subscriptionStatus" TEXT,
     "trialEndsAt" TIMESTAMP(3),
     "lastSeenVersion" TEXT,
+    "participantAILevel" TEXT NOT NULL DEFAULT 'simple',
+    "cairaWebAccess" BOOLEAN NOT NULL DEFAULT false,
+    "cairaWebAccessGrantedAt" TIMESTAMP(3),
+    "cairaWebAccessGrantedBy" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -183,6 +187,27 @@ CREATE TABLE "ShiftReport" (
 
     CONSTRAINT "ShiftReport_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateTable
+CREATE TABLE "CairaFlag" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "participantId" TEXT NOT NULL,
+    "participantName" TEXT NOT NULL,
+    "triggerMessage" TEXT NOT NULL,
+    "flagReason" TEXT,
+    "seenByWorker" BOOLEAN NOT NULL DEFAULT false,
+    "seenAt" TIMESTAMP(3),
+    "shiftId" TEXT,
+    "workerId" TEXT,
+    "organisationId" TEXT,
+
+    CONSTRAINT "CairaFlag_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "CairaFlag_workerId_seenByWorker_idx" ON "CairaFlag"("workerId", "seenByWorker");
+CREATE INDEX "CairaFlag_organisationId_seenByWorker_idx" ON "CairaFlag"("organisationId", "seenByWorker");
 
 -- CreateTable
 CREATE TABLE "LearnedOption" (
