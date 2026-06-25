@@ -15,9 +15,44 @@
 
 import { prisma } from "@/lib/prisma";
 import { recordAudit } from "@/lib/audit";
-import { can, type Capability, type Principal, type Resource } from "@/lib/rbac";
+import { can, Capability, type Principal, type Resource } from "@/lib/rbac";
 import { Role } from "@/lib/enums";
 import { getCurrentUser } from "@/lib/session";
+
+// Can the CURRENT user see/work with this participant at all? Shared gate for any
+// participant-scoped feature (documents, roster, …): org ShiftReadOrg/CareProfileManage,
+// a worker who supports them (link or allocated shift), or a grant (family/guardian).
+export async function canAccessParticipant(participantId: string): Promise<boolean> {
+  const worker = await getCurrentUser();
+  if (!worker) return false;
+  const participant = await prisma.participant.findUnique({
+    where: { id: participantId },
+    select: { id: true, organisationId: true },
+  });
+  if (!participant) return false;
+  const principal = await getCurrentPrincipal();
+  if (!principal) return false;
+  const org = { organisationId: participant.organisationId };
+  if (can(principal, Capability.ShiftReadOrg, org) || can(principal, Capability.CareProfileManage, org)) {
+    return true;
+  }
+  if (
+    can(principal, Capability.NotesRead, { participantId }) ||
+    can(principal, Capability.HandoverReceive, { participantId })
+  ) {
+    return true;
+  }
+  const link = await prisma.workerParticipant.findFirst({
+    where: { workerId: worker.id, participantId },
+    select: { id: true },
+  });
+  if (link) return true;
+  const alloc = await prisma.shift.findFirst({
+    where: { participantId, allocatedToId: worker.id },
+    select: { id: true },
+  });
+  return Boolean(alloc);
+}
 
 // The Principal for the currently signed-in worker (org memberships ∪ active
 // participant grants). null when not signed in. This is what makes participant

@@ -498,6 +498,29 @@ export async function transcribeAudio(audioBase64: string, mimeType: string): Pr
   return cleanTranscript(raw);
 }
 
+// --- Document OCR (photo → text) --------------------------------------------
+//
+// Extract the text from a photographed document so it can be saved/formatted and fed
+// into the assistant context store. Same Rule 2 caveat as audio: an image can't be
+// scrubbed before sending, so a photographed document (which may name people) goes to
+// the AI provider. Gated behind GEMINI_API_KEY + the user choosing to capture it.
+const OCR_SYSTEM_PROMPT = `You extract the text from a photographed document.
+- Output the document's text faithfully, preserving line breaks and obvious structure (headings, lists, tables as plain text).
+- Do NOT summarise, translate, correct, or add anything that is not in the image.
+- Australian English. If the image has no legible text, output nothing at all.`;
+
+export async function extractTextFromImage(imageBase64: string, mimeType: string): Promise<string> {
+  const parts = [
+    { text: "Extract all text from the following document image." },
+    { inlineData: { mimeType, data: imageBase64 } },
+  ];
+  const raw = await geminiGenerate(OCR_SYSTEM_PROMPT, parts, {
+    extraConfig: { temperature: 0 },
+    allowEmpty: true,
+  });
+  return raw.trim();
+}
+
 // Strip the boilerplate models sometimes wrap a transcript in ("Sure, here's the
 // transcript:", surrounding quotes) so we store just the spoken words. Pure —
 // unit-tested.

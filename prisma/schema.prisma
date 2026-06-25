@@ -430,6 +430,30 @@ model AssistantContext {
   @@index([participantId])
 }
 
+// A stored document/file that feeds the assistant + the participant record. Covers
+// provider-attached docs, worker/manager/admin note attachments, third-party uploads,
+// personal uploads, and photographed docs (OCR'd to text). `filePath` is a Supabase
+// Storage RELATIVE path (Rule 3). `extractedText` is the basis for assistant context;
+// on ingest it's chunked into AssistantContext rows. See src/lib/document-actions.ts.
+// NOT auto-applied (prisma/sql/documents.sql).
+model Document {
+  id             String   @id @default(cuid())
+  userId         String // who added it (owner)
+  organisationId String?
+  participantId  String? // about a participant (scopes who can see it)
+  source         String // provider_attached | worker_attachment | third_party_upload | personal_upload | photo_capture
+  title          String?
+  mimeType       String?
+  filePath       String? // Supabase Storage relative path (Rule 3); null if text-only
+  extractedText  String? // typed/OCR'd text — the basis for assistant context
+  status         String   @default("PENDING") // PENDING | READY | INGESTED | FAILED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([participantId])
+}
+
 // Assistant conversation history (also the raw material for "learn as they use it").
 model AssistantMessage {
   id             String   @id @default(cuid())

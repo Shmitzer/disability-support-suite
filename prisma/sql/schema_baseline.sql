@@ -432,3 +432,24 @@ CREATE TABLE "AssistantMessage" (
     CONSTRAINT "AssistantMessage_pkey" PRIMARY KEY ("id")
 );
 CREATE INDEX "AssistantMessage_userId_createdAt_idx" ON "AssistantMessage"("userId", "createdAt");
+
+
+-- CreateTable: Document — stored files feeding the assistant + participant record (prisma/sql/documents.sql)
+CREATE TABLE "Document" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "organisationId" TEXT,
+    "participantId" TEXT,
+    "source" TEXT NOT NULL,
+    "title" TEXT,
+    "mimeType" TEXT,
+    "filePath" TEXT,
+    "extractedText" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Document_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "Document_userId_idx" ON "Document"("userId");
+CREATE INDEX "Document_participantId_idx" ON "Document"("participantId");

@@ -38,15 +38,22 @@ playback).
 - Later: derive context from approved notes / care profile / org docs (ingestion jobs).
 
 ## Phases
-- **v1 (this PR — logic only):** store + keyword retrieval + `askCaira` + ask/remember
-  actions + history. Answers general questions now; answers person/org questions from
-  whatever context exists. cd wires the voice button + audio playback.
-- **v2 — semantic retrieval:** embeddings + pgvector (Supabase) for better recall; swap
-  behind the `topContext` interface (no call-site changes). Needs an embeddings provider
-  + `vector` column. **Decision needed:** provider + cost.
-- **v3 — document ingestion:** a per-user/org document upload → chunk → store as
-  `source:"upload"` context (this is "their docs"). Needs an upload surface (cd) + a
-  chunking job (CC). **Decision needed:** where docs come from (user upload? org library?).
+- **v1 (done — logic):** store + keyword retrieval + `askCaira` + ask/remember actions
+  + history. cd wires the voice button + audio playback.
+- **v3 document ingestion (done — logic):** `Document` model + `document-actions.ts`.
+  Sources: **provider-attached docs, worker/manager/admin note attachments, third-party
+  uploads, personal uploads, and photographed docs** (OCR via `ai.extractTextFromImage`
+  → text → save). `addDocument` (upload and/or text) and `photoToDocument` (photo→OCR→
+  save) auto-ingest: `chunkText` splits the text into `AssistantContext` rows the
+  assistant draws on. Files → Supabase Storage relative paths (Rule 3); participant
+  docs gated by `canAccessParticipant`. cd builds the upload + camera UI.
+- **Photos**: stored as `Document`s (image mimeType); the photo→text path is built. Plain
+  photo storage (no OCR) also works via `addDocument` with a `dataUrl`.
+- **TTS**: **browser SpeechSynthesis first** (cd wires it); a server TTS provider is a
+  later option.
+- **v2 — semantic retrieval (LATER):** embeddings + pgvector for better recall; swap
+  behind the `topContext` interface (no call-site changes). Start with a **cheap
+  embeddings API** when we do it. Deferred for now (keyword retrieval ships).
 - **v4 — proactive learning:** derive context from notes/care profiles/usage patterns.
 
 ## Privacy / compliance (gates)
