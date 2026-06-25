@@ -186,6 +186,7 @@ Apply in this order (Supabase SQL Editor: paste each file's contents and Run; or
 | 2 | `prisma/sql/audit_hash_chain.sql` | `AuditLog.seq` / `prevHash` / `hash` — tamper-evident hash chain | **Before deploy.** `recordAudit()` writes these; it degrades to a logged error if absent, so the chain silently won't persist until applied. |
 | 3 | `prisma/sql/learned_options_per_org.sql` | per-org unique on `LearnedOption` (COALESCE), read index, LearnedOption-specific RLS (global seeds world-readable) | When per-org custom options / global-seed visibility are needed. Run after `rls_policies.sql`. |
 | 4 | `prisma/sql/rbac_grants.sql` | `Membership`, `ParticipantAccessGrant`, `Consent` tables (+ their RLS) | When wiring the participant-grant access model (external carers/guardians). Run after `rls_policies.sql`. Code (`resolvePrincipal`) tolerates their absence until then. |
+| 5 | `prisma/sql/participant_care_profile.sql` | `ParticipantCareProfile` table (condition tags + support-need flags that tailor capture chips) | Needed for per-participant chip tailoring + the care-profile editor. `getCareProfile` tolerates its absence (→ full grid), so not required to run, but apply before using the feature. Run after `rls_policies.sql` for the RLS snippet. |
 
 After applying #1 and #2 the app is correct for this branch's deploy; #3 and #4 can
 follow when their features are switched on.
