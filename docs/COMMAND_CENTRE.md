@@ -25,10 +25,12 @@ organic push. Lives at `marketing/content-engine/` on branch
   voice; optional Claude API + voice pass), `meta.js` (official Graph API
   scheduling, own Page only), `compliance.js` (blocks "NDIS approved/endorsed",
   "guarantees compliance", etc.).
-- `drafts/queue.json` — **16 founder-voice posts (4 weeks)**, all `needs_review`,
+- `drafts/queue.json` — **32 founder-voice posts (8 weeks)**, all `needs_review`,
   all clear of compliance hard-fails.
 - `lead-magnets/` — audit-ready note checklist + person-first cheat-sheet.
 - `landing/landing-copy.md` — caira.net.au copy (pre-launch + launch variants).
+- `email/nurture-sequence.md` — 5-email nurture (magnet → value → founder story
+  → proof → soft CTA), pairs with the lead magnets.
 
 **Guardrails baked in:** own Page only, every post human-approved before schedule,
 compliance-gated, app mentions disclosed. No fake personas / auto-engagement —
