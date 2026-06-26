@@ -6,15 +6,16 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/nifty-ritchie-nqmsxh` (game-suite foundation) · prior: `claude/sharp-hypatia-6zdy2h`
-- **Last updated:** 2026-06-26 (game-suite foundation built; handoff to Cowork · marketing engine added)
+- **Last updated:** 2026-06-26 (marketing engine merged to main; MailerLite waitlist mid-setup — handoff to Cowork)
 
 ---
 
 ## 📣 MARKETING — Caira content engine seeded (2026-06-26)
 
 Transparent, ToS-compliant marketing engine for Caira's pre-launch, founder-led
-organic push. Lives at `marketing/content-engine/` on branch
-`claude/festive-tesla-lebjxq` (NOT yet on `main`).
+organic push. Lives at `marketing/content-engine/` — **merged to `main`**. A
+copy-from set of these docs is also in Google Drive → **"Caira Marketing"**
+folder (Email Nurture paste-pack, 12-week Posts, FB Page Setup, Launch Checklist).
 
 **DONE (on branch `claude/festive-tesla-lebjxq`):**
 - `docs/PLAYBOOK.md` — canonical strategy (warm-network-first, organic-first;
@@ -40,10 +41,23 @@ organic push. Lives at `marketing/content-engine/` on branch
 compliance-gated, app mentions disclosed. No fake personas / auto-engagement —
 warm-network outreach + community + LinkedIn stay human (Edward's call on ban risk).
 
-**NEXT (Edward):** stand up the MailerLite waitlist (≈30-45 min, see waitlist/SETUP.md)
-· site live + legal gate for go-to-market · real waitlist URL into
-`config.json` (`app.earlyInterest`) · FB Page ID + long-lived token to enable
-scheduling · review/approve drafts.
+**LIVE BUILD STATE (2026-06-26 — handoff to Cowork mid-setup):**
+- **MailerLite** account created ("Caira", 14-day trial → drops to free tier which keeps automations ≤1k subs).
+- **Domain auth:** DKIM CNAME (`litesrv._domainkey` → `litesrv._domainkey.mlsend.com`) added at **Crazy Domains**, status pending/propagating — hit "Check records" later. ⚠️ Crazy Domains' DNS manager has **no TXT/SPF option** (only A/AAAA/CNAME/MX/CAA), so SPF/return-path TXT could NOT be added. DKIM alone usually verifies MailerLite. For full SPF + deliverability, **move DNS to Cloudflare (free)** later (recreate the 2 A records → 27.124.125.171, add SPF `v=spf1 a mx include:_spf.mlsend.com ?all`).
+- **Groups** `Caira Waitlist` + `Caira Early Access` ✓. (Custom field `magnet` optional — skipped; Email 1 sends both PDFs to all.)
+- **Embedded form** "Caira Waitlist" ✓ — branded sage, our copy, email + early-access checkbox (→ Early Access group) + reCAPTCHA + privacy line. NOT yet hosted/public.
+- **Lead-magnet PDFs** uploaded to **Google Drive, set public** (both `anyone with link` verified): checklist `1iiH6fPVhUIluEO5oZHyN-Hpj_G9z8IrL`, cheat-sheet `1uRdTchJXTx66xfHIyiBKQrbRaG8T9WLx`.
+- **Nurture automation** started: trigger = joins Caira Waitlist ✓; **Email 1 DONE** (subject/sender/preheader set, both PDFs linked, sender = edward.neppl@gmail.com for testing).
+
+**NEXT (Cowork / Edward — in order):**
+1. **Finish the nurture:** add Emails 2–5 with delays +2/+2/+3/+3 days. Copy from Drive "Caira – Email Nurture (paste-pack)" or `email/nurture-sequence.md`. Link the checklist PDF in Email 2's P.S.; link form/Page + both PDFs in Email 5.
+2. **Verify domain** in MailerLite (Check records) — expect DKIM ✓. If MailerLite blocks sending without SPF, do the Cloudflare move.
+3. **Switch sender** to `edward@caira.net.au` once verified (gmail-from won't deliver well), THEN **test the full automation** (PDFs land, unsubscribe works, mobile view).
+4. **Host the form** — easiest now: a free MailerLite **Sites** landing page (caira.net.au not live). That URL → `config.json` `app.waitlistUrl` + Email 5 EARLY_LINK + FB Page button.
+5. **Don't go public** (don't promote the form/Page) until **privacy policy live at caira.net.au/privacy** + legal go-to-market gate clears.
+6. Then: create FB Page (Drive "Caira – Facebook Page Setup"); warm-network outreach; post weeks 1–2 (value only). Optional: FB Page ID + long-lived token for `schedule`.
+
+Full step list: Drive "Caira – Launch Checklist" or `marketing/content-engine/LAUNCH_CHECKLIST.md`.
 
 ---
 
