@@ -39,8 +39,46 @@ default** · **no shaming fail-states, no "game over"** · adjustable complexity
 fully offline · AAC-friendly (symbol support, large targets, participant's own board) · one
 saved accessibility profile auto-configures every game on first launch.
 
-**Clinical framing:** games *support and practise* skills. They do not treat, cure, or
-diagnose. No medical claims. No real participant data.
+**Input support is per-game, not a blanket guarantee.** Single-switch scanning and eye-gaze
+genuinely cannot drive every title at usable speed (a 64-square chess board, a cryptogram, a
+precision line-trace). So each game carries an **input-support rating** — `Full` (every input
+drives it natively), `Adapted` (works via a scan-friendly composer / assist, not raw scanning),
+`Limited` (touch/pointer/keyboard only; honest about it). "Scanning support" on a high-branching
+game means a scan-friendly *move composer*, never scanning the raw state space. Build the matrix
+per game; never claim parity a game can't honour.
+
+**Safety overrides (hard, profile-independent):** a global **"reduce stimulation"** switch that
+suppresses haptics/chimes/particles regardless of profile, and a **photosensitivity ceiling** —
+nothing flashes faster than the WCAG 2.3.1 three-flash threshold, ever. These sit above the
+accessibility profile, not inside it.
+
+**Never colour-alone for state.** Correct/selected/active is always shown by Caira + shape +
+position + dimming, never by hue alone (the sage-correct / clay-"look-here" pairing is on the
+green↔orange-red axis deuteranopes confuse). Foreground and `--muted` text must pass WCAG AA on
+the warm-paper canvas.
+
+**Age-respectful at every tier.** The floor-tier audience includes *adults* with profound needs.
+Art, copy, and Caira's voice are age-neutral and adult-respectful even at T1 — never babyish,
+never clinical. (Watch `peekaboo`, `wake-animal`, and the cause-and-effect floor.)
+
+**Clinical framing:** games *support and practise* skills. They do not treat, cure, or diagnose,
+and they are **not standardised assessments**. Several titles borrow the *name* of an assessment
+paradigm (digit span, mental rotation) — that is the activity, not a measure. **Game data is
+participation / engagement evidence only**; it must never be reported as a clinical or cognitive
+score, and must never be used to gate funding, eligibility, or supervision level. Where a Target
+column names a construct ("working-memory span"), read it as shorthand for the activity
+("remembering longer sequences"), not a claim to measure that construct.
+
+**"No real participant data" — what it means here.** The seed/catalogue carries **no fabricated
+clinical content and no PHI**. At runtime the suite *does* process limited real data — the
+participant's name (for Caira's greeting/TTS) and their accessibility profile (to configure
+play) — under the same consent, access-scoping, retention, and PII-scrub rules as the rest of
+the app (see `docs/CAIRA_AI_RECONCILIATION.md`). It is not a promise that the system holds zero
+participant data; it is a promise of no invented PHI and no unscoped disclosure.
+
+**Just-play mode.** A participant can always play *without* writing to a tracked NDIS goal —
+practice/just-play logs nothing to `GoalProgress`. Contributing to a goal is opt-in, not the
+default-and-only mode; surveillance-of-play is an autonomy harm.
 
 ## Look, feel & the Caira companion (binding on all 100)
 
@@ -165,12 +203,12 @@ Legend: **B?** = build wave (see Build Plan). **Slug** = stable identifier for
 |---|---|---|---|---|---|---|---|
 | 1 | Touch & Bloom | `touch-bloom` | Any input blooms light/colour from that spot. | Cause & effect, agency | health_wellbeing | T1 | **1** |
 | 2 | Switch Sparkle | `switch-sparkle` | One switch → fireworks, chimes, haptics. | Switch cause & effect | health_wellbeing | T1 | 2 |
-| 3 | Gaze Garden | `gaze-garden` | Flowers grow where your eyes rest. | Gaze control, agency | fine_motor | T1–T2 | 2 |
+| 3 | Gaze Garden | `gaze-garden` | Flowers grow where your eyes rest. | Gaze control, agency | health_wellbeing | T1–T2 | 2 |
 | 4 | Sound Shake | `sound-shake` | Tap/move makes layered musical tones. | Cause & effect, auditory | health_wellbeing | T1 | 3 |
 | 5 | Ripple Pool | `ripple-pool` | Touch sends slow ripples + water sound. | Sensory regulation | health_wellbeing | T1 | 3 |
 | 6 | Light Chaser | `light-chaser` | A glowing orb follows finger/gaze. | Visual tracking | fine_motor | T1–T2 | 2 |
 | 7 | Wake the Animal | `wake-animal` | One press gently animates a creature. | Anticipation, cause & effect | learning | T1–T2 | 3 |
-| 8 | Cause & Caira | `cause-caira` | Any input makes Caira react warmly. | Engagement, agency | social_participation | T1–T2 | **1** |
+| 8 | Cause & Caira | `cause-caira` | Any input makes Caira react warmly. | Engagement, agency | health_wellbeing | T1–T2 | **1** |
 | 9 | Rumble Rain | `rumble-rain` | Switch starts rain + synced haptics. | Calming, cause & effect | health_wellbeing | T1 | 3 |
 | 10 | My Big Button | `big-button` | One huge target; always delightful. | Errorless agency | health_wellbeing | T1 | 2 |
 
@@ -225,10 +263,10 @@ Legend: **B?** = build wave (see Build Plan). **Slug** = stable identifier for
 | 40 | What's Missing? | `whats-missing` | Spot the removed item. | Visual recall | learning | T2–T3 | 2 |
 | 41 | Sound Memory | `sound-memory` | Repeat a growing tone sequence. | Auditory memory | learning | T2–T4 | 2 |
 | 42 | Where Was It? | `where-was-it` | Remember hidden object locations. | Spatial memory | learning | T2–T3 | 3 |
-| 43 | Daily Recall | `daily-recall` | Recall steps of a routine just shown. | Episodic recall | independence | T2–T3 | 3 |
-| 44 | Face & Name | `face-name` | Match faces to names. | Social memory | social_participation | T3–T4 | 3 |
+| 43 | Daily Recall | `daily-recall` | Recall steps of a routine just shown. | Remembering a routine | independence | T2–T3 | 3 |
+| 44 | Face & Name | `face-name` | Match faces to names. | Remembering faces & names | social_participation | T3–T4 | 3 |
 | 45 | Memory Palace | `memory-palace` | Learn loci; recall long lists/numbers. | Mnemonic strategy | learning | T4–T5 | 4 |
-| 46 | Digit Span | `digit-span` | Recall growing number/word strings. | Working-memory span | learning | T3–T5 | 3 |
+| 46 | Digit Span | `digit-span` | Recall growing number/word strings. | Remembering longer sequences | learning | T3–T5 | 3 |
 
 ## 6. Attention & visual perception (8)
 
@@ -241,7 +279,7 @@ Legend: **B?** = build wave (see Build Plan). **Slug** = stable identifier for
 | 51 | Picture Pieces | `picture-pieces` | Complete a picture from large pieces. | Visual closure | learning | T2–T3 | 3 |
 | 52 | Spot the Difference | `spot-difference` | Find differences; scales hard. | Visual scanning | learning | T3–T5 | 3 |
 | 53 | Hidden Objects | `hidden-objects` | Locate items in a rich scene. | Visual search | learning | T3–T4 | 4 |
-| 54 | Mental Rotation | `mental-rotation` | Match rotated 3D shapes. | Spatial reasoning | learning | T4–T5 | 4 |
+| 54 | Mental Rotation | `mental-rotation` | Match rotated 3D shapes. | Picturing shapes turning | learning | T4–T5 | 4 |
 
 ## 7. Logic, strategy & deep puzzles (10) — *the ceiling*
 
@@ -323,6 +361,13 @@ Legend: **B?** = build wave (see Build Plan). **Slug** = stable identifier for
 | 98 | Safe Crossing | `safe-crossing` | Practise road-safety decisions. | Community safety | independence | T2–T3 | 3 |
 | 99 | Kitchen Steps | `kitchen-steps` | Sequence a simple safe recipe. | Cooking sequence | daily_living | T3–T4 | 4 |
 | 100 | Ask for Help | `ask-for-help` | Choose how/where to get help. | Self-advocacy | independence | T2–T3 | 3 |
+
+> ⚠ **Real-world non-transfer disclaimer (mandatory on `safe-crossing`, `kitchen-steps`,
+> `shop-smart`, `morning-routine`):** these are *symbolic, on-screen* practice. In-game success
+> is **never** evidence of real-world capability and is **never** a basis to reduce supervision,
+> change a risk assessment, or judge a participant road-, kitchen-, or community-ready.
+> `safe-crossing` in particular must not be read as traffic-readiness. The disclaimer shows in
+> the game and travels with any exported progress.
 
 ---
 
@@ -412,27 +457,61 @@ Per the Master Handover, all of this is Step 5 (System A), pure app code, no leg
   so look-and-feel and Caira's presence are inherited, never re-built per game. Ships on
   **pre-written copy** (no model call); the generated-voice path and the `CairaFlag` distress
   hook attach later, when the Step-3 AI-brain merge (`docs/CAIRA_AI_RECONCILIATION.md`) lands
-  role personas + safety flags behind the seam. **Not blocking for Wave 1.**
+  role personas + safety flags behind the seam. **Correction:** the companion *surface itself*
+  IS foundation and **does** block `cause-caira` and `breathe-caira` (which foreground Caira by
+  name); only its *generated-voice / CairaFlag* extensions are deferred. Define the event-bus
+  contract here — where it lives (the engine is no-React; this is a provider/hook), sync vs
+  async, how `onGoalProgress` fires only **after** the server confirms the write, and how a
+  high-sensory profile *suppresses* an event vs renders it silently — so 100 games don't each
+  wire it differently.
 - [ ] **Launcher route** — `/games` grid honouring the accessibility profile + tier filter,
   styled like the tracker (warm paper cards, Caira greeting the participant at the top).
 - [ ] **Goal-link wiring** — `GameSession` → `GoalProgress` → goal `currentValue` (System A
   only; no social/XP crossover).
+- [ ] **Persisted adaptive convergence** — store the tier a participant converged to per
+  `(participant, gameSlug)` and seed the controller from it; otherwise every launch restarts at
+  the floor and wide-span titles (`maze-minds`, `pattern-path`, T2–T5) are effectively
+  unreachable. (Decide-or-build, not implicit.)
 
-### I will develop now — Wave 1 (10 games, the engine-proving set + the 5 specced)
-These prove the engine end-to-end across all five capability types and ship the originally
-specced five:
+### Reframe: this is an *engine + starter library*, not "100 games"
 
-1. `touch-bloom` (T1 floor) **— deep-designed (D1)**
+The differentiator is the **adaptive, accessibility-first, NDIS-goal-linked engine + the Caira
+companion** — not the catalogue count. The core product (the shift tracker) is still pre-launch
+behind the legal gate, so the 100-game roadmap is sequenced by **evidence, not capability
+coverage**:
+
+1. **Probe first (the real first milestone):** engine + `<CairaCompanion>` + **3 games** —
+   `touch-bloom` (input-agnostic, no-score logging), `word-match` (adaptive controller +
+   goal-link), and one of `breathe-caira` / `pairs-pals` (companion + span). These three exercise
+   every hard part of the engine; the rest are content on proven rails.
+2. **Instrument 2–3 success metrics** on the probe (e.g. a worker voluntarily opens a game in a
+   shift; a participant returns across ≥2 sessions; a `GoalProgress` row a worker agrees is
+   meaningful). Demo to **2–3 real support workers on dummy data** — the buyer is the
+   worker/coordinator, not only the participant.
+3. **Gate the remaining 8 Wave-1 games and all of Waves 2–3 on hitting those metrics.**
+4. **Cut Waves 4–5 (the ceiling) from the near-term roadmap.** `chess-trainer`, `go-gomoku`,
+   `circuit-logic`, `logic-grid`, `cryptogram`, Sudoku/KenKen are each a standalone game engine
+   serving the rarest slice — highest effort, lowest validation density. The *suite* spans floor
+   to ceiling; not every *title* does, and that's the honest framing (no empty/locked shelf for
+   floor-tier profiles — give the floor genuine depth instead).
+
+### Wave 1 — engine-proving set + the 5 specced (11 games, probe-gated)
+The full Wave-1 set once the probe clears. **Safety gate:** no game that accepts *free* text /
+open AAC composition ships until the `CairaFlag` distress path exists (reconciliation Steps 3–4).
+`choose-ask` is **constrained** (pick-a-symbol-to-request, errorless) so it is in scope;
+open-composition games (`tell-me-more`, `word-predictor`) stay out until the antenna is live.
+
+1. `touch-bloom` (T1 floor) **— deep-designed (D1) · probe**
 2. `cause-caira` (T1, Caira reaction)
 3. `same-again` (T2 matching)
-4. `word-match` *(existing)* **— deep-designed (D2), adaptive reference**
+4. `word-match` *(existing)* **— deep-designed (D2), adaptive reference · probe**
 5. `number-sense` *(existing)* (adaptive numeracy)
-6. `pairs-pals` (T2–T4 span demo) **— deep-designed (D3)**
+6. `pairs-pals` (T2–T4 span demo) **— deep-designed (D3) · probe**
 7. `sequence-it` *(existing)* (executive function)
 8. `emotion-match` *(existing)* (emotional literacy)
-9. `choose-ask` (T1–T2 AAC errorless) **— deep-designed (D4)**
+9. `choose-ask` (T1–T2 AAC errorless, **constrained selection only**) **— deep-designed (D4)**
 10. `type-it` *(existing)* (T2–T5 input) **— deep-designed (D5)**
-11. `breathe-caira` (T1–T3 regulation)
+11. `breathe-caira` (T1–T3 regulation) **— probe alt**
 
 ### Still to be done — remaining 89 games, by wave
 - **Wave 2 (≈24)** — broaden the floor/early-cognition + core adaptive titles:
@@ -449,6 +528,9 @@ specced five:
   `goal-path`, `how-feel`, `calm-or-big`, `what-could-help`, `symbol-story`, `drag-path`,
   `pinch-build`, `glow-trace`, `zen-sand`, `sound-garden`, `morning-routine`, `safe-crossing`,
   `ask-for-help`.
+- **Waves 4–5 — DEFERRED (cut from near-term roadmap; see "Reframe" above).** The ceiling /
+  savant-depth titles are each a standalone game engine for the rarest slice; revisit only once
+  the core product has users and the suite has proven demand.
 - **Wave 4 (≈22)** — the ceiling (savant depth): `word-roots`, `cryptogram`, `times-towers`,
   `fraction-pizza`, `math-sprint`, `logic-numbers`, `memory-palace`, `mental-rotation`,
   `hidden-objects`, `tangram`, `chess-trainer`, `logic-grid`, `tower-builder`, `code-breaker`,
@@ -456,14 +538,43 @@ specced five:
   `steady-hand`, `shop-smart`, `kitchen-steps`.
 - **Wave 5 (≈2, heaviest engines)** — `go-gomoku`, `circuit-logic`.
 
-**Definition of done per game:** runs under all four input modes, honours the accessibility
-profile, no-fail feedback, **renders only in the Sage & Clay tokens / active scheme (no
-custom colours)**, **shows the `<CairaCompanion>` with its five states wired (Greet, Cheer,
-Reassure, Breathe/idle, Goal moment)**, writes a valid `GameSession`, contributes to its
-mapped NDIS category via `GoalGameLink`, and ships an offline asset bundle.
+**Definition of done per game:** declares its **input-support rating** (Full / Adapted /
+Limited) and honours it under those input modes, honours the accessibility profile and the
+hard safety overrides (reduce-stimulation, photosensitivity ceiling), **never signals state by
+colour alone**, no-fail feedback, age-respectful even at T1, **renders only in the Sage & Clay
+tokens / active scheme (no custom colours)**, **shows the `<CairaCompanion>` with its five
+states wired (Greet, Cheer, Reassure, Breathe/idle, Goal moment)**, supports **just-play
+(no-goal-logging) mode**, writes a valid **idempotent** `GameSession`, contributes to its mapped
+NDIS category via `GoalGameLink`, and ships an offline asset bundle. Daily-living/safety titles
+also carry the real-world non-transfer disclaimer.
+
+---
+
+## Engine hardening — pre-Wave-1 checklist (for Cowork, on the engine branch)
+
+The dev-team review found these in the **existing** engine code (`src/lib/games/*` on
+`claude/nifty-ritchie-nqmsxh`). Fix before any second caller or offline sync exists:
+
+- [ ] **P0 · Move the tenant/participant-ownership check INTO `recordSession`.** It currently
+  trusts `result.participantId`; only the one route guards it. RLS won't catch it (Prisma uses
+  the privileged role and bypasses RLS), so the first second caller becomes a cross-tenant write.
+- [ ] **P0 · Make `ParticipantXP` unique on `(participantId, organisationId)`.** The upsert keys
+  on `participantId` alone (global unique) — a shared id across orgs increments the wrong
+  tenant's total.
+- [ ] **P0 · Add an idempotency key.** Client-generated `clientSessionId` + unique constraint;
+  the write upserts on-conflict-do-nothing. Without it, a double-tap / replayed offline session
+  inflates the *immutable* `GoalProgress` evidence log. Single biggest data-integrity risk.
+- [ ] **P1 · Build the input-abstraction layer.** `types.ts` defines `InputMode`/`GameInput`
+  shapes but there is no scanning-loop / dwell-timing / debounce controller — the hardest a11y
+  code (single-switch scanning, gaze dwell-commit) has zero implementation and zero tests.
+- [ ] **P2 · Recorder/route/RLS tests.** Add a recorder test (mock tx, goal fan-out, XP upsert),
+  a cross-tenant-rejection test, and an idempotency-replay test — all three P0s would be caught
+  by them. Also stop returning raw Prisma error strings to the client (route 500 leaks internals).
+- [ ] **Reconcile schema/route on `tier` nullability** for no-score sensory games (`touch-bloom`
+  sends a tier today only to pass route validation).
 
 ---
 
 *Framing reminder: every game supports and practises skills. Nothing here treats, cures, or
-diagnoses, and no real participant data is used. System A only — no multiplayer, no social
-reward crossover.*
+diagnoses; game data is participation evidence, not a clinical score. System A only — no
+multiplayer, no social reward crossover.*
