@@ -43,13 +43,24 @@ export default async function RootLayout({
   // The Caira character system is an org-wide setting (admins can switch it off for
   // all their users). getCurrentUser() is cache()d, so this is deduped with the
   // protected layout. Unknown org (e.g. pre-auth) falls back to the default (on).
-  const user = await getCurrentUser();
-  const cairaEnabled = await getOrgCairaEnabled(user?.organisationId);
-  const persona = cairaPersona(user?.role);
-  const aiLevel =
-    (user as { participantAILevel?: string } | null)?.participantAILevel === "adjusted"
-      ? "adjusted"
-      : "simple";
+  //
+  // Resilient by design: the root layout wraps EVERY page (incl. public/login), so a
+  // transient DB hiccup must never 500 the whole app — fall back to sensible Caira
+  // defaults and let the page itself decide what to do about the outage.
+  let cairaEnabled = true;
+  let persona: ReturnType<typeof cairaPersona> = "worker";
+  let aiLevel: "simple" | "adjusted" = "simple";
+  try {
+    const user = await getCurrentUser();
+    cairaEnabled = await getOrgCairaEnabled(user?.organisationId);
+    persona = cairaPersona(user?.role);
+    aiLevel =
+      (user as { participantAILevel?: string } | null)?.participantAILevel === "adjusted"
+        ? "adjusted"
+        : "simple";
+  } catch (err) {
+    console.error("Root layout: Caira context lookup failed, using defaults:", err);
+  }
 
   return (
     <html
