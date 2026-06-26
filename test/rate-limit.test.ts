@@ -4,7 +4,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { checkRateLimit, rateLimitConfigured } from "../src/lib/rate-limit";
+import { checkRateLimit, checkSpendCap, rateLimitConfigured } from "../src/lib/rate-limit";
 
 const configured = rateLimitConfigured();
 
@@ -20,5 +20,17 @@ test(
     assert.equal(result.allowed, true);
     assert.equal(result.remaining, result.limit);
     assert.equal(result.retryAfter, 0);
+  },
+);
+
+test(
+  "checkSpendCap: uncapped and allowed when unconfigured (dev/sandbox)",
+  { skip: configured },
+  async () => {
+    const result = await checkSpendCap();
+    assert.equal(result.allowed, true);
+    assert.equal(result.cap, 0);
+    assert.equal(result.count, 0);
+    assert.equal(result.alarm, false);
   },
 );

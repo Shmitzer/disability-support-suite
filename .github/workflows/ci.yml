@@ -23,6 +23,10 @@ jobs:
 
       - run: npm run lint
 
+      # Tenant-scope guard: fails on an unscoped tenant-table list/bulk read (the
+      # RLS-bypass-via-Prisma is load-bearing — one unscoped query = a cross-tenant leak).
+      - run: npm run check:tenant-scope
+
       - run: npx tsc --noEmit
 
       - run: npm test

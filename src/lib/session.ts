@@ -24,6 +24,8 @@ export const WORKER_COOKIE = "dsw_worker_id";
 
 // Everyone in the app, for the dev role-switch dropdown (DEV_AUTH only).
 export async function listWorkers() {
+  // tenant-ok: DEV_AUTH-only role-switch dropdown; never reachable in production
+  // (gated by DEV_AUTH at every call site), intentionally lists all seed workers.
   return prisma.worker.findMany({
     orderBy: [{ role: "asc" }, { name: "asc" }],
   });

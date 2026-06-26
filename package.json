@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test test/*.test.ts",
+    "check:tenant-scope": "node scripts/check-tenant-scope.mjs",
     "test:db": "tsx scripts/test-photos-db.ts",
     "verify:rls": "psql \"$DIRECT_URL\" -f prisma/sql/verify_rls.sql"
   },

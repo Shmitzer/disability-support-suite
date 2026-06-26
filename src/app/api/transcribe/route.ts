@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentWorker } from "@/lib/session";
 import { transcribeAudio, aiConfigured } from "@/lib/ai";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, checkSpendCap } from "@/lib/rate-limit";
 
 // Base64 inflates ~33%, so ~14M chars ≈ ~10 MB of audio — plenty for a spoken note
 // (16 kHz mono WAV is ~32 KB/s → ~5 min). Reject larger to bound cost/latency.
@@ -28,6 +28,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "You've hit the transcription limit for now. Please try again later." },
         { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+      );
+    }
+
+    // Global daily spend ceiling (cost protection across ALL users).
+    const cap = await checkSpendCap();
+    if (!cap.allowed) {
+      return NextResponse.json(
+        { error: "The service is at capacity right now. Please try again later." },
+        { status: 503, headers: { "Retry-After": "3600" } },
       );
     }
 

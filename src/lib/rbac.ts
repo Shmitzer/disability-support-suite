@@ -185,6 +185,13 @@ export function can(
 ): boolean {
   // Legacy/shorthand form: a bare org-role string (or null).
   if (subject === null || subject === undefined || typeof subject === "string") {
+    // SUPERADMIN is the internal platform-override seat: it holds EVERY capability.
+    // We grant that here rather than in ROLE_CAPABILITIES so the org-role policy map
+    // stays clean (SUPERADMIN keeps an empty bundle) and the override is explicit and
+    // searchable. Mirrors the Principal-form `platformAdmin` path below. Compared as a
+    // string literal because rbac imports Role type-only (a value import would be a
+    // circular dependency); the Role enum's values ARE these literal strings.
+    if (subject === "SUPERADMIN") return true;
     return capabilitiesFor(subject).includes(capability);
   }
 

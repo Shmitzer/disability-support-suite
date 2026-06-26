@@ -45,9 +45,20 @@ test("can: deny-by-default for null / unknown roles and unseeded roles", () => {
   // ADMIN can also approve notes; front-line workers cannot.
   assert.equal(can(Role.ADMIN, Capability.NoteApprove), true);
   assert.equal(can(Role.WORKER, Capability.NoteApprove), false);
-  // PARTICIPANT / SUPERADMIN remain reserved seats here.
+  // PARTICIPANT remains a reserved seat (no capabilities yet).
   assert.equal(can(Role.PARTICIPANT, Capability.ShiftWork), false);
-  assert.equal(can(Role.SUPERADMIN, Capability.AuditRead), false);
+});
+
+test("SUPERADMIN is the platform-override seat — holds every capability in BOTH forms", () => {
+  // Legacy bare-role form: SUPERADMIN passes every org gate via override, even
+  // though its ROLE_CAPABILITIES bundle is intentionally empty.
+  assert.deepEqual(capabilitiesFor(Role.SUPERADMIN), []);
+  for (const cap of Object.values(Capability)) {
+    assert.equal(can(Role.SUPERADMIN, cap), true, `legacy form should grant ${cap}`);
+  }
+  // Principal form: platformAdmin already overrides everything (regression guard).
+  const sa = { memberships: [], grants: [], platformAdmin: true };
+  assert.equal(can(sa, Capability.BillingManage, { organisationId: "any" }), true);
 });
 
 test("capabilitiesFor: unknown role yields the empty set", () => {
