@@ -1,0 +1,75 @@
+{
+  "_comment": "The founder-story funnel. type: VALUE = pure usefulness, no app. INTRO = personal/founder/build-in-public. SOFT_APP = honest, disclosed app mention. COMMUNITY = question to spark replies. Weeks 1-2 establish trust; weeks 3-4 run the ongoing 70/20/10 mix. Add weekN keys freely — the engine reads them all.",
+  "week1": [
+    { "day": "Tue", "type": "INTRO", "topic": "Hello — who I am and why I'm here", "brief": "Short founder intro. I work in disability support, I'm here to share useful stuff for sole traders. No pitch. Invite people to say hi." },
+    { "day": "Wed", "type": "VALUE", "topic": "The 3 admin tasks that quietly eat your week", "brief": "Practical breakdown + one tip for each. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "What's the most confusing part of the NDIS price guide for you?", "brief": "Open question. Reply to every comment personally." },
+    { "day": "Sun", "type": "VALUE", "topic": "A clean progress-note structure that survives an audit", "brief": "Give away an actual template/structure. No strings. Never say 'audit-proof' or 'guarantees compliance'." }
+  ],
+  "week2": [
+    { "day": "Tue", "type": "VALUE", "topic": "Getting paid faster: invoicing + claims checklist", "brief": "Concrete checklist. Pure value." },
+    { "day": "Wed", "type": "INTRO", "topic": "The admin night that made me start building something", "brief": "Honest founder story — the pain that started it. Still no hard pitch." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Solo support work can be isolating — how do you stay connected?", "brief": "Empathy + conversation. Build the community." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "What I've been building — want to be first to try it?", "brief": "Disclosed, PRE-LAUNCH invite. 'I built this, here's what it does, it's not out yet — would love a few providers to shape it and be first in line.' NO live product link yet; invite to register interest / DM. Honest it's still being readied for market." }
+  ],
+  "week3": [
+    { "day": "Tue", "type": "VALUE", "topic": "Travel and the bits people forget to claim", "brief": "Provider travel, non-labour km, short-notice cancellations — always per the CURRENT pricing arrangements. Keep a travel log as you go. No guarantees, point to official guide." },
+    { "day": "Wed", "type": "VALUE", "topic": "Capturing notes during a shift, not at 9pm", "brief": "Capture-now-polish-later. Generic tools (voice memo, notes app, paper). Three bullets beat a blank page. No app pitch." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "What eats your week that has nothing to do with actual support?", "brief": "Open question on time-wasters. Reply personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: the feedback that changed what I'm building", "brief": "Honest build-in-public. A worker's comment reshaped a Caira decision. Pre-launch, still shaping it. End with a question." }
+  ],
+  "week4": [
+    { "day": "Tue", "type": "VALUE", "topic": "Person-first language, the short version", "brief": "Quick respectful-language guide; ask the person how they describe themselves. Offer the one-page cheat-sheet lead magnet. Pure value." },
+    { "day": "Wed", "type": "VALUE", "topic": "Incident notes without the panic", "brief": "Calm, factual: what/when/who/what you did/who you told. Observable facts only. Know your provider's reporting timeframes. No guarantees." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Best advice you got when you started as a support worker?", "brief": "Community wisdom for new workers. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira update — early feedback is making it sharper", "brief": "Disclosed pre-launch update. Early providers giving feedback; tagline sign-off. Taking a few more to shape it. Comment/DM. No cost." }
+  ],
+  "week5": [
+    { "day": "Tue", "type": "VALUE", "topic": "Setting your rates as a sole trader", "brief": "How to think about rates within the current NDIS pricing arrangements; know the caps, factor real costs (travel, admin, super). General guidance, not financial advice. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Professional boundaries with participants and families", "brief": "Warm but clear boundaries; off-hours messages and gifts; protects you and the relationship. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "How do you reset after a shift that went sideways?", "brief": "Empathy + practical conversation. Reply personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: first beta workers are in", "brief": "Honest milestone — first support workers using Caira. What surprised me. Still pre-launch. End with a question." }
+  ],
+  "week6": [
+    { "day": "Tue", "type": "VALUE", "topic": "Tax and GST basics for sole-trader support workers", "brief": "Plain-English overview: ABN, the $75k GST threshold, keeping receipts, setting aside for tax. NOT financial advice — see a registered accountant. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Cutting last-minute cancellations", "brief": "Practical: confirmations, clear cancellation terms in your agreement, gentle reminders. Know the current short-notice cancellation rules. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "What got you into support work?", "brief": "Story-prompt, builds connection. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira pre-launch: a few early spots left", "brief": "Disclosed pre-launch invite/update. Shaping it with early users; a few spots to be first in line. Comment/DM. No cost. Tagline sign-off." }
+  ],
+  "week7": [
+    { "day": "Tue", "type": "VALUE", "topic": "Handover notes when more than one worker is on", "brief": "What a useful handover/continuity note includes so the next worker isn't guessing. Factual, participant-centred. Pure value." },
+    { "day": "Wed", "type": "VALUE", "topic": "Spotting burnout before it spots you", "brief": "Signs of burnout in support work; small protective habits; it's okay to ask for help. Warm, no hype." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Share a small win from this week", "brief": "Positive prompt. Celebrate replies personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: what building solo has taught me", "brief": "Honest reflection on building Caira solo while working. Pre-launch. End with a question." }
+  ],
+  "week8": [
+    { "day": "Tue", "type": "VALUE", "topic": "Goal-focused notes: linking what you do to a participant's goals", "brief": "How to tie the support you give to the participant's NDIS goals in your notes — clearer, more meaningful. Factual. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Keeping your checks and screening current", "brief": "Practical reminder list: NDIS Worker Screening Check, working-with-children where relevant, first aid, renewals. Know your obligations; check official sources. No guarantees." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "If your admin could vanish overnight, what goes first?", "brief": "Playful but pointed question on admin pain. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira — what the first users are saying", "brief": "Disclosed pre-launch progress post; early-user themes (no fabricated quotes — keep general until real testimonials exist). Invite to be first in line. Tagline sign-off." }
+  ],
+  "week9": [
+    { "day": "Tue", "type": "VALUE", "topic": "Dignity and privacy in your notes — what NOT to include", "brief": "Record what's relevant to support and goals; leave out gossip, unrelated medical detail, judgements. Notes can be read by others. Factual, respectful. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Juggling a schedule across several participants", "brief": "Practical: buffer time for travel/notes, colour-coding, not double-booking, protecting admin time. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "How do you keep work and life separate as a sole trader?", "brief": "Conversation on switching off. Reply personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: the feature I scrapped", "brief": "Honest — a feature I built then cut because users didn't want it. Lesson in listening. Pre-launch. End with a question." }
+  ],
+  "week10": [
+    { "day": "Tue", "type": "VALUE", "topic": "Working well with support coordinators and plan managers", "brief": "How to communicate clearly, what they need from you, timely useful updates. Builds the buyer relationship too. Pure value." },
+    { "day": "Wed", "type": "VALUE", "topic": "Duty of care and emergencies on shift", "brief": "Stay calm, ensure safety first, follow your training and provider's procedures, document and report. Know your plan before you need it. No guarantees; not a substitute for proper training." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "What's a myth about support work you wish people understood?", "brief": "Myth-busting prompt. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira's getting close — pre-launch update", "brief": "Disclosed update: closer to launch, early group shaping it, a few spots to be first in line. Comment/DM. No cost. Tagline sign-off." }
+  ],
+  "week11": [
+    { "day": "Tue", "type": "VALUE", "topic": "Record-keeping for tax time — what to keep and for how long", "brief": "Keep invoices, receipts, logbooks; general retention guidance; a simple system beats shoeboxes. NOT financial/legal advice — check with an accountant/ATO. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Building rapport with a new participant in week one", "brief": "Go slow, listen, follow their lead, small consistency builds trust. Warm, practical. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Best book, podcast or group for support workers?", "brief": "Crowdsource resources. Reply personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: nearly there — what's left before launch", "brief": "Honest near-launch update: what's done, what's left, gratitude to early users. Pre-launch. End with a question." }
+  ],
+  "week12": [
+    { "day": "Tue", "type": "VALUE", "topic": "Understanding a participant's plan — the basics", "brief": "Plan-managed vs self vs agency, funding categories at a high level, why it matters for what you can do. General info, check official sources. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Cultural safety in support work", "brief": "Respect, ask don't assume, learn the person's preferences, work with not over them. Warm, practical. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Three months in — thank you, and what do you want more of?", "brief": "Gratitude + ask the community what content they want next. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira — where to from here", "brief": "Disclosed update; honest status (adjust to whether launched). Invite to join/be first in line. Tagline sign-off. No guarantees, no fabricated claims." }
+  ]
+}

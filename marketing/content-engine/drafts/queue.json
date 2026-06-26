@@ -1,0 +1,434 @@
+[
+  {
+    "id": "w1-tue-intro",
+    "week": 1,
+    "type": "INTRO",
+    "topic": "Hello — who I am and why I'm here",
+    "slot": "Tue 12:30",
+    "text": "G'day, I'm Edward. I've spent years in disability support, and I started this page to share the practical stuff that makes a support worker's week lighter — the notes, the price guide, getting paid, the admin that quietly steals your evenings.\n\nNo pitch here, just things I've learned the hard way and want to pass on. If you're a sole trader or running a small provider, tell me below: what's the one task you wish would just do itself? I read and reply to everything. 👋",
+    "status": "needs_review"
+  },
+  {
+    "id": "w1-wed-value",
+    "week": 1,
+    "type": "VALUE",
+    "topic": "The 3 admin tasks that quietly eat your week",
+    "slot": "Wed 19:30",
+    "text": "Three culprits I see again and again:\n\n1. Progress notes after every shift — do them in the car before you drive off, while it's fresh. Five minutes now beats an hour on Sunday.\n2. Chasing invoices/claims — keep a one-line tracker: date, participant, amount, paid Y/N. You can't chase what you can't see.\n3. Re-finding info — one folder per participant, same structure every time. Future-you will thank you.\n\nWhat's the fourth one I missed? 👇",
+    "status": "needs_review"
+  },
+  {
+    "id": "w1-thu-community",
+    "week": 1,
+    "type": "COMMUNITY",
+    "topic": "What's the most confusing part of the NDIS price guide for you?",
+    "slot": "Thu 12:30",
+    "text": "Honest question for the support workers here: what's the most confusing part of the NDIS price guide for you?\n\nLine items, travel, cancellations, the wording that changes every update — no wrong answers. I'll do my best to point to a clear answer for each one in the comments.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w1-sun-value",
+    "week": 1,
+    "type": "VALUE",
+    "topic": "A clean progress-note template that survives an audit",
+    "slot": "Sun 19:00",
+    "text": "A note that holds up under audit usually has five things: date & time, who was there, what the goal was, what actually happened, and the participant's response. Plain language, factual, no opinions dressed as facts.\n\nQuick test: if someone read your note in two years with zero context, would they understand what happened and why? If yes, you're sorted.\n\nSave this one for your next shift. What does your note routine look like?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w2-tue-value",
+    "week": 2,
+    "type": "VALUE",
+    "topic": "Getting paid faster: invoicing + claims checklist",
+    "slot": "Tue 12:30",
+    "text": "A getting-paid checklist for sole traders:\n\n☐ Service agreement signed before you start\n☐ Notes done same day (your invoice evidence)\n☐ Invoice within 48 hours of the shift\n☐ Clear line items matching the plan\n☐ A follow-up date in your calendar if unpaid in 14 days\n\nCash flow isn't about working more — it's about closing the loop faster. What's your average wait to get paid?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w2-wed-intro",
+    "week": 2,
+    "type": "INTRO",
+    "topic": "The admin night that made me start building something",
+    "slot": "Wed 19:30",
+    "text": "Real talk. A while back I finished a run of shifts, sat down at 9pm, and spent another two hours on notes and invoices. Care all day, paperwork all night. I remember thinking: the record-keeping shouldn't cost this much of the actual caring.\n\nThat night is why I started building something. More on that soon — but first, am I the only one? How late does your admin keep you up?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w2-thu-community",
+    "week": 2,
+    "type": "COMMUNITY",
+    "topic": "Solo support work can be isolating — how do you stay connected?",
+    "slot": "Thu 12:30",
+    "text": "Support work can be lonely — you're often the only one in the room, and there's no team kitchen to debrief in.\n\nSo how do you stay connected? A group chat, a mentor, a Facebook community like this one? Share what works — someone reading this needs to hear it. 🙂",
+    "status": "needs_review"
+  },
+  {
+    "id": "w2-sun-soft_app",
+    "week": 2,
+    "type": "SOFT_APP",
+    "topic": "What I've been building — want to be first to try it?",
+    "slot": "Sun 19:00",
+    "text": "Okay — full honesty, here's what I've been building. It's called Caira. Care is the work. Caira handles the record.\n\nThe idea: take the documentation off a support worker's plate — notes, records and reporting — so the hours go back to care instead of paperwork. It's not out yet; I'm getting it ready properly and want a few real providers to help shape it before launch.\n\nIf you'd like to be first in line and have a say in how it works, comment or DM me. No cost, no pressure — just building this with the people who'll use it. 🙏",
+    "status": "needs_review"
+  },
+  {
+    "id": "w3-tue-value",
+    "week": 3,
+    "type": "VALUE",
+    "topic": "Travel and the bits people forget to claim",
+    "slot": "Tue 12:30",
+    "text": "A few things support workers leave on the table:\n\n• Provider travel between participants, where the plan and current rules allow\n• Non-labour travel costs (the km) under the current pricing arrangements\n• Short-notice cancellations — know the rule before you write the shift off\n\nThe pricing arrangements change, so always check the current ones rather than what you remember from last year. And log your travel as you go, not from memory on Sunday. What's something you only found out you could claim months in?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w3-wed-value",
+    "week": 3,
+    "type": "VALUE",
+    "topic": "Capturing notes during a shift, not at 9pm",
+    "slot": "Wed 19:30",
+    "text": "The tip that gave me my evenings back: don't wait till you're home. Capture the note while it's fresh — a quick voice memo in the car, a line in your notes app, even paper. Three bullets in the moment (what was the goal, what happened, how they responded) beat a blank page at 9pm every time.\n\nWhatever tool you use, the trick is the same: capture now, polish later. How do you capture notes during a shift?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w3-thu-community",
+    "week": 3,
+    "type": "COMMUNITY",
+    "topic": "What eats your week that has nothing to do with actual support?",
+    "slot": "Thu 12:30",
+    "text": "Honest one: what eats your week that has nothing to do with the actual support work?\n\nNotes, invoicing, chasing payments, finding documents, travel admin? Name your biggest time-sink below — I'm curious what comes up most, and there might be a fix worth sharing.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w3-sun-intro",
+    "week": 3,
+    "type": "INTRO",
+    "topic": "Build-in-public: the feedback that changed what I'm building",
+    "slot": "Sun 19:00",
+    "text": "Building in public: a support worker told me last week that the scary part of notes isn't writing them — it's wondering whether they'd hold up if anyone ever asked.\n\nThat stuck with me. Spent the weekend reworking how Caira (the tool I'm building) structures a note so the important bones are there by default. Still pre-launch — shaping it with the people who'll actually use it.\n\nSo: what would make you genuinely confident in your notes?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w4-tue-value",
+    "week": 4,
+    "type": "VALUE",
+    "topic": "Person-first language, the short version",
+    "slot": "Tue 12:30",
+    "text": "Person-first language, the short version:\n\n• 'a person with disability', not 'a disabled person' (in most AU contexts)\n• describe the support, not the deficit\n• 'uses a wheelchair', not 'wheelchair-bound'\n• and ask the person how they describe themselves — they're the authority\n\nIt shows up in your notes too: factual, respectful, about the person not the label. I put together a one-page cheat-sheet on this — happy to share it, just say the word. What language did you have to unlearn when you started?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w4-wed-value",
+    "week": 4,
+    "type": "VALUE",
+    "topic": "Incident notes without the panic",
+    "slot": "Wed 19:30",
+    "text": "When something goes wrong, a good incident note is calm and factual: what happened, when, who was involved, what you did, and who you told.\n\nStick to what you observed — don't write a guess at the cause as if it's a fact. Write it as soon as it's safe to, while the detail's sharp. And know your provider's reporting timeframes before you ever need them.\n\nHow does your team handle incident reporting?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w4-thu-community",
+    "week": 4,
+    "type": "COMMUNITY",
+    "topic": "Best advice you got when you started as a support worker?",
+    "slot": "Thu 12:30",
+    "text": "What's the best piece of advice you got when you started as a support worker?\n\nDrop it below — there are new workers reading this who'll genuinely thank you for it. I'll start in the comments.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w4-sun-soft_app",
+    "week": 4,
+    "type": "SOFT_APP",
+    "topic": "Caira update — early feedback is making it sharper",
+    "slot": "Sun 19:00",
+    "text": "Quick Caira update (the tool I'm building for support-worker notes). The first handful of providers giving feedback have been brutal in the best way — and it's made it sharper. Care is the work. Caira handles the record.\n\nStill pre-launch. I'm taking on a few more people who want to shape it and be first in line. If that's you, comment or DM — no cost, just honest feedback wanted. 🙏",
+    "status": "needs_review"
+  },
+  {
+    "id": "w5-tue-value",
+    "week": 5,
+    "type": "VALUE",
+    "topic": "Setting your rates as a sole trader",
+    "slot": "Tue 12:30",
+    "text": "Setting your rate as a sole trader isn't just \"what's the cap\". Two things to factor in:\n\n• The current NDIS pricing arrangements set the ceiling — always work from the current ones, not last year's.\n• Your real costs sit under that: travel, admin time, insurance, super, the gaps between shifts. The headline rate isn't what lands in your pocket.\n\nWork out your actual hourly cost first, then price with eyes open. (This is general info, not financial advice — worth a chat with an accountant.) How did you land on your rate?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w5-wed-value",
+    "week": 5,
+    "type": "VALUE",
+    "topic": "Professional boundaries with participants and families",
+    "slot": "Wed 19:30",
+    "text": "Good boundaries protect the relationship as much as they protect you.\n\nA few that help:\n• Set hours for messages, and let the after-hours ones wait till you're working.\n• Be warm but clear about what's in scope for the shift.\n• Have a simple line ready for gifts or favours that don't sit right.\n\nNone of it means being cold — it means being consistent, so everyone knows where they stand. How do you handle the after-hours message?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w5-thu-community",
+    "week": 5,
+    "type": "COMMUNITY",
+    "topic": "How do you reset after a shift that went sideways?",
+    "slot": "Thu 12:30",
+    "text": "Some shifts just go sideways — and then you're expected to show up fresh for the next one.\n\nHow do you reset? A walk, a debrief with someone who gets it, a hard stop before home? Share what actually works for you — someone reading this is having one of those days right now.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w5-sun-intro",
+    "week": 5,
+    "type": "INTRO",
+    "topic": "Build-in-public: first beta workers are in",
+    "slot": "Sun 19:00",
+    "text": "Building in public: the first support workers are now using Caira day to day, and it's the best kind of nerve-wracking.\n\nThe surprise so far? It's not the fancy stuff people want — it's the boring reliability of capturing a note fast and trusting it's all there. Good lesson. Still pre-launch, still shaping it with them.\n\nFor those of you who've tried tools before: what made you stop using one?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w6-tue-value",
+    "week": 6,
+    "type": "VALUE",
+    "topic": "Tax and GST basics for sole-trader support workers",
+    "slot": "Tue 12:30",
+    "text": "Tax basics that trip up new sole traders:\n\n• You need an ABN to invoice.\n• GST generally kicks in once you turn over $75k — under that, you usually don't charge it (check your situation).\n• Keep every receipt — car, phone, training, gear.\n• Set aside a slice of every payment for tax now, so June isn't a shock.\n\nBig disclaimer: I'm a support worker, not an accountant — this is general info, get advice for your situation. What's your system for setting tax aside?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w6-wed-value",
+    "week": 6,
+    "type": "VALUE",
+    "topic": "Cutting last-minute cancellations",
+    "slot": "Wed 19:30",
+    "text": "Last-minute cancellations hurt when you're solo. A few things that help:\n\n• A clear cancellation policy in your service agreement, agreed up front.\n• A friendly reminder the day before.\n• Knowing the current short-notice cancellation rules, so you claim correctly when one happens.\n\nIt's not about being rigid — it's about everyone knowing the deal in advance. What's your no-show rate like, and how do you handle it?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w6-thu-community",
+    "week": 6,
+    "type": "COMMUNITY",
+    "topic": "What got you into support work?",
+    "slot": "Thu 12:30",
+    "text": "Genuine question: what got you into support work?\n\nA person, a moment, a job that turned into a calling, or just fell into it and stayed? I love these stories — share yours below. I'll go first in the comments.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w6-sun-soft_app",
+    "week": 6,
+    "type": "SOFT_APP",
+    "topic": "Caira pre-launch: a few early spots left",
+    "slot": "Sun 19:00",
+    "text": "Caira's coming along (the notes tool I'm building for support workers). I'm keeping the early group small so I can actually listen to everyone in it — and there are a few spots left.\n\nCare is the work. Caira handles the record.\n\nIf you'd like to help shape it and be first in line when it launches, comment or DM. No cost, no pressure — just honest feedback wanted. 🙏",
+    "status": "needs_review"
+  },
+  {
+    "id": "w7-tue-value",
+    "week": 7,
+    "type": "VALUE",
+    "topic": "Handover notes when more than one worker is on",
+    "slot": "Tue 12:30",
+    "text": "When a participant has more than one worker, a good handover note saves everyone guessing.\n\nKeep it short and useful: what happened this shift, anything that changed, anything the next worker needs to watch for or follow up. Facts, not vibes — and always written for the participant's benefit, not as a vent.\n\nThe test: could the next worker walk in and pick up cleanly? How does your team do handovers?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w7-wed-value",
+    "week": 7,
+    "type": "VALUE",
+    "topic": "Spotting burnout before it spots you",
+    "slot": "Wed 19:30",
+    "text": "Support work asks a lot of you, and burnout creeps in quietly. Some early signs: dreading shifts you used to enjoy, short fuse, notes feeling like a mountain, switching off from people you care about.\n\nSmall protective habits help — real breaks between shifts, a hard stop, someone to talk to. And it's okay to ask for help; it's a strength, not a failing.\n\nLook after the person doing the caring. What helps you keep your tank from hitting empty?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w7-thu-community",
+    "week": 7,
+    "type": "COMMUNITY",
+    "topic": "Share a small win from this week",
+    "slot": "Thu 12:30",
+    "text": "Let's do a good-news thread. Share one small win from your week — a breakthrough, a laugh, a goal ticked off, a participant moment that stuck with you.\n\nThe little ones count. Drop yours below. 🙂",
+    "status": "needs_review"
+  },
+  {
+    "id": "w7-sun-intro",
+    "week": 7,
+    "type": "INTRO",
+    "topic": "Build-in-public: what building solo has taught me",
+    "slot": "Sun 19:00",
+    "text": "Building Caira solo, around actual shifts, has taught me one thing hard: do less, but do it properly.\n\nEvery time I've been tempted to add something clever, the early users have pulled me back to \"just make the basic thing fast and reliable\". They're right. It's the same lesson the job teaches — show up, do the fundamentals well, every time.\n\nStill pre-launch, still listening. What's one tool that won you over by being simple, not flashy?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w8-tue-value",
+    "week": 8,
+    "type": "VALUE",
+    "topic": "Goal-focused notes: linking what you do to a participant's goals",
+    "slot": "Tue 12:30",
+    "text": "A note becomes far more useful when it connects to the participant's goals.\n\nInstead of just \"went to the shops\", try: which goal this supported (e.g. building independence with money or community access), what you actually did, and how they went. Same shift — but now the note shows progress, not just activity.\n\nIt helps the participant, the plan review, and you. Do you map your notes to goals already, or is it on the to-do list?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w8-wed-value",
+    "week": 8,
+    "type": "VALUE",
+    "topic": "Keeping your checks and screening current",
+    "slot": "Wed 19:30",
+    "text": "Boring but it'll bite you if it lapses — a quick credentials check:\n\n• NDIS Worker Screening Check (know your expiry)\n• Working With Children Check, where your work needs it\n• First aid / CPR currency\n• Any provider-specific training renewals\n\nPop the expiry dates in your calendar now with a reminder a month out. Check the official sources for your exact obligations. What's the one that always sneaks up on you?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w8-thu-community",
+    "week": 8,
+    "type": "COMMUNITY",
+    "topic": "If your admin could vanish overnight, what goes first?",
+    "slot": "Thu 12:30",
+    "text": "Fun one: if a fairy could make one piece of your admin vanish overnight, what's the first to go?\n\nNotes? Invoicing? Chasing payments? Timesheets? Tell me what you'd banish forever. 🧚",
+    "status": "needs_review"
+  },
+  {
+    "id": "w8-sun-soft_app",
+    "week": 8,
+    "type": "SOFT_APP",
+    "topic": "Caira — what the first users are saying",
+    "slot": "Sun 19:00",
+    "text": "Two months of building Caira in the open with support workers, and a clear theme has emerged from the early group: the win isn't doing notes \"better\", it's not carrying them home in your head all evening.\n\nThat's the whole point. Care is the work. Caira handles the record.\n\nStill pre-launch — if you'd like to be first in line and have a say, comment or DM. No cost, just honest feedback. 🙏",
+    "status": "needs_review"
+  },
+  {
+    "id": "w9-tue-value",
+    "week": 9,
+    "type": "VALUE",
+    "topic": "Dignity and privacy in your notes — what NOT to include",
+    "slot": "Tue 12:30",
+    "text": "A quick one on what to leave OUT of a note.\n\nRecord what's relevant to the support and the participant's goals. Leave out: gossip, your personal opinions about family, unrelated medical detail you've overheard, anything that reads like a judgement.\n\nWrite every note as if the participant might read it — because they have the right to. Respectful and factual is the standard. What's your rule of thumb for what stays out?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w9-wed-value",
+    "week": 9,
+    "type": "VALUE",
+    "topic": "Juggling a schedule across several participants",
+    "slot": "Wed 19:30",
+    "text": "Running between participants? A few things that keep it sane:\n\n• Build buffer time in for travel AND notes — back-to-back with zero gap is how you end up doing notes at midnight.\n• Colour-code your calendar by participant or area.\n• Protect a slice of weekly admin time like it's a shift.\n• Don't let optimism double-book you.\n\nThe goal is a week you can actually sustain. How do you lay yours out?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w9-thu-community",
+    "week": 9,
+    "type": "COMMUNITY",
+    "topic": "How do you keep work and life separate as a sole trader?",
+    "slot": "Thu 12:30",
+    "text": "When you're a sole trader, work can bleed into everything. How do you draw the line?\n\nPhone off after a certain hour, a separate work number, a ritual that ends the day? Share what helps you actually switch off — we could all use the ideas.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w9-sun-intro",
+    "week": 9,
+    "type": "INTRO",
+    "topic": "Build-in-public: the feature I scrapped",
+    "slot": "Sun 19:00",
+    "text": "Building in public, and this one stung a bit: I built a feature into Caira I was sure people would love. The early group barely touched it. So I cut it.\n\nLesson I keep re-learning — what I think is clever matters less than what actually helps on a busy shift. Better to do the simple things brilliantly. Still pre-launch, still listening.\n\nWhat's a feature in any app you wish they'd just remove?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w10-tue-value",
+    "week": 10,
+    "type": "VALUE",
+    "topic": "Working well with support coordinators and plan managers",
+    "slot": "Tue 12:30",
+    "text": "Support coordinators and plan managers can make your working life smoother — if you make theirs easier.\n\nWhat helps them: clear, timely updates; notes that actually show progress against goals; flagging issues early, not at crisis point; tidy invoices. A coordinator who trusts you sends you more work.\n\nTreat the relationship as a two-way street. What's made one of these relationships work well for you?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w10-wed-value",
+    "week": 10,
+    "type": "VALUE",
+    "topic": "Duty of care and emergencies on shift",
+    "slot": "Wed 19:30",
+    "text": "When something serious happens on shift: safety first, stay calm, follow your training and your provider's procedures, then document and report properly.\n\nThe time to learn the emergency plan is BEFORE you need it — know who to call, what to record, and the reporting timeframes for your setting. Keep key numbers somewhere you can reach one-handed.\n\n(This is a prompt to be prepared, not a substitute for proper training.) How do you keep emergency info handy on shift?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w10-thu-community",
+    "week": 10,
+    "type": "COMMUNITY",
+    "topic": "What's a myth about support work you wish people understood?",
+    "slot": "Thu 12:30",
+    "text": "What's a myth about support work you wish people outside it understood?\n\n\"It's just babysitting\", \"anyone can do it\", \"it must be so sad\"? Set the record straight below — I reckon this thread could be a good one to share.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w10-sun-soft_app",
+    "week": 10,
+    "type": "SOFT_APP",
+    "topic": "Caira's getting close — pre-launch update",
+    "slot": "Sun 19:00",
+    "text": "Caira update (the notes tool I'm building for support workers): we're getting close. The early group has put it through real shifts and it's holding up.\n\nCare is the work. Caira handles the record.\n\nStill a few spots if you'd like to be first in line and have a say before launch — comment or DM. No cost, just honest feedback wanted. 🙏",
+    "status": "needs_review"
+  },
+  {
+    "id": "w11-tue-value",
+    "week": 11,
+    "type": "VALUE",
+    "topic": "Record-keeping for tax time — what to keep and for how long",
+    "slot": "Tue 12:30",
+    "text": "Tax-time record-keeping, the simple version:\n\n• Keep invoices issued, receipts for expenses, and a logbook for car use.\n• A digital folder per financial year beats a shoebox every time.\n• As a rule, keep records for several years — check the ATO's current requirements for your situation.\n\nSet the system up once and future-you sails through June. (General info, not tax advice — your accountant is the boss here.) What's your record-keeping setup?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w11-wed-value",
+    "week": 11,
+    "type": "VALUE",
+    "topic": "Building rapport with a new participant in week one",
+    "slot": "Wed 19:30",
+    "text": "First week with a new participant? Go slow.\n\nListen more than you talk. Follow their lead and their preferences. Be reliable in the small things — on time, do what you said you would. Trust is built in tiny consistent moments, not grand gestures.\n\nYou're a guest in their routine and often their home. Earn it gently. What's helped you build trust with someone new?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w11-thu-community",
+    "week": 11,
+    "type": "COMMUNITY",
+    "topic": "Best book, podcast or group for support workers?",
+    "slot": "Thu 12:30",
+    "text": "Let's build a little resource list together.\n\nWhat's the best book, podcast, course or group that's made you better at this work — or just kept you sane? Drop your pick below and I'll pull the best ones into a follow-up post.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w11-sun-intro",
+    "week": 11,
+    "type": "INTRO",
+    "topic": "Build-in-public: nearly there — what's left before launch",
+    "slot": "Sun 19:00",
+    "text": "Build-in-public, near-launch edition. What's done: fast in-the-moment capture, the note structure, the day-to-day reliability the early group leaned on hardest. What's left: polishing the rough edges they flagged and getting the boring-but-important things right.\n\nHuge thanks to the support workers who've shaped Caira so far — it's genuinely theirs as much as mine. What's the one thing that would make you trust a new tool on day one?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w12-tue-value",
+    "week": 12,
+    "type": "VALUE",
+    "topic": "Understanding a participant's plan — the basics",
+    "slot": "Tue 12:30",
+    "text": "Knowing how a participant's plan is managed changes how you work:\n\n• Self-managed — they (or a nominee) handle the money and can be more flexible on who they use.\n• Plan-managed — a plan manager pays your invoices.\n• Agency-managed — claimed through the NDIA portal; you generally need to be a registered provider.\n\nIt affects how you invoice and what's possible. Always check the current official guidance. Which type do you work with most?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w12-wed-value",
+    "week": 12,
+    "type": "VALUE",
+    "topic": "Cultural safety in support work",
+    "slot": "Wed 19:30",
+    "text": "Cultural safety isn't a box to tick — it's how you show up.\n\nAsk, don't assume. Learn the person's preferences around food, family, faith, language and personal space. Work WITH someone's culture, not over it. And if you get something wrong, own it and adjust.\n\nThe person is always the expert on their own life. What's something a participant taught you about doing this respectfully?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w12-thu-community",
+    "week": 12,
+    "type": "COMMUNITY",
+    "topic": "Three months in — thank you, and what do you want more of?",
+    "slot": "Thu 12:30",
+    "text": "Three months of this page — thank you. Genuinely. The comments have taught me as much as anything.\n\nQuick ask: what do you want more of? Practical how-tos, NDIS explainers, the business side, community threads like this? Tell me where to point next. 🙏",
+    "status": "needs_review"
+  },
+  {
+    "id": "w12-sun-soft_app",
+    "week": 12,
+    "type": "SOFT_APP",
+    "topic": "Caira — where to from here",
+    "slot": "Sun 19:00",
+    "text": "Where Caira's at: built in the open with support workers, shaped by real shifts, and almost ready for more of you.\n\nCare is the work. Caira handles the record.\n\nIf you've been following along and want to be first in line, comment or DM and I'll keep you posted. No cost, no pressure — thanks for being part of it. 🙏",
+    "status": "needs_review"
+  }
+]

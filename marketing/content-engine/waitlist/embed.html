@@ -1,0 +1,71 @@
+<!--
+  Caira waitlist form — accessible, on-brand (Sage & Clay) fallback.
+
+  Two ways to use this:
+  A) Easiest: paste your ESP's own embed snippet (MailerLite → Forms → Embed)
+     and skip this file. The ESP handles storage, double opt-in and unsubscribe.
+  B) Custom look: use this markup and point the <form action> at your ESP's
+     form-post endpoint (MailerLite "embedded form" gives you an action URL and
+     the exact field names — swap them in below). Field names here are generic.
+
+  Tokens mirror src/app/globals.css so it matches caira.net.au.
+  Mobile-first, WCAG-minded: real <label>s, visible focus, 16px inputs.
+-->
+<style>
+  .caira-waitlist {
+    --bg: #fffaf2; --ink: #3a3128; --muted: #8a7a66;
+    --brand: #0f766e; --brand-strong: #0b5d56; --border: #ece0cf; --radius: 1rem;
+    max-width: 30rem; margin: 0 auto; padding: 1.5rem;
+    background: var(--bg); color: var(--ink); border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .caira-waitlist h2 { margin: 0 0 .25rem; font-size: 1.35rem; }
+  .caira-waitlist p.sub { margin: 0 0 1.25rem; color: var(--muted); font-size: .95rem; }
+  .caira-waitlist label { display: block; font-weight: 600; margin: .9rem 0 .35rem; font-size: .95rem; }
+  .caira-waitlist input[type=text],
+  .caira-waitlist input[type=email] {
+    width: 100%; box-sizing: border-box; padding: .75rem .9rem; font-size: 16px;
+    border: 1px solid var(--border); border-radius: .6rem; background: #fff; color: var(--ink);
+  }
+  .caira-waitlist input:focus-visible { outline: 3px solid var(--brand); outline-offset: 1px; }
+  .caira-waitlist .check { display: flex; gap: .6rem; align-items: flex-start; margin-top: 1rem; }
+  .caira-waitlist .check input { margin-top: .2rem; width: 1.1rem; height: 1.1rem; }
+  .caira-waitlist .check label { margin: 0; font-weight: 400; font-size: .92rem; color: var(--ink); }
+  .caira-waitlist button {
+    margin-top: 1.25rem; width: 100%; padding: .85rem 1rem; font-size: 1rem; font-weight: 700;
+    color: #fff; background: var(--brand); border: 0; border-radius: .7rem; cursor: pointer;
+  }
+  .caira-waitlist button:hover { background: var(--brand-strong); }
+  .caira-waitlist .fine { margin-top: .9rem; font-size: .78rem; color: var(--muted); }
+  .caira-waitlist .fine a { color: var(--brand); }
+</style>
+
+<form class="caira-waitlist"
+      action="REPLACE_WITH_YOUR_ESP_FORM_ACTION_URL"
+      method="post">
+  <h2>Get the free guides</h2>
+  <p class="sub">The Audit-Ready Shift Note Checklist + Person-First Language
+     Cheat-Sheet, straight to your inbox — from a support worker who made them.</p>
+
+  <!-- Preset which magnet this page offers; change value per page: checklist | cheatsheet | both -->
+  <input type="hidden" name="fields[magnet]" value="both">
+
+  <label for="cw-name">First name <span style="font-weight:400;color:#8a7a66">(optional)</span></label>
+  <input id="cw-name" type="text" name="fields[name]" autocomplete="given-name">
+
+  <label for="cw-email">Email</label>
+  <input id="cw-email" type="email" name="fields[email]" required autocomplete="email"
+         inputmode="email" placeholder="you@example.com">
+
+  <div class="check">
+    <input id="cw-early" type="checkbox" name="groups[]" value="Caira Early Access">
+    <label for="cw-early">I'd like to help shape Caira and be first in line when it launches.</label>
+  </div>
+
+  <button type="submit">Send me the free guides</button>
+
+  <p class="fine">You're joining Caira's email list — practical, no spam, and you
+     can unsubscribe any time. We'll never imply NDIS endorsement or share your
+     details. <a href="/privacy">Privacy policy</a>.</p>
+</form>
