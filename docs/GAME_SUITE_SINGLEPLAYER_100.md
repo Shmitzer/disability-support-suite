@@ -96,18 +96,23 @@ Rules for the companion:
 - **Calm by default, dialable by profile.** Caira's animation, sound, and frequency all read
   from the accessibility profile. High-sensory-sensitivity → Caira goes still and silent but
   stays present. She is never the distractor that breaks a focus/attention game.
-- **She is the voice — the *same* voice, one brain.** Any spoken/generated companion line goes
-  through the single AI seam (`src/lib/ai.ts` → `ai.askCaira`) using the **participant-simple
-  role persona**, never a new model call or a third persona. The game companion is a *surface*
-  of the one Caira brain defined in `docs/CAIRA_AI_RECONCILIATION.md` (role personas = voice,
-  context store = memory, seam = single mouth) — it does not fork it. Most companion copy is
-  fixed, friendly, pre-written (no model call needed); only genuinely generated lines touch the
-  seam. TTS reuses the existing browser `SpeechSynthesis` path; never clinical, never babyish.
+- **She is the voice — the *same* voice, one brain.** **Most companion copy is fixed,
+  friendly, pre-written** (Greet/Cheer/Reassure templates) and needs **no model call at all** —
+  that is what Wave 1 ships. Any *genuinely generated* line must go through the single AI seam
+  (`src/lib/ai.ts` → `ai.askCaira`) using the **participant-simple role persona** — never a new
+  model call or a third persona. ⚠ **Dependency:** that persona path does **not exist yet** —
+  today `ai.askCaira` takes only `{question, context, people}` with one persona. Role-aware
+  personas behind the seam are the **Step-3 AI-brain merge** in `docs/CAIRA_AI_RECONCILIATION.md`
+  (role personas = voice, context store = memory, seam = single mouth). Until that merge lands,
+  the companion stays on pre-written copy and does **not** call a model. TTS reuses the existing
+  browser `SpeechSynthesis` path; never clinical, never babyish.
 - **Distress is handled by the one safety system.** If a participant's free input (AAC message,
   typed/spoken text in a communication game) reads as distress, it raises a `CairaFlag` →
   `recordAudit` + worker `Notification`, exactly as the reconciliation doc specifies. Games do
   **not** invent their own moderation; non-punitive play and the safety antenna are the same
-  guardrails everywhere.
+  guardrails everywhere. ⚠ **Dependency:** `CairaFlag` is also net-new (reconciliation Step 4),
+  so the in-game distress hook ships **with** the AI-brain merge — Wave 1's free-input games
+  surface the antenna only once that schema + wiring exist.
 - **Errorless & non-punitive, embodied.** Because Caira only ever greets, cheers, reassures,
   or breathes, the suite *structurally cannot* shame. The "no game over" rule is enforced by
   the companion, not just by copy.
@@ -115,11 +120,12 @@ Rules for the companion:
   `breathe-caira` (breathe with Caira). These are the floor/regulation showcases of the same
   companion every other game uses quietly.
 
-> Engine note: `<CairaCompanion>` + the five states live in the shared engine
-> (`src/lib/games/`), wired to the existing **Caira reaction hooks** already in the build plan.
-> A game never re-implements Caira; it emits engine events (`onGreet`, `onCorrect`,
-> `onRetry`, `onIdle`, `onGoalProgress`) and the companion responds. This keeps all 100 games
-> consistent for free.
+> Engine note: `<CairaCompanion>` + the five states are **net-new** — they belong in the shared
+> engine (`src/lib/games/`) and do not exist yet (today's `engine.ts`/`catalogue.ts` reference
+> Caira only in game *copy*, with no companion or feedback-event layer). Building this surface +
+> its event bus (`onGreet`, `onCorrect`, `onRetry`, `onIdle`, `onGoalProgress`) is the **first
+> foundation task**, before any Wave-1 game body. A game never re-implements Caira; it emits the
+> events and the companion responds — which keeps all 100 games consistent for free.
 
 ## NDIS goal categories (mapping target codes)
 
@@ -403,7 +409,10 @@ Per the Master Handover, all of this is Step 5 (System A), pure app code, no leg
   recorder/XP writer, non-punitive feedback + Caira reaction hooks.
 - [ ] **`<CairaCompanion>` + scheme provider** — the shared on-screen companion (five states,
   profile-dialed) and the Sage & Clay / 16-scheme token provider every game renders through,
-  so look-and-feel and Caira's presence are inherited, never re-built per game.
+  so look-and-feel and Caira's presence are inherited, never re-built per game. Ships on
+  **pre-written copy** (no model call); the generated-voice path and the `CairaFlag` distress
+  hook attach later, when the Step-3 AI-brain merge (`docs/CAIRA_AI_RECONCILIATION.md`) lands
+  role personas + safety flags behind the seam. **Not blocking for Wave 1.**
 - [ ] **Launcher route** — `/games` grid honouring the accessibility profile + tier filter,
   styled like the tracker (warm paper cards, Caira greeting the participant at the top).
 - [ ] **Goal-link wiring** — `GameSession` → `GoalProgress` → goal `currentValue` (System A
