@@ -6,7 +6,45 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/nifty-ritchie-nqmsxh` (game-suite foundation) · prior: `claude/sharp-hypatia-6zdy2h`
-- **Last updated:** 2026-06-26 (game-suite plan FINAL + reviewed; Wave 0 build checklist = Issue #5; building on `claude/nifty-ritchie-nqmsxh`)
+- **Last updated:** 2026-06-26 (game-suite appropriateness review + sales.html landing page merged to `main`; **handover to Cowork** below)
+
+---
+
+## 🤝 HANDOVER TO COWORK — game review + sales page (2026-06-26)
+
+Session worked on the **claude/awesome-mccarthy-ue78ce** branch; everything below is
+**merged to `main`** (commit `2caf909`). Two deliverables + clear next actions.
+
+### Delivered (on `main`)
+1. **`docs/design/GAME_SUITE_REVIEW.md`** — three-lens (NDIS / game-design / engineering)
+   appropriateness review of the 100-game catalogue, graded Must / Should / Consider, plus a
+   **staged deployment shortlist** (§7). Recommended go-live = **Stage 0 + Stage 1 = 11 games**
+   (smallest set that proves the engine *and* covers every NDIS goal category, zero
+   safety/IP-gated titles). Top "Must" fixes: reframe `safe-crossing` to signal-recognition;
+   age-band art decoupled from tier; IP pass on chess/go/KenKen/tangram; honest engine-cost on
+   chess/go/circuit-logic; CI-enforce the a11y contract.
+2. **`marketing/content-engine/landing/sales.html`** — standalone, no-build, Sage & Clay sales
+   page generated from `landing/landing-copy.md`. Pre-launch (waitlist) variant,
+   compliance-safe (no NDIS endorsement / guaranteed outcomes), WCAG-conscious. The MailerLite
+   form is wired to the real `embed.html` field schema (`fields[email]`, `fields[name]`,
+   `groups[]=Caira Early Access`, `fields[magnet]=both`).
+
+### NEXT (Cowork / Edward — in order)
+1. **Set the form action.** `sales.html` form `action` is still
+   `REPLACE_WITH_YOUR_MAILERLITE_FORM_ACTION_URL`. Paste the MailerLite embedded-form POST URL
+   (Forms → Embedded → "form action"), or paste MailerLite's own embed snippet over the
+   `<form>` block.
+2. **Deploy to get an *active* URL.** The file is in the repo but **not hosted** — no live
+   link exists yet. Pick a host: drop into the caira.net.au host root, OR GitHub Pages, OR
+   paste into a MailerLite Sites page (best while the domain isn't pointed). The intended live
+   home is `https://caira.net.au`.
+3. **At launch:** swap the three pre-launch CTAs ("Join the early list →") to the trial CTA
+   ("Start logging notes free →"), and point `/privacy` at the live policy page (don't promote
+   publicly until privacy policy is live — see LAUNCH_CHECKLIST).
+4. **Game suite:** the review is advisory only — the catalogue/registry edits it recommends
+   (`docs/GAME_SUITE_SINGLEPLAYER_100.md` + `src/lib/games/catalogue.ts`, both on
+   `claude/nifty-ritchie-nqmsxh`) are NOT yet applied. Apply the "Must" items before any game
+   ships to participants.
 
 ---
 
