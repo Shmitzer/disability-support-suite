@@ -6,7 +6,44 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/nifty-ritchie-nqmsxh` (game-suite foundation) · prior: `claude/sharp-hypatia-6zdy2h`
-- **Last updated:** 2026-06-26 (game-suite appropriateness review + sales.html landing page merged to `main`; **handover to Cowork** below)
+- **Last updated:** 2026-06-26 (cc Phase 2 logic cores — price guide / offline sync / SCHADS — on `claude/elegant-davinci-551vkd`; **handover to Cowork** immediately below)
+
+---
+
+## 🤝 HANDOVER TO COWORK — Phase 2 logic cores (2026-06-26)
+
+cc (Phase-2 lane) built every Phase 2 item that's cleanly startable **headless** — no design, no
+`node_modules`, no first-revenue gate. **4 pure, unit-tested logic cores, 30/30 tests green** via
+`tsx`. All on branch **`claude/elegant-davinci-551vkd`** (NOT merged to `main`); full detail in
+**`docs/PHASE_2_HANDOFF.md`** + the decision-log entries below.
+
+> Sandbox caveat: `node_modules` is network-gated in the web session, so `tsc/lint/build` couldn't
+> run — cores verified with `tsx`. Server actions + the new Prisma model type-check/build on the
+> laptop after `prisma generate`.
+
+### Delivered (on `claude/elegant-davinci-551vkd`)
+- **2.4 — NDIS price guide + claims.** `src/lib/price-guide.ts` (NDIA Support-Catalogue CSV importer,
+  per-region price caps, over-cap validation) + `toNdisBulkCsv()` (real 16-col NDIA bulk template) in
+  `billing-claims.ts`, wired into `billing-claims-actions.ts` (`importPriceGuide`, `checkClaimAgainstGuide`).
+  New `NdisSupportItem` model + `prisma/sql/ndis_price_guide.sql` (UNAPPLIED).
+- **2.2 — Offline sync core.** `src/lib/offline-sync.ts` — outbox with per-entity-serialised drain,
+  retry/backoff, conflict reconcile (server duplicate = success), `pending/syncing/synced/failed` state.
+- **2.5 — SCHADS award core.** `src/lib/schads.ts` — day penalties + overtime + shift loadings
+  (higher-of) + casual loading + allowances, parameterised by a verify-before-use config.
+
+### NEXT (Cowork / Edward — in order)
+1. **Review + merge** `claude/elegant-davinci-551vkd` (or cherry-pick the 4 cores) once `tsc/lint/build`
+   pass on the laptop after `prisma generate`.
+2. **Apply SQL by hand** (NOT `db push`): `prisma/sql/ndis_price_guide.sql`, add `"NdisSupportItem"`
+   to `schema_baseline.sql`, re-run `verify_rls.sql`.
+3. **Supply/verify reference data:** confirm the NDIA price-guide file/version to import; verify/replace
+   `DEFAULT_SCHADS_CONFIG` against the current Fair Work **MA000100** pay guide (defaults marked UNVERIFIED).
+4. **2.2 service-worker half (laptop):** `@serwist/next` (app-shell precache + read caching + offline
+   fallback ONLY — do NOT cache/replay server-action POSTs), web manifest, IndexedDB binding for the
+   `offline-sync` outbox, + a route-handler replay mirror for Background Sync. Server idempotency is done.
+5. **cd** designs the still-gated surfaces (`/portal` 2.1, messaging/handover 2.3, offline badges, the
+   budgets/claims + price-guide-import screens) before cc wires them.
+6. **Suggested next cc work** (no design/deps): **Track L** legal drafts.
 
 ---
 
