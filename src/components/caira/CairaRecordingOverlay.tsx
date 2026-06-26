@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import CairaFull from "./CairaFull";
+import CairaCharacter from "./CairaCharacter";
 import { useCaira } from "./CairaContext";
 import { getSpeechRecognition, type SpeechRecognitionLike } from "@/lib/audio";
 
@@ -133,7 +133,7 @@ function RecordingPanel() {
     return (
       <Shell>
         <div className="mt-6" style={{ animation: "dropIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both" }}>
-          <CairaFull mood="excited" size={84} />
+          <CairaCharacter state="cheer" size={84} />
         </div>
         <p className="mt-2 text-lg font-bold text-caira-teal-dk">Here&apos;s what I heard — does this look right?</p>
         <div
@@ -185,7 +185,7 @@ function RecordingPanel() {
     return (
       <Shell>
         <div className="mt-8">
-          <CairaFull mood="idle" size={84} />
+          <CairaCharacter state="idle" size={84} />
         </div>
         <div
           className="absolute left-4 right-4 rounded-2xl border border-caira-teal-lt bg-white p-4 text-center"
@@ -217,7 +217,7 @@ function RecordingPanel() {
             style={{ inset: -24, animation: "ripple 1.9s ease-out infinite", animationDelay: `${d}s` }}
           />
         ))}
-        <CairaFull mood={phase === "processing" ? "thinking" : "listening"} size={92} />
+        <CairaCharacter state="idle" size={92} />
       </div>
 
       <p className="mt-3 text-lg font-bold text-caira-teal-dk" style={{ animation: "fadeUp 0.4s ease 0.28s both" }}>

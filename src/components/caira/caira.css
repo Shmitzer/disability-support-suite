@@ -126,9 +126,59 @@
   80%      { opacity: 1; }
 }
 
-/* className hook: raised arm wave (applied to a <g> in CairaFull) */
+/* className hook: raised arm wave (legacy SVG character; retained for reference) */
 .arm-wave {
   transform-box: fill-box;
   transform-origin: center;
   animation: armWave 0.6s ease-in-out 3;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Static-cutout per-state micro-motion (CairaStatic). The static renderer can
+   only transform the whole cutout; full limb articulation comes with the Rive
+   rig. Amplitudes are gentle; the Quiet variant and reduced-motion damp/disable.
+   ────────────────────────────────────────────────────────────────────────── */
+.caira-static { transform-origin: 50% 90%; will-change: transform; }
+
+@keyframes cairaIdle {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50%      { transform: translateY(-2px) scaleY(1.012); }
+}
+@keyframes cairaGreet {
+  0%   { transform: translateY(-8px) scale(0.96) rotate(-3deg); }
+  60%  { transform: translateY(0) scale(1) rotate(2deg); }
+  100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+@keyframes cairaCheer {
+  0%, 100% { transform: translateY(0) scaleY(1) scaleX(1); }
+  30%      { transform: translateY(-8px) scaleY(1.05) scaleX(0.96); }
+  60%      { transform: translateY(0) scaleY(0.95) scaleX(1.04); }
+}
+@keyframes cairaReassure {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50%      { transform: rotate(2deg) translateY(1px); }
+}
+@keyframes cairaGoal {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  25%      { transform: translateY(-12px) scale(1.06) rotate(-3deg); }
+  55%      { transform: translateY(0) scale(0.96) rotate(3deg); }
+  80%      { transform: translateY(-4px) scale(1.02) rotate(0deg); }
+}
+
+.caira-anim-idle     { animation: cairaIdle 3.4s ease-in-out infinite; }
+.caira-anim-greet    { animation: cairaGreet 0.7s cubic-bezier(0.34,1.56,0.64,1) 1 both,
+                                   cairaIdle 3.4s ease-in-out infinite 0.7s; }
+.caira-anim-cheer    { animation: cairaCheer 0.5s ease-in-out infinite; }
+.caira-anim-reassure { animation: cairaReassure 1.6s ease-in-out infinite; }
+.caira-anim-goal     { animation: cairaGoal 0.9s ease-in-out infinite; }
+
+/* Quiet Caira (low stimulation): collapse every state to a barely-there breathe. */
+.caira-static.caira-quiet {
+  animation: cairaIdle 4.6s ease-in-out infinite !important;
+}
+
+/* Accessibility: respect reduced-motion by holding her completely still. */
+@media (prefers-reduced-motion: reduce) {
+  .caira-static,
+  .caira-static.caira-quiet { animation: none !important; }
 }

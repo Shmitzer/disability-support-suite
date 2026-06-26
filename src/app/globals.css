@@ -60,14 +60,16 @@
   --font-sans: var(--font-sans-base);
   --font-display: var(--font-display);
 
-  /* Caira character system palette (kebab utilities: e.g. text-caira-teal-dk) */
-  --color-caira-teal: #4db8b0;
-  --color-caira-teal-dk: #2d9b93;
-  --color-caira-teal-lt: #e8f7f5;
-  --color-caira-rose: #e8a8a0;
-  --color-caira-rose-lt: #fdf0ee;
-  --color-caira-cream: #f7f2ec;
-  --color-caira-soft: #6ba8a2;
+  /* Caira character system palette — aligned to the canonical "Sage & Clay" brand
+     tokens (teal #0f766e, clay #df5b40). The old standalone #4db8b0 teal is retired;
+     caira-* now resolves to the brand vars so the character matches the design system. */
+  --color-caira-teal: var(--brand);
+  --color-caira-teal-dk: var(--brand-strong);
+  --color-caira-teal-lt: var(--brand-tint);
+  --color-caira-rose: var(--clay);
+  --color-caira-rose-lt: var(--clay-tint);
+  --color-caira-cream: var(--surface);
+  --color-caira-soft: var(--muted);
 }
 
 body {

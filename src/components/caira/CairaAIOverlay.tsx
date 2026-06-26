@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import CairaFull from "./CairaFull";
+import CairaCharacter from "./CairaCharacter";
 import CairaHead from "./CairaHead";
 import { useCaira, type CairaPersona } from "./CairaContext";
 
@@ -170,7 +170,7 @@ function ExpandedPanel() {
       {!hasConversation && (
         <>
           <div className="mt-6" style={{ animation: "dropIn 0.55s cubic-bezier(0.34,1.56,0.64,1) both" }}>
-            <CairaFull mood="waving" size={98} />
+            <CairaCharacter state="greet" size={98} />
           </div>
           <p
             className="mt-2 text-lg font-bold text-caira-teal-dk"

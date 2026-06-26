@@ -1,27 +1,25 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { CairaMood } from "./CairaFull";
+import type { CairaState } from "./states";
 import type { CairaMode } from "./CairaContext";
 import {
   playWave,
-  startThinking,
-  stopThinking,
   playExcited,
   playError,
+  playIdle,
   playRecordStart,
   playRecordStop,
-  playSleep,
-  playIdle,
 } from "@/lib/caira/audioManager";
 
 /**
- * useCairaAudio — maps Caira mood/mode changes to her state sounds.
- * All playback is a no-op when muted or when audio is unavailable (handled in the
- * audioManager). Only fires on actual transitions, so re-renders are silent.
+ * useCairaAudio — maps the 5 canonical states (+ record mode) to Caira's soft sounds.
+ * No-op when muted or audio is unavailable (handled in the audioManager). Only fires
+ * on real transitions, so re-renders stay silent. The old looping "thinking" hum is
+ * gone — no state maps to a continuous tone (idle must stay silent; she's everywhere).
  */
-export function useCairaAudio(mood: CairaMood, mode: CairaMode) {
-  const prevMood = useRef<CairaMood>("idle");
+export function useCairaAudio(state: CairaState, mode: CairaMode) {
+  const prevState = useRef<CairaState>("idle");
   const prevMode = useRef<CairaMode>("logo");
 
   // Mode changes → record start/stop chirps.
@@ -33,47 +31,24 @@ export function useCairaAudio(mood: CairaMood, mode: CairaMode) {
     }
   }, [mode]);
 
-  // Mood changes → the per-state sound.
+  // State changes → the per-state sound.
   useEffect(() => {
-    if (mood === prevMood.current) return;
-
-    // Leaving thinking/listening: stop the continuous hum.
-    if (prevMood.current === "thinking" || prevMood.current === "listening") {
-      stopThinking();
-    }
-
-    switch (mood) {
-      case "waving":
+    if (state === prevState.current) return;
+    switch (state) {
+      case "greet":
         playWave();
         break;
-      case "thinking":
-      case "listening":
-        startThinking(); // same hum for both
-        break;
-      case "excited":
+      case "cheer":
+      case "goal":
         playExcited();
         break;
-      case "error":
+      case "reassure":
         playError();
         break;
-      case "sleeping":
-        playSleep();
-        break;
       case "idle":
-        if (prevMood.current !== "idle") playIdle();
+        if (prevState.current !== "idle") playIdle();
         break;
     }
-
-    prevMood.current = mood;
-  }, [mood]);
-
-  // Safety net: if a component humming (thinking/listening) unmounts, stop the hum so
-  // it can't get stuck on. The hum is a module-level singleton, so this is correct.
-  useEffect(() => {
-    return () => {
-      if (prevMood.current === "thinking" || prevMood.current === "listening") {
-        stopThinking();
-      }
-    };
-  }, []);
+    prevState.current = state;
+  }, [state]);
 }
