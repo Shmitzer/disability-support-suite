@@ -45,9 +45,17 @@ test("can: deny-by-default for null / unknown roles and unseeded roles", () => {
   // ADMIN can also approve notes; front-line workers cannot.
   assert.equal(can(Role.ADMIN, Capability.NoteApprove), true);
   assert.equal(can(Role.WORKER, Capability.NoteApprove), false);
-  // PARTICIPANT / SUPERADMIN remain reserved seats here.
+  // PARTICIPANT remains a reserved seat here.
   assert.equal(can(Role.PARTICIPANT, Capability.ShiftWork), false);
-  assert.equal(can(Role.SUPERADMIN, Capability.AuditRead), false);
+});
+
+test("can: SUPERADMIN is the platform override — full access on legacy gates", () => {
+  // The internal SUPERADMIN seat short-circuits to true for every capability, so
+  // legacy `can(role, cap)` gates honour the platform admin without per-site wiring.
+  assert.equal(can(Role.SUPERADMIN, Capability.AuditRead), true);
+  assert.equal(can(Role.SUPERADMIN, Capability.RosterManage), true);
+  assert.equal(can(Role.SUPERADMIN, Capability.ParticipantErase), true);
+  assert.equal(can(Role.SUPERADMIN, Capability.BillingManage), true);
 });
 
 test("capabilitiesFor: unknown role yields the empty set", () => {

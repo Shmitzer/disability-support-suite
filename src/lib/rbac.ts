@@ -23,6 +23,10 @@
 // Role values), so it stays exhaustively type-checked against Role with no cycle.
 import type { Role } from "@/lib/enums";
 
+// The internal platform-admin role string (kept inline to avoid a runtime import of
+// the enums module — see the type-only import note above). Matches Role.SUPERADMIN.
+const PLATFORM_ROLE = "SUPERADMIN";
+
 // The capability vocabulary — the verbs the app gates on. Keep these
 // surface-agnostic and granular enough that a future role can be handed exactly
 // what it needs (e.g. a Finance role gets BillingManage without RosterManage).
@@ -188,6 +192,11 @@ export function can(
 ): boolean {
   // Legacy/shorthand form: a bare org-role string (or null).
   if (subject === null || subject === undefined || typeof subject === "string") {
+    // The internal SUPERADMIN seat is the platform override — full access across
+    // every legacy gate (they all funnel through this form), mirroring the
+    // Principal-form `platformAdmin` short-circuit below. The seat is MFA-gated +
+    // fully audited at sign-in (ops concern); never the default login.
+    if (subject === PLATFORM_ROLE) return true;
     return capabilitiesFor(subject).includes(capability);
   }
 
