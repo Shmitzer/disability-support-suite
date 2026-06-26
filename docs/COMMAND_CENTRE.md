@@ -6,7 +6,52 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/nifty-ritchie-nqmsxh` (game-suite foundation) · prior: `claude/sharp-hypatia-6zdy2h`
-- **Last updated:** 2026-06-26 (game-suite appropriateness review + sales.html landing page merged to `main`; **handover to Cowork** below)
+- **Last updated:** 2026-06-26 (**Phase 0 cc hardening complete + handed to Cowork** — top section; prior: game-suite review + sales.html)
+
+---
+
+## 🤝 HANDOVER TO COWORK — Phase 0 cc hardening complete (2026-06-26)
+
+cc finished the **Phase 0 foundation-hardening** slice (no design dependency). Code is on
+branch **`claude/serene-feynman-p80kpr`** (commit `78661b9`, pushed); detail in the Decision log.
+
+### Delivered (branch `claude/serene-feynman-p80kpr`)
+- **0.1 Ordered SQL apply + RLS sweep** — `prisma/sql/apply_all_features.sql` (one idempotent,
+  `ON_ERROR_STOP`'d `\i`-include script: 13 unapplied feature files in dependency order,
+  `audit_hash_chain`+`rbac_grants` first, RLS sweep last) + `prisma/sql/feature_tables_rls.sql`
+  (enables RLS + per-table `tenant_isolation` on the feature tables that shipped DDL **without**
+  it — incl. `Membership`/`ParticipantAccessGrant`/`Consent`/`ParticipantCareProfile`, whose RLS
+  was only commented-out SQL). **Validated against a throwaway Postgres 16**: clean, idempotent,
+  every swept table RLS-enabled.
+- **0.2 SUPERADMIN wiring** — legacy `can(role,cap)` now honours SUPERADMIN as platform override.
+- **0.3 Hard LLM spend cap + budget alarm** — `rate-limit.ts checkSpendCap()` wired into
+  `/api/generate-note` + `/api/transcribe`; env-gated, fail-open, PostHog `llm_budget_alarm`.
+- **0.4 CI tenant-scope guard** — `npm run check:tenant-scope` + CI step (unscoped tenant read = leak).
+- **0.5** — verified all four integrations env-gated; PostHog behind `hasAnalyticsConsent()`.
+
+### NEXT (Cowork / Edward — gated ops, in order)
+1. **Apply the SQL (by hand, NOT `db push`):** from repo root, `psql "$DIRECT_URL" -f
+   prisma/sql/apply_all_features.sql`, then re-run `prisma/sql/verify_rls_editor.sql` in the
+   Supabase SQL editor (expect every public table RLS-enabled).
+2. **Turn the spend cap on:** provision Upstash (`UPSTASH_REDIS_REST_URL/_TOKEN`) + set
+   `LLM_DAILY_CAP`; without keys the throttle + cap are inert (dev behaviour unchanged).
+3. **Rotate the DB password** + provision remaining keys (Stripe/Sentry/PostHog/Resend/VAPID,
+   `shift-photos` bucket) per `SECRETS.md`.
+4. **Enable MFA on the SUPERADMIN seat** (Supabase dashboard) — never the default login.
+5. **CI** runs `prisma generate` so `tsc/lint/test/build` go green there (the web sandbox can't —
+   Prisma engine CDN network-gated; cc verified tests/lint headless, residual failures are all
+   missing-generated-client cascades).
+
+### What's next for cc
+Phase 1 screens are **design-gated** (cd must land `.dc.html` + screenshots first). Phase 2 is
+after-first-revenue. The next cc-startable work is **Track L** (legal drafts: privacy/ToS/DPA/
+consent + acceptance-logging to `ParticipantAccessGrant`/`Consent`) — parallel, no design gate.
+
+### ⚠️ Multi-session note
+Several cc sessions are pushing ccu entries to `main` concurrently (Phase 2.2/2.4 landed here
+mid-handover, and one earlier overwrote this Phase 0 entry from a stale copy — now restored).
+When editing `docs/COMMAND_CENTRE.md`, always branch from the **latest** `origin/main` and re-fetch
+right before pushing.
 
 ---
 
@@ -287,6 +332,8 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 ---
 
 ## Decision log (newest first)
+
+- **2026-06-26** — **Phase 0 (cc): foundation hardening — ordered SQL apply + RLS sweep, LLM spend cap, tenant-scope CI guard, SUPERADMIN wiring** (branch `claude/serene-feynman-p80kpr`, commit `78661b9`). The "safe to take money + real data" layer, no design dependency (IMPLEMENTATION_PLAN_MVP §2). **0.1 Ordered SQL apply:** `prisma/sql/apply_all_features.sql` — one `ON_ERROR_STOP`'d, idempotent, `\i`-include script that applies the 13 unapplied feature files **in dependency order** (`audit_hash_chain` + `rbac_grants` FIRST), then the RLS sweep LAST; plus `prisma/sql/feature_tables_rls.sql` — a post-apply sweep that enables RLS + a per-table `tenant_isolation` policy (built from each table's actual `userId`/`organisationId` columns) on the feature tables whose DDL shipped **without** RLS — including `Membership`/`ParticipantAccessGrant`/`Consent`/`ParticipantCareProfile`, whose RLS existed only as **commented-out** SQL (latent gap closed). Made `learned_options_per_org.sql`'s unique index `IF NOT EXISTS` so the whole apply is re-runnable. **Validated end-to-end against a throwaway Postgres 16**: applies clean, idempotent across re-runs, every swept table ends RLS-enabled with its policy. **0.2 SUPERADMIN wiring:** the legacy `can(role, cap)` string form now honours `SUPERADMIN` as the platform override (holds every capability), mirroring the Principal-form `platformAdmin` path, **without** polluting `ROLE_CAPABILITIES`. **0.3 Hard LLM spend cap + budget alarm:** `rate-limit.ts → checkSpendCap()` — a global per-UTC-day ceiling on paid LLM calls across the platform (the app-side complement to the AI-Studio budget), wired into `/api/generate-note` + `/api/transcribe` (503 on breach), env-gated like the throttle, fail-open on outage, one-shot PostHog `llm_budget_alarm` at the alarm fraction; new `UPSTASH_*`/`LLM_DAILY_CAP`/`LLM_DAILY_ALARM_FRACTION` env documented. **0.4 CI tenant-scope guard:** `scripts/check-tenant-scope.mjs` + `npm run check:tenant-scope` + a CI step — the RLS-bypass-via-Prisma is load-bearing, so an unscoped list/bulk read on a tenant table is a cross-tenant leak (IDOR/BOLA); the guard flags risky ops on tenant models lacking a scope token, understands `tenantScope`-derived locals, and legitimate cross-tenant reads carry a `// tenant-ok: <reason>` note (5 audited + annotated). **0.5** verified all four integrations env-gated (Stripe/Sentry/PostHog/Resend) + PostHog behind `hasAnalyticsConsent()`. **+tests** (rbac SUPERADMIN, spend-cap unconfigured). **Headless caveat:** the Prisma engine CDN is network-gated in the web sandbox, so `prisma generate → tsc/build` can't run here — changed tests pass, lint clean, and the residual test/tsc failures are **all** missing-generated-client cascades (green once CI runs `prisma generate`). **Edward TODO:** run `psql "$DIRECT_URL" -f prisma/sql/apply_all_features.sql` by hand (NOT `db push`), then `verify_rls_editor.sql`; provision Upstash + set `LLM_DAILY_CAP`; enable MFA on the SUPERADMIN seat (Supabase dashboard). Phase 0 cc items complete; ops items (secret rotation, key provisioning) remain Edward's.
 
 - **2026-06-26** — **Phase 2.2 (cc): offline outbox / sync-engine core** (branch `claude/elegant-davinci-551vkd`). Researched + reassessed 2.2 first: the app's writes are **idempotent server actions** (client `@unique idempotencyKey`, server dedupes a replay → no-op), so replay is already safe; and per the current Serwist/Next-16 guidance, **service workers must not cache/replay server-action POSTs** (RSC-encoded, build-varying action IDs) — the architecture is SW(app-shell+reads) + client IndexedDB outbox + server idempotency + optional route-handler replay mirror. So 2.2 splits into a buildable core and an env/design-gated wiring half. Built the core: `src/lib/offline-sync.ts` (PURE — no IndexedDB/SW/network/`Date.now()`, time injected, fully headless-testable): `enqueue` (monotonic seq + stable idempotency key), `drainBatch` with **per-entity serialisation** (a clock-off can never replay before its clock-on; distinct entities sync in parallel), retry-with-exponential-backoff + terminal-failure, `reconcile` (a server **duplicate = success**, a rejection = terminal, transient = retry), `purgeSynced`, `summarise` (the pending/syncing/synced/failed badge state). **10 pure tests, green via tsx.** **Deferred (env/design-gated):** `@serwist/next` service worker + manifest + PWA shell (needs `node_modules` + the local Next 16 docs + live browser test), the IndexedDB binding + route-handler replay mirror, and cd's offline UI states. Same headless caveat (`tsc/lint/build` not runnable in the web sandbox).
 
