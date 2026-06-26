@@ -96,9 +96,18 @@ Rules for the companion:
 - **Calm by default, dialable by profile.** Caira's animation, sound, and frequency all read
   from the accessibility profile. High-sensory-sensitivity → Caira goes still and silent but
   stays present. She is never the distractor that breaks a focus/attention game.
-- **She is the voice.** Greet/Reassure/Goal copy is spoken through the existing TTS path and
-  written in Caira's warm, plain-English, person-first persona (same voice as the assistant in
-  `docs/caira-assistant.md`) — never clinical, never babyish.
+- **She is the voice — the *same* voice, one brain.** Any spoken/generated companion line goes
+  through the single AI seam (`src/lib/ai.ts` → `ai.askCaira`) using the **participant-simple
+  role persona**, never a new model call or a third persona. The game companion is a *surface*
+  of the one Caira brain defined in `docs/CAIRA_AI_RECONCILIATION.md` (role personas = voice,
+  context store = memory, seam = single mouth) — it does not fork it. Most companion copy is
+  fixed, friendly, pre-written (no model call needed); only genuinely generated lines touch the
+  seam. TTS reuses the existing browser `SpeechSynthesis` path; never clinical, never babyish.
+- **Distress is handled by the one safety system.** If a participant's free input (AAC message,
+  typed/spoken text in a communication game) reads as distress, it raises a `CairaFlag` →
+  `recordAudit` + worker `Notification`, exactly as the reconciliation doc specifies. Games do
+  **not** invent their own moderation; non-punitive play and the safety antenna are the same
+  guardrails everywhere.
 - **Errorless & non-punitive, embodied.** Because Caira only ever greets, cheers, reassures,
   or breathes, the suite *structurally cannot* shame. The "no game over" rule is enforced by
   the companion, not just by copy.
