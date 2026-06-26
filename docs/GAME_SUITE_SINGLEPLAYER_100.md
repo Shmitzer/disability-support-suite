@@ -441,6 +441,164 @@ same rails.
 
 ---
 
+# Wave 1 — implementation requirements for the remaining six games
+
+D1–D5 above prove the engine. The other six Wave-1 games are content on those rails, but each
+still needs a buildable spec. Same format, plus the bits engineering asked for: the **input
+rating** (Full / Adapted / Limited, per the accessibility baseline), the **assets** a game body
+needs, the **adaptive parameters** (what the controller scales), and the **`SessionResult`**
+shape it reports to `recordSession` (fields per `src/lib/games/types.ts`: `participantId`,
+`gameSlug`, `tier`, `difficulty`, `score`, `maxScore`, `durationSecs`, `completed`).
+
+> Cross-cutting (true for all six, so not repeated): all input via the unified `GameInput`
+> event (never branch on input type); honour the accessibility profile + the hard safety
+> overrides; **never signal state by colour alone**; **just-play mode** writes no `GoalProgress`;
+> the session write must be **idempotent** (see the engine-hardening checklist); offline asset
+> bundle; Caira companion wired to the five engine events.
+
+### W1-a · Cause & Caira (`cause-caira`) — T1–T2, companion-led floor game
+- **Loop:** any input event → Caira reacts warmly (wave, smile, giggle, a bloom of her colour).
+  No target, no score, no end — pure agency. The companion *is* the game.
+- **Adaptive:** none (no difficulty). The only variation is sensory intensity, read from profile.
+- **Caira on screen:** this game foregrounds **Greet** + a continuous **Cheer/idle** loop; she is
+  the entire playfield. High-sensory profile → the "quiet Caira" variant (still, soft, no chime).
+- **Input rating:** **Full** — switch/gaze/touch/keyboard/pointer all map to the same react event.
+- **Assets:** Caira reaction animation set (≥4 warm reactions) + soft chord/haptic per profile.
+- **Goal contribution:** `health_wellbeing` — logs **engagement minutes**, not correctness.
+- **Data:** `scored:false`; `score:0`, `maxScore:0`; `tier:'T1'` by convention; `completed:true`
+  when the participant leaves; `durationSecs` = engagement. *(Depends on the schema/route
+  accepting a no-score session — see the `tier` nullability item in engine hardening.)*
+
+### W1-b · Same Again (`same-again`) — T2, matching (errorless)
+- **Loop:** a model picture is shown; 2–4 choices appear; tap/scan the one that matches. Correct
+  → **Cheer**; "not yet" → **Reassure**, the non-match softly dims (clay-tint), choice stays.
+- **Adaptive:** controller scales **choice count (2→4)** and **distractor similarity** on the
+  rolling accuracy window (reuses the `word-match` adaptive controller — same rails).
+- **Caira on screen:** Greet reads the instruction; Cheer on match; Goal moment at session end.
+- **Input rating:** **Full** — choice game; switch-scan with `scanDwellMs` dwell, audio name per
+  option.
+- **Assets:** a matched-image set (model + distractors) drawn from the participant's vocabulary /
+  symbol set where possible; audio label per image.
+- **Goal contribution:** `learning` (visual matching / discrimination).
+- **Data:** `scored:true`; `score` = correct first-tries, `maxScore` = rounds; `difficulty` from
+  the converged tier band.
+
+### W1-c · Number Sense (`number-sense`) — T2–T3, adaptive numeracy *(existing spec)*
+- **Loop:** compare or order quantities and numerals — "which is more?", "put these in order".
+  Visual supports (dots/ten-frames) at the low end, bare numerals higher.
+- **Adaptive:** scales **range** (1–5 → 1–20+), **representation** (concrete dots → numerals),
+  and **task** (compare two → order several). Reuses the shared adaptive controller.
+- **Caira on screen:** Cheer on correct comparison; Reassure invites a retry; no timer ever.
+- **Input rating:** **Full** for compare/select; **Adapted** for ordering (switch users use a
+  scan-to-place composer, not free drag).
+- **Assets:** quantity/numeral renderer (ten-frames, dot fields), audio number names.
+- **Goal contribution:** `numeracy` (magnitude, comparison, ordering).
+- **Data:** `scored:true`; `score`/`maxScore` per round.
+
+### W1-d · Sequence It (`sequence-it`) — T2–T3, executive function *(existing spec)*
+- **Loop:** picture cards of an activity (e.g. making toast) appear shuffled; order them
+  first→last. Correct order → **Cheer** + the sequence plays back; out of order → **Reassure**,
+  the card eases back, never an error buzz.
+- **Adaptive:** scales **number of steps (2→6)** and whether a partial scaffold (first card pre-
+  placed) is shown.
+- **Caira on screen:** Greet sets the scene; Goal moment links to `independence` progress.
+- **Input rating:** **Adapted** — ordering is drag-or-scan-to-place; define the scan-place
+  composer (this is the reference for every "arrange/order" game in the suite).
+- **Assets:** ordered picture-card sets per routine; audio caption per card. Prefer routines from
+  the participant's own day where the care profile allows.
+- **Goal contribution:** `independence` (sequencing, task analysis).
+- **Data:** `scored:true`; `score` = steps placed correctly, `maxScore` = step count.
+
+### W1-e · Emotion Match (`emotion-match`) — T2–T3, emotional literacy *(existing spec)*
+- **Loop:** a face or short scenario is shown; choose the matching emotion (from faces or labels).
+  Warm, non-judgemental — there is no "wrong feeling," only the matching task.
+- **Adaptive:** scales **choice count**, **subtlety** (clear → nuanced expressions), and
+  **modality** (face→scenario→tone).
+- **Caira on screen:** Cheer on match; Reassure is especially gentle here — emotions are sensitive.
+- **Input rating:** **Full** (choice game). Captions + audio on every option.
+- **Assets:** an **inclusive, diverse** emotion-face set (age-respectful — adults too, not
+  cartoons-only) + short scenario cards; audio label per emotion.
+- **Goal contribution:** `social_participation` (emotion recognition). **Boundary:** supports
+  emotional *literacy*; it is not counselling, assessment, or therapy (carry the clinical-framing
+  note). Watch the line into mental-health territory.
+- **Data:** `scored:true`; `score`/`maxScore` per round.
+
+### W1-f · Breathe With Caira (`breathe-caira`) — T1–T3, regulation showcase
+- **Loop:** Caira breathes; the participant follows. A slow expand/contract guide with optional
+  audio pacing and haptic. No score, no end — leave when calm.
+- **Adaptive:** none. **Pace** (breaths/min), **hold length**, and whether audio/haptic guide is
+  on all come from the profile / a worker setting — never auto-changed mid-session.
+- **Caira on screen:** the **Breathe/idle** state, foregrounded and full-screen. The reference
+  implementation of that companion state for every regulation game.
+- **Input rating:** **Full** — passive/watch is valid; any input just starts/pauses. Works with no
+  input at all (eye-gaze/observe only).
+- **Assets:** the breathing animation (reduced-motion = slow opacity fade, no scale), optional
+  calm soundscape, optional haptic pattern synced to the breath.
+- **Goal contribution:** `health_wellbeing` — engagement minutes, not correctness.
+- **Data:** `scored:false`; `score:0`, `maxScore:0`; `tier:'T1'` by convention; `durationSecs` =
+  time spent. Same no-score dependency as `cause-caira`.
+
+> **Two reusable engine pieces fall out of these six** that Waves 2–3 inherit for free: the
+> **scan-to-place composer** (from `sequence-it`, used by every order/arrange/sort game) and the
+> **no-score engagement session** (from `cause-caira`/`breathe-caira`, used by all sensory & calm
+> games). Build both as shared engine utilities, not per-game.
+
+---
+
+# Archetypes — implementation requirements for the remaining 89 games
+
+The other 89 are not 89 designs. Every one maps to one of **nine archetypes**, each backed by a
+shared engine primitive. Spec a new game by naming its archetype + its content pack — the
+mechanic, input handling, adaptive shape, and session data come from the archetype. This is how
+"build once, reuse everywhere" stays true past Wave 1, and it's the gate to keep: **no game ships
+in a Wave until its archetype primitive exists.**
+
+| # | Archetype | Engine primitive | Default input rating | Scored? | Key requirement / risk |
+|---|---|---|---|---|---|
+| A | **No-score sensory / calm** | engagement session (no score) | Full | No | needs the no-score session path; sensory ceiling + photosensitivity override |
+| B | **Choice / match** | adaptive choice controller | Full | Yes | choice-count + distractor-similarity scaling; audio+symbol per option |
+| C | **Order / arrange / sort** | scan-to-place composer | Adapted | Yes | no free-drag-only; define scan/keyboard place; partial-scaffold assist |
+| D | **Memory / recall** | reveal–hold–recall timer | Full | Yes | grid/sequence length scaling; **never** a countdown timer (recall ≠ time pressure) |
+| E | **Attention / visual search** | target-in-field renderer | Adapted | Yes | distractor density scaling; sustained-attention vigilance = opt-in only (P1) |
+| F | **Construct / compose** | message/word builder | Adapted | Yes | **constrained vs free**: free-text/open-AAC is gated on `CairaFlag` (safety) |
+| G | **Numeric / value** | quantity & numeral renderer | Full | Yes | reuses Number Sense renderer; money/time content packs; AU locale |
+| H | **Trace / precision motor** | continuous-path tracker | **Limited** | Yes | continuous motor — honest "not suited to single-switch"; tolerance from profile |
+| I | **Logic / strategy engine** | per-game standalone engine | varies | Yes | each is a real engine (chess/sudoku/mastermind) — **DEFERRED, Waves 4–5** |
+
+**Mapping the catalogue to archetypes** (so every game has a home):
+
+- **A — no-score sensory/calm:** `switch-sparkle`, `sound-shake`, `ripple-pool`, `light-chaser`,
+  `wake-animal`, `rumble-rain`, `big-button`, `gaze-garden`, `calm-canvas`, `sound-garden`,
+  `bubble-calm`, `glow-trace`, `zen-sand`, `feelings-checkin` (AAC self-report, constrained).
+- **B — choice/match:** `pop-match`, `sort-bins`*, `big-small`, `odd-one-out`, `finish-pattern`,
+  `peekaboo`, `hide-seek`, `sound-starters`, `rhyme-time`, `sight-word-garden`, `same-different`,
+  `shape-shadows`, `count-along`, `add-take`, `clock-keeper`, `how-feel`, `calm-or-big`,
+  `what-could-help`, `yes-no-quest`, `first-then`, `safe-crossing`, `ask-for-help`,
+  `read-the-room`, `social-detective`, `what-if`. (*`sort-bins`/sorting overlaps C.)
+- **C — order/arrange/sort:** `sort-bins`, `cause-chains`, `story-steps`, `sentence-builder`,
+  `plan-my-day`, `goal-path`, `morning-routine`, `kitchen-steps`, `daily-recall`, `sort-it-out`,
+  `switch-tracks`, `pattern-path`, `recipe-planner`.
+- **D — memory/recall:** `whats-missing`, `sound-memory`, `where-was-it`, `face-name`,
+  `digit-span`, `memory-palace`.
+- **E — attention/search:** `find-target`, `stay-with-it`, `picture-pieces`, `spot-difference`,
+  `hidden-objects`.
+- **F — construct/compose:** `build-a-word`, `word-roots`, `tell-me-more`, `symbol-story`,
+  `word-predictor`, `type-it` (built). **All open-composition members wait on `CairaFlag`.**
+- **G — numeric/value:** `coin-cafe`, `times-towers`, `fraction-pizza`, `math-sprint`†,
+  `logic-numbers`, `budget-buddy`, `shop-smart`. (†timed = opt-in only.)
+- **H — trace/precision motor:** `trace-place`, `pop-tap`, `drag-path`, `pinch-build`,
+  `steady-hand`.
+- **I — logic/strategy engine (DEFERRED):** `cryptogram`, `tangram`, `maze-minds`, `chess-trainer`,
+  `go-gomoku`, `logic-grid`, `tower-builder`, `code-breaker`, `circuit-logic`, `mental-rotation`.
+
+**What this buys us:** the build order is now *primitives first, content second*. Wave 2 reduces
+to "ship archetypes A–C + their content packs"; Wave 3 adds D–E + G; H is a small motor track; I
+stays deferred. A "new game" in Waves 2–3 is a content pack + an archetype tag + a one-line
+deviation note — not a fresh design. Anything that *doesn't* fit A–I is a red flag to re-scope,
+not a tenth archetype.
+
+---
+
 # Build plan — what I will develop vs what remains
 
 **Sequencing rule:** the shared **engine** ships before any game beyond the proving set.
