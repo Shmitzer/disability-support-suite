@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design prototypes / SSOT live under docs/ (vanilla browser JS, not app
+    // code and not part of the Next build) — don't lint them as app code.
+    "docs/**",
   ]),
 ]);
 
