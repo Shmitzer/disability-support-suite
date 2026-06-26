@@ -269,6 +269,37 @@ model LearnedOption {
   @@unique([kind, name])
 }
 
+// NDIS Support Catalogue (price guide) reference data — Phase 2 (budgets/claims).
+// National REFERENCE data, not participant data: the NDIA's periodically-published
+// support-item price caps (no public API; imported from the spreadsheet via
+// src/lib/price-guide.ts). Global like LearnedOption seeds (organisationId NULL =
+// shared by every tenant); an org MAY hold a private override row (organisationId
+// set) for a negotiated/quote price. Price caps are integer cents per price region.
+model NdisSupportItem {
+  id                String   @id @default(cuid())
+  code              String // Support Item Number, e.g. "01_011_0107_1_1"
+  name              String
+  registrationGroup String?
+  supportCategory   String?
+  unit              String? // H | E | D | WK | MON | YR
+  typeOfSupport     String? // Core | Capacity Building | Capital
+  quote             Boolean  @default(false) // price by quote (no fixed cap)
+  // Price caps in integer cents, per PriceRegion (price-guide.ts). null = not published.
+  capActNswQldVicCents Int?
+  capNtSaTasWaCents    Int?
+  capRemoteCents       Int?
+  capVeryRemoteCents   Int?
+  capNationalCents     Int?
+  priceGuideVersion String? // e.g. "2025-07" — which NDIA release this row came from
+  userId            String? // owner uid for an org override row; NULL for globals
+  organisationId    String? // NULL = global seed; set = org-private override
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+
+  @@unique([code, organisationId])
+  @@index([code])
+}
+
 // A worker's request to fix a missing/wrong clock on/off time.
 // Must be approved by a manager — workers can't edit clock times themselves.
 model ClockAmendmentRequest {
