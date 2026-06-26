@@ -47,5 +47,29 @@
     { "day": "Wed", "type": "VALUE", "topic": "Keeping your checks and screening current", "brief": "Practical reminder list: NDIS Worker Screening Check, working-with-children where relevant, first aid, renewals. Know your obligations; check official sources. No guarantees." },
     { "day": "Thu", "type": "COMMUNITY", "topic": "If your admin could vanish overnight, what goes first?", "brief": "Playful but pointed question on admin pain. Reply personally." },
     { "day": "Sun", "type": "SOFT_APP", "topic": "Caira — what the first users are saying", "brief": "Disclosed pre-launch progress post; early-user themes (no fabricated quotes — keep general until real testimonials exist). Invite to be first in line. Tagline sign-off." }
+  ],
+  "week9": [
+    { "day": "Tue", "type": "VALUE", "topic": "Dignity and privacy in your notes — what NOT to include", "brief": "Record what's relevant to support and goals; leave out gossip, unrelated medical detail, judgements. Notes can be read by others. Factual, respectful. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Juggling a schedule across several participants", "brief": "Practical: buffer time for travel/notes, colour-coding, not double-booking, protecting admin time. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "How do you keep work and life separate as a sole trader?", "brief": "Conversation on switching off. Reply personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: the feature I scrapped", "brief": "Honest — a feature I built then cut because users didn't want it. Lesson in listening. Pre-launch. End with a question." }
+  ],
+  "week10": [
+    { "day": "Tue", "type": "VALUE", "topic": "Working well with support coordinators and plan managers", "brief": "How to communicate clearly, what they need from you, timely useful updates. Builds the buyer relationship too. Pure value." },
+    { "day": "Wed", "type": "VALUE", "topic": "Duty of care and emergencies on shift", "brief": "Stay calm, ensure safety first, follow your training and provider's procedures, document and report. Know your plan before you need it. No guarantees; not a substitute for proper training." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "What's a myth about support work you wish people understood?", "brief": "Myth-busting prompt. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira's getting close — pre-launch update", "brief": "Disclosed update: closer to launch, early group shaping it, a few spots to be first in line. Comment/DM. No cost. Tagline sign-off." }
+  ],
+  "week11": [
+    { "day": "Tue", "type": "VALUE", "topic": "Record-keeping for tax time — what to keep and for how long", "brief": "Keep invoices, receipts, logbooks; general retention guidance; a simple system beats shoeboxes. NOT financial/legal advice — check with an accountant/ATO. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Building rapport with a new participant in week one", "brief": "Go slow, listen, follow their lead, small consistency builds trust. Warm, practical. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Best book, podcast or group for support workers?", "brief": "Crowdsource resources. Reply personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: nearly there — what's left before launch", "brief": "Honest near-launch update: what's done, what's left, gratitude to early users. Pre-launch. End with a question." }
+  ],
+  "week12": [
+    { "day": "Tue", "type": "VALUE", "topic": "Understanding a participant's plan — the basics", "brief": "Plan-managed vs self vs agency, funding categories at a high level, why it matters for what you can do. General info, check official sources. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Cultural safety in support work", "brief": "Respect, ask don't assume, learn the person's preferences, work with not over them. Warm, practical. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Three months in — thank you, and what do you want more of?", "brief": "Gratitude + ask the community what content they want next. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira — where to from here", "brief": "Disclosed update; honest status (adjust to whether launched). Invite to join/be first in line. Tagline sign-off. No guarantees, no fabricated claims." }
   ]
 }
