@@ -5,8 +5,48 @@
 MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
-- **Working branch:** `claude/nifty-ritchie-nqmsxh` (game-suite foundation) · prior: `claude/sharp-hypatia-6zdy2h`
-- **Last updated:** 2026-06-26 (cc Phase 2 logic cores — price guide / offline sync / SCHADS — on `claude/elegant-davinci-551vkd`; **handover to Cowork** immediately below)
+- **Working branch:** `claude/funny-brown-oinkli` (Caira character system + AI brain + audio + Rive) · prior: `claude/nifty-ritchie-nqmsxh`
+- **Last updated:** 2026-06-26 (Caira character/AI/audio build + real-creature Rive rebrand on `claude/funny-brown-oinkli`; **handover to Cowork** immediately below)
+
+---
+
+## 🤝 HANDOVER TO COWORK — Caira character + AI brain + audio + Rive (2026-06-26)
+
+All on branch **`claude/funny-brown-oinkli`** (NOT merged to `main`). Verified headless:
+`tsc` ✓ · `lint` ✓ · `npm test` (25/25, incl. 4 new Caira suites) ✓ · `npm run build` ✓.
+Asset master + every spec/handover doc are in the **"Caira UI"** Google Drive folder.
+
+### Delivered (on `claude/funny-brown-oinkli`)
+- **Character system** — `components/caira/`: nav `CairaBar` (wandering mark), `CairaAIOverlay`,
+  `CairaRecordingOverlay`, `CairaEmpty/Loading/Error`, `caira.css` animations. Wired into the root
+  layout behind a **provider**; org-wide enable/disable toggle (`Organisation.cairaEnabled`).
+- **AI brain** — `app/api/caira/route.ts` (role personas: worker/participant/supervisor via
+  `lib/caira/systemPrompts.ts`), `lib/ai.ts#cairaChat` (Gemini, no tools unless web granted),
+  participant safety pre-check + `CairaFlag` + flag badge, `preference` + `flags` routes.
+- **Web-access permissions** — per-user `cairaWebAccess` (admin/supervisor grant via
+  `app/api/admin/caira-access`); **participant lockout enforced in 3 places** (Prisma default, the
+  chat route, the grant route). Admin UI in `/admin/settings`.
+- **Audio** — `lib/caira/audioManager.ts` (Web Audio, synth state sounds, no assets) + mute toggle.
+- **Real-creature rebrand** — replaced the spec-drawn SVG with the actual clay creature. Retouched
+  cutout master at **`public/caira/caira-master.png`**. New **5-state** model
+  (greet/cheer/reassure/idle/goal), `CairaCharacter` renders **Rive** (`@rive-app/react-canvas`,
+  two-way: pushes `state`/`quiet`, reads events) with the static cutout as fallback + reduced-motion
+  + Quiet variant. Palette retired `#4db8b0` → canonical Sage & Clay (`--brand #0f766e`).
+- Root layout hardened against DB outages (no longer 500s every route on a DB hiccup).
+- **DB:** `prisma/sql/caira_ai.sql` + `org_caira_enabled.sql` (UNAPPLIED) + `schema_baseline.sql`
+  updated; new `CairaFlag` model and `Worker` columns (`participantAILevel`, `cairaWebAccess*`).
+
+### NEXT (Cowork / Edward — in order)
+1. **Apply SQL by hand** (NOT `db push`): `prisma/sql/caira_ai.sql`, `prisma/sql/org_caira_enabled.sql`.
+   Both readers tolerate the columns/table being absent, so the app runs before they're applied.
+2. **Review + merge** `claude/funny-brown-oinkli` once `tsc/lint/build` pass on the laptop after
+   `prisma generate`. Set `GEMINI_API_KEY` for Caira chat (degrades gracefully without it).
+3. **Author `public/caira/caira.riv`** in the Rive editor from `caira-master.png` to the contract in
+   the Drive docs *"Caira Rive — Rig & Integration Spec"* + *"…Per-State Animation Direction"*
+   (state machine `Caira`; number `state` 0–4; bool `quiet`). **This is the only piece that gives
+   per-state facial expression + posture** — until it lands, all states share one cutout (motion only).
+   Drop the file in → animates with zero code changes (static fallback if absent).
+4. **cd**: optional higher-res creature render for a crisper rig; design any net-new Caira surfaces.
 
 ---
 
