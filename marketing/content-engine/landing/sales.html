@@ -181,9 +181,11 @@
       padding: 32px;
       text-align: center;
     }
-    .form-row { display: flex; gap: 10px; max-width: 480px; margin: 20px auto 0; flex-wrap: wrap; justify-content: center; }
-    .form-row input[type="email"] {
-      flex: 1 1 220px;
+    .ml-form { max-width: 460px; margin: 20px auto 0; text-align: left; }
+    .ml-form label { display: block; font-weight: 600; margin: 14px 0 6px; font-size: 15px; }
+    .ml-form input[type="text"],
+    .ml-form input[type="email"] {
+      width: 100%;
       padding: 14px 16px;
       border-radius: var(--radius);
       border: 1px solid var(--border);
@@ -191,7 +193,10 @@
       background: #fff;
       color: var(--foreground);
     }
-    .form-row input[type="email"]:focus-visible { outline: 3px solid var(--brand); outline-offset: 1px; }
+    .ml-form input:focus-visible { outline: 3px solid var(--brand); outline-offset: 1px; }
+    .ml-form .check { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; }
+    .ml-form .check input { margin-top: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
+    .ml-form .check label { margin: 0; font-size: 15px; }
 
     footer.site {
       background: var(--surface);
@@ -346,16 +351,36 @@
           </p>
 
           <!--
-            IMPLEMENTATION: replace this stub with the real ESP form from
-            waitlist/embed.html (MailerLite). Signup → emails the magnets (Email 1)
-            → runs the 5-email nurture. The optional checkbox tags warm beta leads.
+            Real ESP form (mirrors waitlist/embed.html). MailerLite field names:
+            fields[email] / fields[name] / groups[] / fields[magnet].
+            >>> Before launch: set the form `action` to your MailerLite embedded-form
+            POST URL (Forms → Embedded → "form action"). Until then it posts nowhere.
+            Easiest alternative: paste MailerLite's own embed snippet over this block.
+            Signup → emails both magnets (Email 1) → runs the 5-email nurture; the
+            checkbox tags warm beta leads into the "Caira Early Access" group.
           -->
-          <form class="form-row" action="#" method="post" aria-label="Get the free guides">
-            <label class="skip" for="email">Email address</label>
-            <input id="email" type="email" name="email" placeholder="you@email.com" required autocomplete="email" />
-            <button class="btn" type="submit">Send me the free guides</button>
+          <form class="ml-form" action="REPLACE_WITH_YOUR_MAILERLITE_FORM_ACTION_URL" method="post" aria-label="Get the free guides">
+            <!-- which magnet this page offers: checklist | cheatsheet | both -->
+            <input type="hidden" name="fields[magnet]" value="both" />
+
+            <label for="cw-name">First name <span class="muted" style="font-weight:400;">(optional)</span></label>
+            <input id="cw-name" type="text" name="fields[name]" autocomplete="given-name" />
+
+            <label for="cw-email">Email</label>
+            <input id="cw-email" type="email" name="fields[email]" required autocomplete="email" inputmode="email" placeholder="you@example.com" />
+
+            <div class="check">
+              <input id="cw-early" type="checkbox" name="groups[]" value="Caira Early Access" />
+              <label for="cw-early" style="font-weight:400;">I'd like to help shape Caira and be first in line when it launches.</label>
+            </div>
+
+            <button class="btn" type="submit" style="width:100%;margin-top:18px;">Send me the free guides</button>
           </form>
-          <p class="fine" style="margin-top:14px;">We'll email you the guides and occasional updates. Unsubscribe anytime.</p>
+          <p class="fine" style="margin-top:14px;">
+            You're joining Caira's email list — practical, no spam, unsubscribe any time.
+            We'll never imply NDIS endorsement or share your details.
+            <a href="/privacy">Privacy policy</a>.
+          </p>
         </div>
       </div>
     </section>
