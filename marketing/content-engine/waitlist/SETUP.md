@@ -29,14 +29,14 @@ Kit/ConvertKit. The steps below map cleanly to any of them.)
    help shape Caira / be first in line" — these are your warm beta leads.
 
 ### 3. Host the lead magnets
-1. Convert the two markdown magnets to PDF:
-   - `lead-magnets/audit-ready-note-checklist.md`
-   - `lead-magnets/person-first-language-cheatsheet.md`
-   (Any markdown→PDF export, or paste into Docs and export. Keep them one page,
-   on-brand, with a footer link to the waitlist.)
+1. The print-ready PDFs are already built and on-brand (Sage & Clay, one page each):
+   - `lead-magnets/audit-ready-note-checklist.pdf`
+   - `lead-magnets/person-first-language-cheatsheet.pdf`
+   (Source HTML lives in `lead-magnets/build/` — edit there and re-run the build
+   command in that folder's note to regenerate.)
 2. Upload both PDFs to MailerLite's **File manager** (or host at
    `caira.net.au/downloads/…`). Copy the public links — these become
-   `{{magnet_link}}` in the nurture.
+   `{{checklist_link}}` and `{{cheatsheet_link}}` in the nurture.
 
 ### 4. The form
 1. Build an **Embedded form** (not a pop-up) titled `Caira Waitlist`.
@@ -54,17 +54,19 @@ Waitlist`*. Then add steps straight from `email/nurture-sequence.md`:
 
 | Step | Wait | Email |
 |------|------|-------|
-| 1 | immediately | **Email 1** — deliver the magnet (`{{magnet_link}}`) + hello |
+| 1 | immediately | **Email 1** — deliver the magnet(s) + hello (**branched** on `magnet`: checklist / cheatsheet / both — see nurture-sequence.md variants A/B/C) |
 | 2 | +2 days | **Email 2** — the in-the-moment notes habit |
 | 3 | +2 days | **Email 3** — the 9pm founder story |
 | 4 | +3 days | **Email 4** — what Caira looks like (testimonial slot) |
 | 5 | +3 days | **Email 5** — soft CTA / be first in line |
 
 - Paste each email's subject + body. Map `{{first_name}}` → MailerLite's
-  `{$name}` (with a fallback like "there"), `{{magnet_link}}` → the hosted PDF
-  link, `{{waitlist_or_trial_link}}` → your Early Access form/page.
-- For Email 1's `{{magnet_name}}`, you can branch on the `magnet` field, or keep
-  it generic ("your free guides") and link both PDFs.
+  `{$name}` (with a fallback like "there"), `{{checklist_link}}` /
+  `{{cheatsheet_link}}` → the hosted PDF links, `{{waitlist_or_trial_link}}` →
+  your Early Access form/page.
+- Email 1 is **branched** on the `magnet` field — add a condition step after the
+  trigger and wire variants A/B/C (or use dynamic content). Each variant links
+  both PDFs anyway, so even the simplest single-email setup works.
 
 ### 6. Connect it to the funnel
 - Put the form on the **landing page** (`landing/landing-copy.md` →

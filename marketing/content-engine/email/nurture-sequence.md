@@ -9,24 +9,82 @@ the founder story, then a soft trial/waitlist CTA. Per PLAYBOOK.md §Conversion.
 **Compliance:** no "NDIS approved/endorsed", no guaranteed outcomes. Caira *helps
 you write your own* compliant notes. Every email has a one-click unsubscribe.
 
-> Placeholders: `{{first_name}}`, `{{magnet_name}}`, `{{magnet_link}}`,
+> Placeholders: `{{first_name}}`, `{{checklist_link}}`, `{{cheatsheet_link}}`,
 > `{{waitlist_or_trial_link}}`. Use the waitlist CTA pre-launch; swap to the
 > trial CTA at launch.
 
 ---
 
-## Email 1 — Deliver the magnet (instant)
+## Email 1 — Deliver the magnet (instant) · BRANCHED on the `magnet` field
 
-**Subject:** Here's your {{magnet_name}} 👇
+This email branches on the `magnet` field set by the form (`checklist`,
+`cheatsheet`, or `both`). In MailerLite, do this one of two ways:
+- **Simplest:** the automation's first step is a **condition on `magnet`** → three
+  parallel "send email" steps, one per variant below; or
+- **One email, dynamic blocks:** use the ESP's conditional content (`{$magnet}`)
+  to swap the bolded line + link. Either way the hello/sign-off is identical.
+
+Always link **both** PDFs as a bonus regardless — it raises perceived value and
+saves a second email. Hosted links:
+`{{checklist_link}}` = audit-ready-note-checklist.pdf ·
+`{{cheatsheet_link}}` = person-first-language-cheatsheet.pdf
+
+---
+
+### Variant A — they asked for the checklist (`magnet = checklist`)
+
+**Subject:** Here's your Audit-Ready Note Checklist 👇
 **Preview:** Plus a quick hello from the support worker who made it.
 
 Hi {{first_name}},
 
-Here's what you came for: **{{magnet_name}}** → {{magnet_link}}
+Here's what you came for — **The Audit-Ready Shift Note Checklist**:
+→ {{checklist_link}}
+
+While I'm here, I also made a **Person-First Language Cheat-Sheet** that pairs
+nicely with it — yours too if it's useful: → {{cheatsheet_link}}
+
+[SHARED-HELLO]
+
+---
+
+### Variant B — they asked for the cheat-sheet (`magnet = cheatsheet`)
+
+**Subject:** Here's your Person-First Language Cheat-Sheet 👇
+**Preview:** Plus a quick hello from the support worker who made it.
+
+Hi {{first_name}},
+
+Here's what you came for — **The Person-First Language Cheat-Sheet**:
+→ {{cheatsheet_link}}
+
+I also made an **Audit-Ready Shift Note Checklist** that goes hand in hand with
+it — grab that too if you'd like: → {{checklist_link}}
+
+[SHARED-HELLO]
+
+---
+
+### Variant C — they asked for both (`magnet = both`, the default)
+
+**Subject:** Here are your free guides 👇
+**Preview:** Plus a quick hello from the support worker who made them.
+
+Hi {{first_name}},
+
+Here are both guides, as promised:
+• **The Audit-Ready Shift Note Checklist** → {{checklist_link}}
+• **The Person-First Language Cheat-Sheet** → {{cheatsheet_link}}
+
+[SHARED-HELLO]
+
+---
+
+### [SHARED-HELLO] — paste into each variant where shown
 
 Quick hello while you're here. I'm Edward — I've spent years doing support work
-on the Central Coast, and I made this because it's the thing I wish someone had
-handed me when I started.
+on the Central Coast, and I made these because they're the things I wish someone
+had handed me when I started.
 
 Have a read, use what's useful, ignore what isn't. Over the next week or so I'll
 send a couple more short, practical things — the stuff that actually saves time
@@ -59,7 +117,7 @@ That's it. Try it on your next shift and see.
 
 Edward
 
-*P.S. The {{magnet_name}} has the full structure if you want it: {{magnet_link}}*
+*P.S. The Audit-Ready Note Checklist has the full structure if you want it: {{checklist_link}}*
 
 ---
 
@@ -131,4 +189,4 @@ Thanks for reading this far. It means a lot.
 
 Edward
 
-*P.S. Not for you right now? No worries at all — keep the {{magnet_name}} with my compliments: {{magnet_link}}*
+*P.S. Not for you right now? No worries at all — keep the free guides with my compliments: {{checklist_link}} · {{cheatsheet_link}}*
