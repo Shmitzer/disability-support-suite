@@ -635,41 +635,67 @@ Per the Master Handover, all of this is Step 5 (System A), pure app code, no leg
 
 The differentiator is the **adaptive, accessibility-first, NDIS-goal-linked engine + the Caira
 companion** — not the catalogue count. The core product (the shift tracker) is still pre-launch
-behind the legal gate, so the 100-game roadmap is sequenced by **evidence, not capability
-coverage**:
+behind the legal gate, so the roadmap is sequenced by **evidence, not capability coverage**:
+**Wave 0** (a 3-game probe) earns the right to build **Wave 1** (the full proving set), which
+earns **Waves 2–3** (the library via archetypes). **Waves 4–5 (the ceiling) are cut** from the
+near-term roadmap — each is a standalone game engine for the rarest slice; the *suite* spans
+floor to ceiling, not every *title*.
 
-1. **Probe first (the real first milestone):** engine + `<CairaCompanion>` + **3 games** —
-   `touch-bloom` (input-agnostic, no-score logging), `word-match` (adaptive controller +
-   goal-link), and one of `breathe-caira` / `pairs-pals` (companion + span). These three exercise
-   every hard part of the engine; the rest are content on proven rails.
-2. **Instrument 2–3 success metrics** on the probe (e.g. a worker voluntarily opens a game in a
-   shift; a participant returns across ≥2 sessions; a `GoalProgress` row a worker agrees is
-   meaningful). Demo to **2–3 real support workers on dummy data** — the buyer is the
-   worker/coordinator, not only the participant.
-3. **Gate the remaining 8 Wave-1 games and all of Waves 2–3 on hitting those metrics.**
-4. **Cut Waves 4–5 (the ceiling) from the near-term roadmap.** `chess-trainer`, `go-gomoku`,
-   `circuit-logic`, `logic-grid`, `cryptogram`, Sudoku/KenKen are each a standalone game engine
-   serving the rarest slice — highest effort, lowest validation density. The *suite* spans floor
-   to ceiling; not every *title* does, and that's the honest framing (no empty/locked shelf for
-   floor-tier profiles — give the floor genuine depth instead).
+### Wave 0 — the probe (FINAL · the real first milestone)
 
-### Wave 1 — engine-proving set + the 5 specced (11 games, probe-gated)
-The full Wave-1 set once the probe clears. **Safety gate:** no game that accepts *free* text /
-open AAC composition ships until the `CairaFlag` distress path exists (reconciliation Steps 3–4).
-`choose-ask` is **constrained** (pick-a-symbol-to-request, errorless) so it is in scope;
-open-composition games (`tell-me-more`, `word-predictor`) stay out until the antenna is live.
+The smallest slice that proves the engine end-to-end and earns a real-user signal before any
+more content is built. **Scope = the full Foundation list above + exactly three games:**
 
-1. `touch-bloom` (T1 floor) **— deep-designed (D1) · probe**
-2. `cause-caira` (T1, Caira reaction)
-3. `same-again` (T2 matching)
-4. `word-match` *(existing)* **— deep-designed (D2), adaptive reference · probe**
-5. `number-sense` *(existing)* (adaptive numeracy)
-6. `pairs-pals` (T2–T4 span demo) **— deep-designed (D3) · probe**
-7. `sequence-it` *(existing)* (executive function)
-8. `emotion-match` *(existing)* (emotional literacy)
-9. `choose-ask` (T1–T2 AAC errorless, **constrained selection only**) **— deep-designed (D4)**
-10. `type-it` *(existing)* (T2–T5 input) **— deep-designed (D5)**
-11. `breathe-caira` (T1–T3 regulation) **— probe alt**
+| # | Game | Tier | What it proves |
+|---|---|---|---|
+| 1 | `touch-bloom` (D1) | T1 | input-agnostic events + **no-score** engagement session/logging |
+| 2 | `word-match` (D2) | T2–T3 | the **adaptive controller** + `GameSession`→`GoalProgress` goal-link |
+| 3 | `breathe-caira` (W1-f) | T1–T3 | the **`<CairaCompanion>`** (Breathe/idle) + a tier-spanning title |
+
+> `breathe-caira` is chosen over `pairs-pals` as the third probe game: it exercises the companion
+> surface most directly and carries zero scoring/AAC complexity, so the probe stays minimal.
+> `pairs-pals` moves into the Wave-1 set.
+
+**Wave 0 exit criteria (all must hold before Wave 1 starts):**
+- [ ] Foundation built and the three games meet the per-game Definition of Done.
+- [ ] The engine-hardening P0s are fixed (tenant check in `recordSession`, `ParticipantXP`
+  `(participantId, organisationId)` key, idempotent session write) — verified by recorder tests.
+- [ ] 2–3 **success metrics instrumented** (e.g. a worker voluntarily opens a game in a shift; a
+  participant returns across ≥2 sessions; a `GoalProgress` row a worker agrees is meaningful).
+- [ ] **Demoed to 2–3 real support workers on dummy data** — the buyer is the worker/coordinator,
+  not only the participant — and the metrics clear an agreed bar.
+
+If the bar isn't met, the response is iterate or stop — **not** "build Wave 1 anyway."
+
+### Wave 1 — full engine-proving set (FINAL · 11 games, gated on Wave 0)
+
+Ships once Wave 0 clears. Adds the remaining eight games that exercise the last capability types
+(matching, executive function, emotional literacy, constrained AAC, fine-motor/input). All 11 are
+specced — D1–D5 and W1-a…f above.
+
+**Safety gate (hard):** no game that accepts *free* text / open-AAC composition ships until the
+`CairaFlag` distress path exists (reconciliation Steps 3–4). `choose-ask` is **constrained**
+(pick-a-symbol-to-request, errorless) so it is in scope; open-composition titles (`tell-me-more`,
+`word-predictor`) stay out until the antenna is live.
+
+| # | Game | Tier | Spec | Archetype | Notes |
+|---|---|---|---|---|---|
+| 1 | `touch-bloom` | T1 | D1 | A | *Wave 0* |
+| 2 | `word-match` | T2–T3 | D2 | B | *Wave 0* · adaptive reference |
+| 3 | `breathe-caira` | T1–T3 | W1-f | A | *Wave 0* · companion showcase |
+| 4 | `pairs-pals` | T2–T4 | D3 | D | span demo |
+| 5 | `choose-ask` | T1–T2 | D4 | F | **constrained AAC only** |
+| 6 | `type-it` | T2–T5 | D5 | F | input / fine-motor |
+| 7 | `cause-caira` | T1–T2 | W1-a | A | companion-led |
+| 8 | `same-again` | T2 | W1-b | B | matching |
+| 9 | `number-sense` | T2–T3 | W1-c | G | adaptive numeracy |
+| 10 | `sequence-it` | T2–T3 | W1-d | C | exec function · defines scan-to-place |
+| 11 | `emotion-match` | T2–T3 | W1-e | B | emotional literacy |
+
+Wave 1 also **proves six of the nine archetypes** (A, B, C, D, F, G) and both shared utilities
+(scan-to-place composer, no-score engagement session) — so Waves 2–3 are content on proven rails.
+The three not yet proven by a Wave-1 title are **E** (attention/search), **H** (precision motor),
+and **I** (deferred logic engines).
 
 ### Still to be done — remaining 89 games, by wave
 - **Wave 2 (≈24)** — broaden the floor/early-cognition + core adaptive titles:
