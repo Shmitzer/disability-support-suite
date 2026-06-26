@@ -6,7 +6,7 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/nifty-ritchie-nqmsxh` (game-suite foundation) · prior: `claude/sharp-hypatia-6zdy2h`
-- **Last updated:** 2026-06-26 (marketing engine merged to main; MailerLite waitlist mid-setup — handoff to Cowork)
+- **Last updated:** 2026-06-26 (game-suite plan FINAL + reviewed; Wave 0 build checklist = Issue #5; building on `claude/nifty-ritchie-nqmsxh`)
 
 ---
 
@@ -58,6 +58,30 @@ warm-network outreach + community + LinkedIn stay human (Edward's call on ban ri
 6. Then: create FB Page (Drive "Caira – Facebook Page Setup"); warm-network outreach; post weeks 1–2 (value only). Optional: FB Page ID + long-lived token for `schedule`.
 
 Full step list: Drive "Caira – Launch Checklist" or `marketing/content-engine/LAUNCH_CHECKLIST.md`.
+
+---
+
+## 🎮 GAME SUITE — plan FINAL, building Wave 0 (2026-06-26)
+
+> **▶ START HERE to build the games: [Issue #5 — Wave 0 (probe): single build
+> checklist](https://github.com/Shmitzer/disability-support-suite/issues/5).**
+> That issue is the one checklist to work against (engine-hardening P0s → foundation +
+> Caira companion → 3 probe games → exit gate). Build on branch
+> `claude/nifty-ritchie-nqmsxh` (engine code). Plan is **FINAL** and canonical on `main`:
+> `docs/GAME_SUITE_SINGLEPLAYER_100.md` + `docs/CAIRA_AI_RECONCILIATION.md`. Companion
+> design handoff is in Google Drive → **design** folder.
+
+**Plan status (reviewed + finalised this session):** 100 games catalogued and partitioned into
+build waves (**11 + 27 + 37 + 22 + 3 = 100**, verified — every game one wave, one of nine
+build-by-template archetypes). All 11 Wave-1 games specced; remaining 89 archetype-mapped.
+Three-lens dev-team review folded in (engineering / accessibility-clinical / product). **Wave 0
+= Foundation + 3 games** (`touch-bloom`, `word-match`, `breathe-caira`), evidence-gated before
+Wave 1; Waves 4–5 (ceiling) deferred. Bound to the Sage & Clay language + the Caira companion.
+
+**Wave 0 first move (gated DB op, then code):** apply `prisma/sql/games.sql` → `games_rls.sql`
+via the direct connection → `npx prisma generate`, then work Issue #5 top-down (the engine P0s
+— tenant check into `recordSession`, `ParticipantXP` `(participantId, organisationId)` key,
+idempotency key — come first, each with a test).
 
 ---
 
