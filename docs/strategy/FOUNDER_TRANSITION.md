@@ -66,6 +66,25 @@ trigger is the **seed closing with a founder salary**, not MRR covering your lif
   salary buffer is partly for this.
 - **Clean personal/company money separation** from day one.
 
+## Founder compensation: reasonable band + step-up
+Founder salary is **"survivable, not market"** — enough to remove money as a distraction, with the
+bulk of comp in equity. The test investors apply: does it cover the founder's life without optimizing
+salary over growth? Pre-raise, the reasonable number is **whatever savings + DSW shifts let you
+survive on (possibly $0 from the company)**; $10k only becomes reasonable the moment the seed closes.
+
+| Stage | Reasonable salary/mo | Logic |
+|---|---|---|
+| Bootstrapped / pre-seed (no outside money) | $0–6k | Whatever the company affords without dying; bridge with savings + DSW shifts |
+| **Seed (target)** | **$10k** | Covers $8k burn + ~25% buffer for super/income protection/savings; squarely reasonable |
+| Series A | $14–15k | Above survival; de-risked, larger team |
+| Series B+ | $18–30k+ | Approaching (still below) market exec comp |
+
+**Guardrails for "reasonable":** (1) cover real burn + thin buffer, no more; (2) don't materially
+shorten runway; (3) don't out-earn the team by an awkward margin pre-traction; (4) the domain-expert
+premium is real but small — it justifies sitting at the *top* of the survival band, and shows up in
+equity/fundability, not salary. **Plan a step-up ($10k seed → ~$14–15k A → revisit at B)** rather than
+a flat number — it signals both sustainability and discipline to investors.
+
 ## Protect the human
 Keep 1–2 shifts longer than strictly necessary — for income, structure, user connection, and a
 psychological safety net. Founders who aren't desperate make better decisions. Burnout torches more
