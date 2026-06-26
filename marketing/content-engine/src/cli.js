@@ -28,10 +28,10 @@ const fbChannel = (cfg) => cfg.channels?.facebook_page || cfg.channel || {};
 
 function flatArc() {
   const arc = loadJSON("content/arc.json");
-  return [
-    ...arc.week1.map((i) => ({ ...i, week: 1 })),
-    ...arc.week2.map((i) => ({ ...i, week: 2 }))
-  ];
+  return Object.keys(arc)
+    .filter((k) => /^week\d+$/.test(k))
+    .sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)))
+    .flatMap((k) => arc[k].map((i) => ({ ...i, week: Number(k.slice(4)) })));
 }
 
 async function cmdPlan() {

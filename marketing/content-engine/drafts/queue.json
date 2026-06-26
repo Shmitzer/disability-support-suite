@@ -70,5 +70,77 @@
     "slot": "Sun 19:00",
     "text": "Okay — full honesty, here's what I've been building. It's called Caira. Care is the work. Caira handles the record.\n\nThe idea: take the documentation off a support worker's plate — notes, records and reporting — so the hours go back to care instead of paperwork. It's not out yet; I'm getting it ready properly and want a few real providers to help shape it before launch.\n\nIf you'd like to be first in line and have a say in how it works, comment or DM me. No cost, no pressure — just building this with the people who'll use it. 🙏",
     "status": "needs_review"
+  },
+  {
+    "id": "w3-tue-value",
+    "week": 3,
+    "type": "VALUE",
+    "topic": "Travel and the bits people forget to claim",
+    "slot": "Tue 12:30",
+    "text": "A few things support workers leave on the table:\n\n• Provider travel between participants, where the plan and current rules allow\n• Non-labour travel costs (the km) under the current pricing arrangements\n• Short-notice cancellations — know the rule before you write the shift off\n\nThe pricing arrangements change, so always check the current ones rather than what you remember from last year. And log your travel as you go, not from memory on Sunday. What's something you only found out you could claim months in?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w3-wed-value",
+    "week": 3,
+    "type": "VALUE",
+    "topic": "Capturing notes during a shift, not at 9pm",
+    "slot": "Wed 19:30",
+    "text": "The tip that gave me my evenings back: don't wait till you're home. Capture the note while it's fresh — a quick voice memo in the car, a line in your notes app, even paper. Three bullets in the moment (what was the goal, what happened, how they responded) beat a blank page at 9pm every time.\n\nWhatever tool you use, the trick is the same: capture now, polish later. How do you capture notes during a shift?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w3-thu-community",
+    "week": 3,
+    "type": "COMMUNITY",
+    "topic": "What eats your week that has nothing to do with actual support?",
+    "slot": "Thu 12:30",
+    "text": "Honest one: what eats your week that has nothing to do with the actual support work?\n\nNotes, invoicing, chasing payments, finding documents, travel admin? Name your biggest time-sink below — I'm curious what comes up most, and there might be a fix worth sharing.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w3-sun-intro",
+    "week": 3,
+    "type": "INTRO",
+    "topic": "Build-in-public: the feedback that changed what I'm building",
+    "slot": "Sun 19:00",
+    "text": "Building in public: a support worker told me last week that the scary part of notes isn't writing them — it's wondering whether they'd hold up if anyone ever asked.\n\nThat stuck with me. Spent the weekend reworking how Caira (the tool I'm building) structures a note so the important bones are there by default. Still pre-launch — shaping it with the people who'll actually use it.\n\nSo: what would make you genuinely confident in your notes?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w4-tue-value",
+    "week": 4,
+    "type": "VALUE",
+    "topic": "Person-first language, the short version",
+    "slot": "Tue 12:30",
+    "text": "Person-first language, the short version:\n\n• 'a person with disability', not 'a disabled person' (in most AU contexts)\n• describe the support, not the deficit\n• 'uses a wheelchair', not 'wheelchair-bound'\n• and ask the person how they describe themselves — they're the authority\n\nIt shows up in your notes too: factual, respectful, about the person not the label. I put together a one-page cheat-sheet on this — happy to share it, just say the word. What language did you have to unlearn when you started?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w4-wed-value",
+    "week": 4,
+    "type": "VALUE",
+    "topic": "Incident notes without the panic",
+    "slot": "Wed 19:30",
+    "text": "When something goes wrong, a good incident note is calm and factual: what happened, when, who was involved, what you did, and who you told.\n\nStick to what you observed — don't write a guess at the cause as if it's a fact. Write it as soon as it's safe to, while the detail's sharp. And know your provider's reporting timeframes before you ever need them.\n\nHow does your team handle incident reporting?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w4-thu-community",
+    "week": 4,
+    "type": "COMMUNITY",
+    "topic": "Best advice you got when you started as a support worker?",
+    "slot": "Thu 12:30",
+    "text": "What's the best piece of advice you got when you started as a support worker?\n\nDrop it below — there are new workers reading this who'll genuinely thank you for it. I'll start in the comments.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w4-sun-soft_app",
+    "week": 4,
+    "type": "SOFT_APP",
+    "topic": "Caira update — early feedback is making it sharper",
+    "slot": "Sun 19:00",
+    "text": "Quick Caira update (the tool I'm building for support-worker notes). The first handful of providers giving feedback have been brutal in the best way — and it's made it sharper. Care is the work. Caira handles the record.\n\nStill pre-launch. I'm taking on a few more people who want to shape it and be first in line. If that's you, comment or DM — no cost, just honest feedback wanted. 🙏",
+    "status": "needs_review"
   }
 ]
