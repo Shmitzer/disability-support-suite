@@ -173,3 +173,49 @@ device.
 - One saved accessibility profile auto-configuring every game — keep; extend it with the
   age-band theme (§2).
 - The non-medical-claims framing — keep verbatim; it gates the whole suite legally.
+
+---
+
+## 7. Staged deployment shortlist
+
+Ordered by engine-proving value, clinical safety, and breadth of NDIS-goal coverage. Folds
+in the review caveats: no `safe-crossing` early, `feelings-checkin` errorless/self-report
+only, age-band art (§2) shipped before any floor game goes public.
+
+### Stage 0 — Pilot / engine-proving (5)
+Minimum set that exercises every engine capability. If these run, the other 95 are largely
+content on the same rails.
+
+| Game | Slug | Proves |
+|---|---|---|
+| Touch & Bloom | `touch-bloom` | input-agnostic events, no-score session logging |
+| Word Match | `word-match` | adaptive-difficulty controller (reference impl) |
+| Pairs & Pals | `pairs-pals` | one title spanning 3 tiers by config |
+| Choose & Ask | `choose-ask` | AAC board, errorless mode, voiced-message output |
+| Type It | `type-it` | alt/switch-keyboard + fine-motor logging |
+
+### Stage 1 — First public release (+6 → 11 total)
+Rounds out the floor and gives every NDIS goal category at least one credible game.
+
+| Game | Slug | Category |
+|---|---|---|
+| Cause & Caira | `cause-caira` | engagement (re-tagged off `social_participation`) |
+| Same Again | `same-again` | learning / matching |
+| Number Sense | `number-sense` | numeracy |
+| Sequence It | `sequence-it` | independence / executive function |
+| Emotion Match | `emotion-match` | social-emotional (errorless) |
+| Breathe With Caira | `breathe-caira` | health_wellbeing / regulation |
+
+**Recommended go-live = Stage 0 + Stage 1 (11 games)** — smallest set that proves the whole
+engine *and* gives every NDIS goal category a home, with zero safety/IP-gated titles.
+
+### Stage 2 — Breadth release (~12 from Waves 2–3)
+Highest-coverage, lowest-build-cost titles; skips the near-duplicates flagged in §3:
+`big-button`, `pop-match`, `sort-bins`, `finish-pattern`, `build-a-word`, `count-along`,
+`add-take`, `whats-missing`, `find-target`, `first-then`, `feelings-checkin` (self-report),
+`calm-canvas`.
+
+### Stage 3 — Ceiling + daily-living (gated)
+Hold until the engine-cost and IP/safety items clear:
+- **After IP/legal pass:** `chess-trainer` (puzzle-only v1), `code-breaker`, `tangram`, `logic-grid`.
+- **After safety reframe:** `safe-crossing` (signal-recognition only), `kitchen-steps`, `shop-smart`.
