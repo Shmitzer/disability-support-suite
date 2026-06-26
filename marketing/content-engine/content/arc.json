@@ -23,5 +23,29 @@
     { "day": "Wed", "type": "VALUE", "topic": "Incident notes without the panic", "brief": "Calm, factual: what/when/who/what you did/who you told. Observable facts only. Know your provider's reporting timeframes. No guarantees." },
     { "day": "Thu", "type": "COMMUNITY", "topic": "Best advice you got when you started as a support worker?", "brief": "Community wisdom for new workers. Reply personally." },
     { "day": "Sun", "type": "SOFT_APP", "topic": "Caira update — early feedback is making it sharper", "brief": "Disclosed pre-launch update. Early providers giving feedback; tagline sign-off. Taking a few more to shape it. Comment/DM. No cost." }
+  ],
+  "week5": [
+    { "day": "Tue", "type": "VALUE", "topic": "Setting your rates as a sole trader", "brief": "How to think about rates within the current NDIS pricing arrangements; know the caps, factor real costs (travel, admin, super). General guidance, not financial advice. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Professional boundaries with participants and families", "brief": "Warm but clear boundaries; off-hours messages and gifts; protects you and the relationship. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "How do you reset after a shift that went sideways?", "brief": "Empathy + practical conversation. Reply personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: first beta workers are in", "brief": "Honest milestone — first support workers using Caira. What surprised me. Still pre-launch. End with a question." }
+  ],
+  "week6": [
+    { "day": "Tue", "type": "VALUE", "topic": "Tax and GST basics for sole-trader support workers", "brief": "Plain-English overview: ABN, the $75k GST threshold, keeping receipts, setting aside for tax. NOT financial advice — see a registered accountant. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Cutting last-minute cancellations", "brief": "Practical: confirmations, clear cancellation terms in your agreement, gentle reminders. Know the current short-notice cancellation rules. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "What got you into support work?", "brief": "Story-prompt, builds connection. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira pre-launch: a few early spots left", "brief": "Disclosed pre-launch invite/update. Shaping it with early users; a few spots to be first in line. Comment/DM. No cost. Tagline sign-off." }
+  ],
+  "week7": [
+    { "day": "Tue", "type": "VALUE", "topic": "Handover notes when more than one worker is on", "brief": "What a useful handover/continuity note includes so the next worker isn't guessing. Factual, participant-centred. Pure value." },
+    { "day": "Wed", "type": "VALUE", "topic": "Spotting burnout before it spots you", "brief": "Signs of burnout in support work; small protective habits; it's okay to ask for help. Warm, no hype." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Share a small win from this week", "brief": "Positive prompt. Celebrate replies personally." },
+    { "day": "Sun", "type": "INTRO", "topic": "Build-in-public: what building solo has taught me", "brief": "Honest reflection on building Caira solo while working. Pre-launch. End with a question." }
+  ],
+  "week8": [
+    { "day": "Tue", "type": "VALUE", "topic": "Goal-focused notes: linking what you do to a participant's goals", "brief": "How to tie the support you give to the participant's NDIS goals in your notes — clearer, more meaningful. Factual. No guarantees." },
+    { "day": "Wed", "type": "VALUE", "topic": "Keeping your checks and screening current", "brief": "Practical reminder list: NDIS Worker Screening Check, working-with-children where relevant, first aid, renewals. Know your obligations; check official sources. No guarantees." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "If your admin could vanish overnight, what goes first?", "brief": "Playful but pointed question on admin pain. Reply personally." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Caira — what the first users are saying", "brief": "Disclosed pre-launch progress post; early-user themes (no fabricated quotes — keep general until real testimonials exist). Invite to be first in line. Tagline sign-off." }
   ]
 }
