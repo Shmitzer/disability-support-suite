@@ -1,8 +1,12 @@
-# NDIS Content Engine
+# Caira Content Engine
 
-A transparent, Terms-of-Service-compliant tool to market your NDIS app to sole
+A transparent, Terms-of-Service-compliant tool to market **Caira** to NDIS sole
 traders and small/medium providers — by showing up as **you**, openly, with
 genuinely useful content, and letting an honest founder story do the work.
+
+**Strategy spine:** [`docs/PLAYBOOK.md`](docs/PLAYBOOK.md) — the founder-led,
+warm-network-first, organic-first launch plan. The config, content arc and
+compliance checks all derive from it. Read it first.
 
 It does **not** create fake personas, auto-engage on other people's posts, or
 scrape. Those tactics break Meta's rules and, in the trust-driven disability
@@ -26,8 +30,9 @@ Post types: `VALUE` (no app at all), `INTRO` (founder/human), `COMMUNITY`
 npm install
 node src/cli.js plan      # show the calendar
 node src/cli.js draft     # generate drafts -> drafts/queue.json (needs_review)
-node src/cli.js review    # read drafts + approval status
-node src/cli.js schedule  # push APPROVED drafts to Meta as scheduled posts
+node src/cli.js review    # read drafts + approval status + compliance flags
+node src/cli.js check      # NDIS-advertising compliance check over the queue
+node src/cli.js schedule  # push APPROVED drafts to Meta (banned-phrase posts blocked)
 ```
 
 **Nothing posts without you.** `draft` marks every post `needs_review`. You
