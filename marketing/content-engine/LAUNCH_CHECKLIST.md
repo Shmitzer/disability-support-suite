@@ -32,7 +32,8 @@ Legend: 🟢 do now (no dependencies) · 🟡 needs the legal/site gate first
 - [ ] **1.6** Upload both PDFs (`lead-magnets/*.pdf`) to the File manager; copy the
   two public links → these are `{{checklist_link}}` and `{{cheatsheet_link}}`.
 
-*(Full detail: `waitlist/SETUP.md`.)*
+*(Full detail: `waitlist/SETUP.md`. Turnkey email copy ready to paste:
+`waitlist/mailerlite-paste-pack.md` — all 5 emails in MailerLite merge syntax.)*
 
 ## Phase 2 — The form (~20 min) 🟢
 
@@ -58,6 +59,7 @@ Legend: 🟢 do now (no dependencies) · 🟡 needs the legal/site gate first
 ## Phase 4 — Facebook presence (~30 min) 🟢
 
 - [ ] **4.1** Create the Caira **Facebook Page** (clearly branded as you).
+  *(Copy-paste name, bio, About, pinned post, button: `facebook/page-setup.md`.)*
 - [ ] **4.2** Page bio: support worker who built a tool; link to waitlist; add a Page button → waitlist.
 - [ ] **4.3** Join the target communities (`config.json` → `channels.communities`).
   Start being helpful — comment value, no pitching yet (earn the ~50-helpful-
@@ -95,8 +97,9 @@ Only if you want the engine to schedule for you; otherwise copy-paste from
 
 ## What's already done (no action needed)
 Strategy (`docs/PLAYBOOK.md`) · 48 posts / 12 weeks (`drafts/queue.json`, compliance-clean)
-· 2 lead-magnet PDFs · 5-email nurture (branched Email 1) · broadcast idea bank ·
-3 GEO/SEO pages · landing copy · waitlist form + setup · compliance gate in the CLI.
+· 2 lead-magnet PDFs · 5-email nurture (branched Email 1) + **MailerLite paste-pack**
+· broadcast idea bank · 3 GEO/SEO pages · landing copy · waitlist form + setup ·
+**Facebook Page copy** · compliance gate in the CLI.
 
 ## The hard gates to respect
 - Don't promote anything public before **0.1 privacy policy** + **0.2 legal gate**.
