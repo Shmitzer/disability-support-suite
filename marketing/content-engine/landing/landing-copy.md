@@ -74,4 +74,8 @@ under the Privacy Act 1988. *(Link to your privacy policy.)*
 > Cheat-Sheet.* Enter your email and we'll send both.
 > `[ email ]  [ Send me the free guides ]`
 
-(Feeds the 4–5 email nurture: deliver magnet → value → founder story → case study → soft CTA.)
+**Implementation:** drop the waitlist form here — see
+`waitlist/SETUP.md` and `waitlist/embed.html`. Signup → instantly emails the
+magnet (Email 1) → runs the 5-email nurture → an optional "help shape Caira /
+be first in line" checkbox tags warm beta leads. Feeds the nurture:
+deliver magnet → value → founder story → proof → soft CTA.

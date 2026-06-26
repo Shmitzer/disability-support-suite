@@ -27,7 +27,9 @@
     "oneLiner": "Caira takes the documentation off a support worker's plate — notes, records and reporting handled, so the time goes back to care.",
     "link": "https://caira.net.au",
     "status": "pre-launch — site not live yet; legal/go-to-market in progress",
-    "earlyInterest": "Register interest / join the early list (replace with real waitlist URL or 'DM me' when ready)",
+    "earlyInterest": "Join the early list / grab the free guides",
+    "waitlistUrl": "<YOUR_ESP_FORM_URL>",
+    "waitlistSetup": "See waitlist/SETUP.md — hosted form + ESP (MailerLite), auto-delivers magnet + runs the 5-email nurture.",
     "mentionPolicy": "Soft. App appears as 'the tool I built' only after value is established. Earn the right to mention it (~50 helpful comments before pitching in any community). Max ~1 in 4 posts references it in weeks 1-2."
   },
   "channels": {
