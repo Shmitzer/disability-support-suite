@@ -6,7 +6,37 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/nifty-ritchie-nqmsxh` (game-suite foundation) · prior: `claude/sharp-hypatia-6zdy2h`
-- **Last updated:** 2026-06-26 (game-suite foundation built; handoff to Cowork)
+- **Last updated:** 2026-06-26 (game-suite foundation built; handoff to Cowork · marketing engine added)
+
+---
+
+## 📣 MARKETING — Caira content engine seeded (2026-06-26)
+
+Transparent, ToS-compliant marketing engine for Caira's pre-launch, founder-led
+organic push. Lives at `marketing/content-engine/` on branch
+`claude/festive-tesla-lebjxq` (NOT yet on `main`).
+
+**DONE (on branch `claude/festive-tesla-lebjxq`):**
+- `docs/PLAYBOOK.md` — canonical strategy (warm-network-first, organic-first;
+  channel priority Facebook → founder LinkedIn → IG → TikTok).
+- `config.json` — positioning ("the shift logger built by a support worker"),
+  audience, channels, + NDIS-advertising compliance ruleset.
+- `src/` — `cli.js` (plan/draft/review/check/schedule), `generate.js` (drafts in
+  voice; optional Claude API + voice pass), `meta.js` (official Graph API
+  scheduling, own Page only), `compliance.js` (blocks "NDIS approved/endorsed",
+  "guarantees compliance", etc.).
+- `drafts/queue.json` — **16 founder-voice posts (4 weeks)**, all `needs_review`,
+  all clear of compliance hard-fails.
+- `lead-magnets/` — audit-ready note checklist + person-first cheat-sheet.
+- `landing/landing-copy.md` — caira.net.au copy (pre-launch + launch variants).
+
+**Guardrails baked in:** own Page only, every post human-approved before schedule,
+compliance-gated, app mentions disclosed. No fake personas / auto-engagement —
+warm-network outreach + community + LinkedIn stay human (Edward's call on ban risk).
+
+**NEXT (Edward):** site live + legal gate for go-to-market · real waitlist URL into
+`config.json` (`app.earlyInterest`) · FB Page ID + long-lived token to enable
+scheduling · review/approve drafts.
 
 ---
 
