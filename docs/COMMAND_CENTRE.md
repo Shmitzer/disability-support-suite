@@ -33,12 +33,15 @@ organic push. Lives at `marketing/content-engine/` on branch
   → proof → soft CTA); `email/broadcast-ideas.md` — ongoing ~monthly broadcast bank.
 - `content/seo/` — 3 GEO/SEO pages (best-ndis-shift-note-app, caira-vs-spreadsheets,
   how-to-write-ndis-progress-notes) for buyer-intent search + AI citation.
+- `waitlist/` — `SETUP.md` (MailerLite: form → instant magnet → 5-email nurture)
+  + `embed.html` (on-brand, accessible form). No custom code; ESP-hosted.
 
 **Guardrails baked in:** own Page only, every post human-approved before schedule,
 compliance-gated, app mentions disclosed. No fake personas / auto-engagement —
 warm-network outreach + community + LinkedIn stay human (Edward's call on ban risk).
 
-**NEXT (Edward):** site live + legal gate for go-to-market · real waitlist URL into
+**NEXT (Edward):** stand up the MailerLite waitlist (≈30-45 min, see waitlist/SETUP.md)
+· site live + legal gate for go-to-market · real waitlist URL into
 `config.json` (`app.earlyInterest`) · FB Page ID + long-lived token to enable
 scheduling · review/approve drafts.
 
