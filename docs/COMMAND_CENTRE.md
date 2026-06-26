@@ -10,6 +10,50 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 ---
 
+## 🤝 HANDOVER TO COWORK — Phase 0 cc hardening complete (2026-06-26)
+
+cc finished the **Phase 0 foundation-hardening** slice (no design dependency). Code is on
+branch **`claude/serene-feynman-p80kpr`** (commit `78661b9`, pushed); detail in the Decision log.
+
+### Delivered (branch `claude/serene-feynman-p80kpr`)
+- **0.1 Ordered SQL apply + RLS sweep** — `prisma/sql/apply_all_features.sql` (one idempotent,
+  `ON_ERROR_STOP`'d `\i`-include script: 13 unapplied feature files in dependency order,
+  `audit_hash_chain`+`rbac_grants` first, RLS sweep last) + `prisma/sql/feature_tables_rls.sql`
+  (enables RLS + per-table `tenant_isolation` on the feature tables that shipped DDL **without**
+  it — incl. `Membership`/`ParticipantAccessGrant`/`Consent`/`ParticipantCareProfile`, whose RLS
+  was only commented-out SQL). **Validated against a throwaway Postgres 16**: clean, idempotent,
+  every swept table RLS-enabled.
+- **0.2 SUPERADMIN wiring** — legacy `can(role,cap)` now honours SUPERADMIN as platform override.
+- **0.3 Hard LLM spend cap + budget alarm** — `rate-limit.ts checkSpendCap()` wired into
+  `/api/generate-note` + `/api/transcribe`; env-gated, fail-open, PostHog `llm_budget_alarm`.
+- **0.4 CI tenant-scope guard** — `npm run check:tenant-scope` + CI step (unscoped tenant read = leak).
+- **0.5** — verified all four integrations env-gated; PostHog behind `hasAnalyticsConsent()`.
+
+### NEXT (Cowork / Edward — gated ops, in order)
+1. **Apply the SQL (by hand, NOT `db push`):** from repo root, `psql "$DIRECT_URL" -f
+   prisma/sql/apply_all_features.sql`, then re-run `prisma/sql/verify_rls_editor.sql` in the
+   Supabase SQL editor (expect every public table RLS-enabled).
+2. **Turn the spend cap on:** provision Upstash (`UPSTASH_REDIS_REST_URL/_TOKEN`) + set
+   `LLM_DAILY_CAP`; without keys the throttle + cap are inert (dev behaviour unchanged).
+3. **Rotate the DB password** + provision remaining keys (Stripe/Sentry/PostHog/Resend/VAPID,
+   `shift-photos` bucket) per `SECRETS.md`.
+4. **Enable MFA on the SUPERADMIN seat** (Supabase dashboard) — never the default login.
+5. **CI** runs `prisma generate` so `tsc/lint/test/build` go green there (the web sandbox can't —
+   Prisma engine CDN network-gated; cc verified tests/lint headless, residual failures are all
+   missing-generated-client cascades).
+
+### What's next for cc
+Phase 1 screens are **design-gated** (cd must land `.dc.html` + screenshots first). Phase 2 is
+after-first-revenue. The next cc-startable work is **Track L** (legal drafts: privacy/ToS/DPA/
+consent + acceptance-logging to `ParticipantAccessGrant`/`Consent`) — parallel, no design gate.
+
+### ⚠️ Multi-session note
+Several cc sessions push ccu entries to `main` concurrently and have repeatedly overwritten this
+Phase 0 entry from a stale copy. When editing `docs/COMMAND_CENTRE.md`, branch from the **latest**
+`origin/main` and re-fetch right before pushing, or serialize ccu updates to one owner.
+
+---
+
 ## 🤝 HANDOVER TO COWORK — Phase 2 logic cores (2026-06-26)
 
 cc (Phase-2 lane) built every Phase 2 item that's cleanly startable **headless** — no design, no
@@ -324,6 +368,8 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 ---
 
 ## Decision log (newest first)
+
+- **2026-06-26** — **Phase 0 (cc): foundation hardening — ordered SQL apply + RLS sweep, LLM spend cap, tenant-scope CI guard, SUPERADMIN wiring** (branch `claude/serene-feynman-p80kpr`, commit `78661b9`). The "safe to take money + real data" layer, no design dependency (IMPLEMENTATION_PLAN_MVP §2). **0.1 Ordered SQL apply:** `prisma/sql/apply_all_features.sql` — one `ON_ERROR_STOP`'d, idempotent, `\i`-include script that applies the 13 unapplied feature files **in dependency order** (`audit_hash_chain` + `rbac_grants` FIRST), then the RLS sweep LAST; plus `prisma/sql/feature_tables_rls.sql` — a post-apply sweep that enables RLS + a per-table `tenant_isolation` policy on the feature tables whose DDL shipped **without** RLS (incl. `Membership`/`ParticipantAccessGrant`/`Consent`/`ParticipantCareProfile`, whose RLS existed only as commented-out SQL). **Validated against a throwaway Postgres 16** (clean, idempotent, every swept table RLS-enabled). **0.2 SUPERADMIN wiring:** legacy `can(role, cap)` now honours `SUPERADMIN` as the platform override without polluting `ROLE_CAPABILITIES`. **0.3 Hard LLM spend cap + budget alarm:** `rate-limit.ts checkSpendCap()` (global per-UTC-day ceiling) wired into `/api/generate-note` + `/api/transcribe` (503 on breach), env-gated, fail-open, PostHog `llm_budget_alarm`; new `UPSTASH_*`/`LLM_DAILY_CAP`/`LLM_DAILY_ALARM_FRACTION` env. **0.4 CI tenant-scope guard:** `scripts/check-tenant-scope.mjs` + `npm run check:tenant-scope` + CI step — an unscoped tenant-table list/bulk read is a cross-tenant leak (the Prisma-RLS-bypass is load-bearing); 5 legitimate cross-tenant reads annotated `// tenant-ok:`. **0.5** all four integrations env-gated + PostHog behind `hasAnalyticsConsent()`. **+tests.** **Headless caveat:** Prisma engine CDN network-gated in the web sandbox, so `prisma generate → tsc/build` can't run here — changed tests pass, lint clean, residual failures are all missing-generated-client cascades (green in CI). **Edward TODO:** `psql "$DIRECT_URL" -f prisma/sql/apply_all_features.sql` by hand (NOT `db push`) then `verify_rls_editor.sql`; provision Upstash + set `LLM_DAILY_CAP`; MFA on the SUPERADMIN seat.
 
 - **2026-06-26** — **Phase 2.5 (cc): SCHADS award (MA000100) pay-interpretation core** (branch `claude/elegant-davinci-551vkd`). Enterprise-depth payroll interpretation built as a **rules engine parameterised by a swappable, verify-before-use config** — SCHADS multipliers change at every Fair Work annual wage review (+3.5% from 2025-07) and the rate-table sites 403 through the agent proxy, so hardcoding numbers as authoritative would be wrong. Same pattern as the NDIA price guide: **the engine owns the structure, Edward verifies the numbers.** `src/lib/schads.ts` (pure): `ordinaryMultiplier` (permanent vs casual; casual loading *added* per SCHADS, or *compounded*, via config), `splitOvertime` (daily ordinary→first-2h→after buckets), `payForShift` (day penalty Sat/Sun/PH, evening/night **shift loading applied higher-of** with weekend/PH — no double-stacking, overtime, casual loading on OT, flat sleepover + broken-shift allowances), `classifyDay` (PH > Sun > Sat > weekday). `DEFAULT_SCHADS_CONFIG` is clearly marked **UNVERIFIED** — confirm against the current MA000100 pay guide before real payroll. **10 pure tests (custom round-number config so they test the engine, not the defaults), green via tsx.** **Edward TODO:** verify/replace the default multipliers + allowance amounts against the live Fair Work MA000100 pay guide; later wire to roster hours + a state public-holiday calendar.
 
