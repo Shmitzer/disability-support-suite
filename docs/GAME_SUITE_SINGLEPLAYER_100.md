@@ -2,6 +2,13 @@
 
 **Product backlog · System A only · single-player, therapeutic, NDIS-goal-linked.**
 
+> **Status: FINAL (plan).** All 100 games catalogued and assigned to a build wave; all 11
+> Wave-1 games specced (D1–D5 + W1-a…f); the remaining 89 mapped to nine build-by-template
+> archetypes. Wave 0 (probe) and Wave 1 finalised with exit criteria. Coverage verified:
+> 11 + 27 + 37 + 22 + 3 = 100, every game in exactly one wave with an archetype home, every
+> design choice bound to the Sage & Clay language + the Caira companion. Remaining open work is
+> *implementation*, not planning — tracked in the build plan and the engine-hardening checklist.
+
 Multiplayer (old System B) is deliberately out of scope here. Every game in this
 document is single-player, contributes to NDIS goal progress, is accessibility-first,
 adaptive, offline-capable, and non-punitive.
@@ -325,7 +332,7 @@ Legend: **B?** = build wave (see Build Plan). **Slug** = stable identifier for
 | # | Name | Slug | Description | Target | NDIS | Range | Wave |
 |---|---|---|---|---|---|---|---|
 | 79 | Tell Me More | `tell-me-more` | Build a message from AAC symbols. | Expressive language | communication | T2–T4 | 2 |
-| 80 | Choose & Ask | `choose-ask` | Select symbols to request (errorless). | Requesting | communication | T1–T2 | 2 |
+| 80 | Choose & Ask | `choose-ask` | Select symbols to request (errorless). | Requesting | communication | T1–T2 | **1** |
 | 81 | Yes / No Quest | `yes-no-quest` | Answer yes/no about pictures. | Receptive language | communication | T1–T2 | 2 |
 | 82 | Symbol Story | `symbol-story` | Sequence AAC symbols into a message. | Symbol literacy | communication | T2–T4 | 3 |
 | 83 | Word Predictor | `word-predictor` | Fluent AAC sentence-building w/ prediction. | Communication fluency | communication | T3–T5 | 4 |
@@ -698,29 +705,41 @@ The three not yet proven by a Wave-1 title are **E** (attention/search), **H** (
 and **I** (deferred logic engines).
 
 ### Still to be done — remaining 89 games, by wave
-- **Wave 2 (≈24)** — broaden the floor/early-cognition + core adaptive titles:
-  `switch-sparkle`, `gaze-garden`, `light-chaser`, `big-button`, `pop-match`, `sort-bins`,
-  `odd-one-out`, `finish-pattern`, `sound-starters`, `build-a-word`, `sentence-builder`,
-  `count-along`, `add-take`, `pattern-path`, `whats-missing`, `sound-memory`, `find-target`,
-  `same-different`, `sort-it-out`, `first-then`, `feelings-checkin`, `tell-me-more`,
-  `yes-no-quest`, `trace-place`, `pop-tap`, `calm-canvas`, `bubble-calm`.
-- **Wave 3 (≈27)** — developing tier across all groups: `sound-shake`, `ripple-pool`,
-  `wake-animal`, `rumble-rain`, `peekaboo`, `big-small`, `cause-chains`, `hide-seek`,
-  `rhyme-time`, `story-steps`, `sight-word-garden`, `coin-cafe`, `clock-keeper`,
-  `where-was-it`, `daily-recall`, `face-name`, `digit-span`, `stay-with-it`, `shape-shadows`,
-  `picture-pieces`, `spot-difference`, `switch-tracks`, `maze-minds`, `plan-my-day`,
-  `goal-path`, `how-feel`, `calm-or-big`, `what-could-help`, `symbol-story`, `drag-path`,
-  `pinch-build`, `glow-trace`, `zen-sand`, `sound-garden`, `morning-routine`, `safe-crossing`,
-  `ask-for-help`.
-- **Waves 4–5 — DEFERRED (cut from near-term roadmap; see "Reframe" above).** The ceiling /
-  savant-depth titles are each a standalone game engine for the rarest slice; revisit only once
-  the core product has users and the suite has proven demand.
-- **Wave 4 (≈22)** — the ceiling (savant depth): `word-roots`, `cryptogram`, `times-towers`,
-  `fraction-pizza`, `math-sprint`, `logic-numbers`, `memory-palace`, `mental-rotation`,
-  `hidden-objects`, `tangram`, `chess-trainer`, `logic-grid`, `tower-builder`, `code-breaker`,
-  `recipe-planner`, `budget-buddy`, `what-if`, `read-the-room`, `word-predictor`,
-  `steady-hand`, `shop-smart`, `kitchen-steps`.
-- **Wave 5 (≈2, heaviest engines)** — `go-gomoku`, `circuit-logic`.
+
+Counts below are exact and partition the 89 with no overlap (verified against the catalogue
+Wave column: 11 + 27 + 37 + 22 + 3 = 100). Each game is built by naming its **archetype**
+(A–I) + a content pack — not a fresh design.
+
+- **Wave 2 (27)** — broaden the floor / early-cognition + core adaptive titles (archetypes
+  A–C, F-constrained, G): `add-take`, `big-button`, `bubble-calm`, `build-a-word`, `calm-canvas`,
+  `count-along`, `feelings-checkin`, `find-target`, `finish-pattern`, `first-then`, `gaze-garden`,
+  `light-chaser`, `odd-one-out`, `pattern-path`, `pop-match`, `pop-tap`, `same-different`,
+  `sentence-builder`, `sort-bins`, `sort-it-out`, `sound-memory`, `sound-starters`,
+  `switch-sparkle`, `tell-me-more`†, `trace-place`, `whats-missing`, `yes-no-quest`.
+- **Wave 3 (37)** — developing tier across all groups (archetypes A–E, G + daily-living):
+  `ask-for-help`, `big-small`, `calm-or-big`, `cause-chains`, `clock-keeper`, `coin-cafe`,
+  `daily-recall`, `digit-span`, `drag-path`, `face-name`, `glow-trace`, `goal-path`, `hide-seek`,
+  `how-feel`, `maze-minds`, `morning-routine`, `peekaboo`, `picture-pieces`, `pinch-build`,
+  `plan-my-day`, `rhyme-time`, `ripple-pool`, `rumble-rain`, `safe-crossing`, `shape-shadows`,
+  `sight-word-garden`, `sound-garden`, `sound-shake`, `spot-difference`, `stay-with-it`,
+  `story-steps`, `switch-tracks`, `symbol-story`, `wake-animal`, `what-could-help`,
+  `where-was-it`, `zen-sand`.
+
+> **Waves 4–5 — DEFERRED (cut from the near-term roadmap; see "Reframe" above).** The ceiling /
+> savant-depth titles are each a standalone game engine (archetype I, or heavy G/E content)
+> serving the rarest slice — highest effort, lowest validation density. Listed for completeness;
+> revisit only once the core product has users and the suite has proven demand.
+
+- **Wave 4 (22)** — the ceiling (savant depth): `budget-buddy`, `chess-trainer`, `code-breaker`,
+  `cryptogram`, `fraction-pizza`, `hidden-objects`, `kitchen-steps`, `logic-grid`,
+  `logic-numbers`, `math-sprint`†, `memory-palace`, `mental-rotation`, `read-the-room`,
+  `recipe-planner`, `shop-smart`, `steady-hand`, `tangram`, `times-towers`, `tower-builder`,
+  `what-if`, `word-predictor`†, `word-roots`.
+- **Wave 5 (3)** — heaviest engines: `circuit-logic`, `go-gomoku`, `social-detective`.
+
+† **Safety-gated:** `tell-me-more`, `word-predictor` (open-AAC composition) and any free-text
+title do **not** ship until the `CairaFlag` distress path exists (reconciliation Steps 3–4),
+regardless of their wave. `math-sprint`'s timing is opt-in only.
 
 **Definition of done per game:** declares its **input-support rating** (Full / Adapted /
 Limited) and honours it under those input modes, honours the accessibility profile and the
