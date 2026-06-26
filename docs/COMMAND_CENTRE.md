@@ -5,8 +5,46 @@
 MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
-- **Working branch:** `claude/sharp-hypatia-6zdy2h` (Caira overnight build)
-- **Last updated:** 2026-06-25 night (SOFT LAUNCH — Supabase live, seeded, build fixed; handoff to Cowork)
+- **Working branch:** `claude/nifty-ritchie-nqmsxh` (game-suite foundation) · prior: `claude/sharp-hypatia-6zdy2h`
+- **Last updated:** 2026-06-26 (game-suite foundation built; handoff to Cowork)
+
+---
+
+## 🎮 GAME SUITE — System A foundation built · handoff to Cowork (2026-06-26)
+
+Step 5 (participant game suite) kicked off. Catalogue **re-scoped to 100 purely
+single-player therapeutic games** spanning a 5-tier difficulty spine (T1 severe-ABI /
+single-switch → T5 savant ceiling) so one suite serves the whole ability range.
+Multiplayer (old System B) **deferred** — single-player only for now.
+
+**DONE (on branch `claude/nifty-ritchie-nqmsxh`):**
+- `docs/GAME_SUITE_SINGLEPLAYER_100.md` — full catalogue (100 games, tiered, NDIS-mapped,
+  build-waved) + 5 deep-designed engine-proving games + build plan.
+- **Prisma models** (`schema.prisma`): `NDISGoal`, `GoalProgress`, `GoalGameLink`,
+  `GameSession`, `ParticipantXP` — tenant-stamped; the ONLY place therapeutic XP / goal
+  progress lives (no social crossover).
+- **Engine shell** (`src/lib/games/`): unified-input + accessibility-profile types, the
+  canonical 100-game catalogue, a pure adaptive-difficulty/tier controller, and the
+  session recorder (one txn → session + XP + linked-goal progress).
+- `POST /api/games/session` to record a finished session.
+- **16 unit tests** (`test/games-engine.test.ts`) — catalogue integrity + adaptive/XP
+  logic — all passing (ran via locally-installed tsx; full `npm` blocked here, Prisma
+  engine binary download is network-gated).
+- **Migration SQL** (`prisma/sql/games.sql` + `games_rls.sql`) hand-applied style,
+  matching repo convention. **Validated against a throwaway Postgres 16**: applies clean,
+  idempotent, FK cascade + unique + the recordSession upsert all verified, RLS enabled.
+
+**NEXT (Cowork / Edward — gated DB op):**
+1. **Apply the migration** with the direct connection string (not done — no DB creds in
+   the web sandbox): `psql "$DIRECT_URL" -f prisma/sql/games.sql` then
+   `psql "$DIRECT_URL" -f prisma/sql/games_rls.sql` (both safe to re-run, in that order).
+2. `npx prisma generate` (or next `npm run build`) so `session.ts` + the API route compile
+   against the new models — **not type-checkable here** without the generated client.
+3. Then build is clear for **Wave 1 game bodies** (`word-match` adaptive reference,
+   `touch-bloom`, `pairs-pals`, `choose-ask`, `type-it`, …) + the `/games` launcher UI.
+
+**Guardrail unchanged:** dummy data only until the legal gate clears — creating the empty
+tables is fine; do not load real participant goals yet.
 
 ---
 
