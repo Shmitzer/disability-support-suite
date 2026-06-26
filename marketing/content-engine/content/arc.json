@@ -1,0 +1,15 @@
+{
+  "_comment": "The 2-week founder-story funnel. type: VALUE = pure usefulness, no app. INTRO = personal/founder. SOFT_APP = honest, disclosed app mention. COMMUNITY = question to spark replies. Edit freely.",
+  "week1": [
+    { "day": "Tue", "type": "INTRO", "topic": "Hello — who I am and why I'm here", "brief": "Short founder intro. I work in disability support, I'm here to share useful stuff for sole traders. No pitch. Invite people to say hi." },
+    { "day": "Wed", "type": "VALUE", "topic": "The 3 admin tasks that quietly eat your week", "brief": "Practical breakdown + one tip for each. Pure value." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "What's the most confusing part of the NDIS price guide for you?", "brief": "Open question. Reply to every comment personally." },
+    { "day": "Sun", "type": "VALUE", "topic": "A clean progress-note template that survives an audit", "brief": "Give away an actual template/structure. No strings." }
+  ],
+  "week2": [
+    { "day": "Tue", "type": "VALUE", "topic": "Getting paid faster: invoicing + claims checklist", "brief": "Concrete checklist. Pure value." },
+    { "day": "Wed", "type": "INTRO", "topic": "The admin night that made me start building something", "brief": "Honest founder story — the pain that started it. Still no hard pitch." },
+    { "day": "Thu", "type": "COMMUNITY", "topic": "Solo support work can be isolating — how do you stay connected?", "brief": "Empathy + conversation. Build the community." },
+    { "day": "Sun", "type": "SOFT_APP", "topic": "Here's what I've been building — want to be first to try it?", "brief": "Disclosed, PRE-LAUNCH invite. 'I built this, here's what it does, it's not out yet — would love a few providers to shape it and be first in line.' NO live product link yet; invite to register interest / DM. Honest it's still being readied for market." }
+  ]
+}

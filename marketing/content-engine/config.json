@@ -1,0 +1,42 @@
+{
+  "brand": {
+    "displayName": "Edward @ Caira",
+    "voice": "Warm, plain-spoken, practical. An NDIS-world insider who built a tool to fix a real pain. Never salesy, never corporate. Australian spelling.",
+    "founderStory": "I work in disability support and got sick of the admin eating the hours that should go to participants. So I built a tool to fix it. Sharing what I learn along the way.",
+    "disclosure": "I built this app — when I mention it I'll always say so. Posts are from me, not a bot."
+  },
+  "audience": {
+    "primary": "NDIS sole traders (independent support workers / allied health) in Australia",
+    "secondary": "Small and medium NDIS providers (2-50 staff)",
+    "pains": [
+      "Admin and paperwork eating billable/support hours",
+      "Confusing NDIS price guide and line-item changes",
+      "Invoicing, claims and getting paid on time",
+      "Audit and compliance anxiety",
+      "Note-taking and progress reports",
+      "Isolation of working solo"
+    ],
+    "tone_notes": "This audience is wary of being sold to and protective of participants. Lead with usefulness. Respect, never hype."
+  },
+  "app": {
+    "name": "Caira",
+    "fullName": "Consistent Advanced Integrated Reportable Aid",
+    "tagline": "Care is the work. Caira handles the record.",
+    "oneLiner": "Caira takes the documentation off a support worker's plate — notes, records and reporting handled, so the time goes back to care.",
+    "link": "https://caira.net.au",
+    "status": "pre-launch — site not live yet; legal/go-to-market in progress",
+    "earlyInterest": "Register interest / join the early list (replace with real waitlist URL or 'DM me' when ready)",
+    "mentionPolicy": "Soft. App appears as 'the tool I built' only after value is established. Max ~1 in 4 posts references it in weeks 1-2."
+  },
+  "channel": {
+    "platform": "facebook_page",
+    "pageId": "<YOUR_FB_PAGE_ID>",
+    "postsPerWeek": 4,
+    "preferredTimesAEST": ["Tue 12:30", "Wed 19:30", "Thu 12:30", "Sun 19:00"]
+  },
+  "arc": {
+    "week1": "Pure value + introduce yourself. Zero app pitch. Build trust and show you live in this world.",
+    "week2": "More value, first soft founder-story posts, one gentle 'here's what I'm building' beta invite.",
+    "ongoing": "70% useful content, 20% community/conversation, 10% honest app updates + case studies."
+  }
+}

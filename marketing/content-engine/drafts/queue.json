@@ -1,0 +1,74 @@
+[
+  {
+    "id": "w1-tue-intro",
+    "week": 1,
+    "type": "INTRO",
+    "topic": "Hello — who I am and why I'm here",
+    "slot": "Tue 12:30",
+    "text": "G'day, I'm Edward. I've spent years in disability support, and I started this page to share the practical stuff that makes a support worker's week lighter — the notes, the price guide, getting paid, the admin that quietly steals your evenings.\n\nNo pitch here, just things I've learned the hard way and want to pass on. If you're a sole trader or running a small provider, tell me below: what's the one task you wish would just do itself? I read and reply to everything. 👋",
+    "status": "needs_review"
+  },
+  {
+    "id": "w1-wed-value",
+    "week": 1,
+    "type": "VALUE",
+    "topic": "The 3 admin tasks that quietly eat your week",
+    "slot": "Wed 19:30",
+    "text": "Three culprits I see again and again:\n\n1. Progress notes after every shift — do them in the car before you drive off, while it's fresh. Five minutes now beats an hour on Sunday.\n2. Chasing invoices/claims — keep a one-line tracker: date, participant, amount, paid Y/N. You can't chase what you can't see.\n3. Re-finding info — one folder per participant, same structure every time. Future-you will thank you.\n\nWhat's the fourth one I missed? 👇",
+    "status": "needs_review"
+  },
+  {
+    "id": "w1-thu-community",
+    "week": 1,
+    "type": "COMMUNITY",
+    "topic": "What's the most confusing part of the NDIS price guide for you?",
+    "slot": "Thu 12:30",
+    "text": "Honest question for the support workers here: what's the most confusing part of the NDIS price guide for you?\n\nLine items, travel, cancellations, the wording that changes every update — no wrong answers. I'll do my best to point to a clear answer for each one in the comments.",
+    "status": "needs_review"
+  },
+  {
+    "id": "w1-sun-value",
+    "week": 1,
+    "type": "VALUE",
+    "topic": "A clean progress-note template that survives an audit",
+    "slot": "Sun 19:00",
+    "text": "A note that holds up under audit usually has five things: date & time, who was there, what the goal was, what actually happened, and the participant's response. Plain language, factual, no opinions dressed as facts.\n\nQuick test: if someone read your note in two years with zero context, would they understand what happened and why? If yes, you're sorted.\n\nSave this one for your next shift. What does your note routine look like?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w2-tue-value",
+    "week": 2,
+    "type": "VALUE",
+    "topic": "Getting paid faster: invoicing + claims checklist",
+    "slot": "Tue 12:30",
+    "text": "A getting-paid checklist for sole traders:\n\n☐ Service agreement signed before you start\n☐ Notes done same day (your invoice evidence)\n☐ Invoice within 48 hours of the shift\n☐ Clear line items matching the plan\n☐ A follow-up date in your calendar if unpaid in 14 days\n\nCash flow isn't about working more — it's about closing the loop faster. What's your average wait to get paid?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w2-wed-intro",
+    "week": 2,
+    "type": "INTRO",
+    "topic": "The admin night that made me start building something",
+    "slot": "Wed 19:30",
+    "text": "Real talk. A while back I finished a run of shifts, sat down at 9pm, and spent another two hours on notes and invoices. Care all day, paperwork all night. I remember thinking: the record-keeping shouldn't cost this much of the actual caring.\n\nThat night is why I started building something. More on that soon — but first, am I the only one? How late does your admin keep you up?",
+    "status": "needs_review"
+  },
+  {
+    "id": "w2-thu-community",
+    "week": 2,
+    "type": "COMMUNITY",
+    "topic": "Solo support work can be isolating — how do you stay connected?",
+    "slot": "Thu 12:30",
+    "text": "Support work can be lonely — you're often the only one in the room, and there's no team kitchen to debrief in.\n\nSo how do you stay connected? A group chat, a mentor, a Facebook community like this one? Share what works — someone reading this needs to hear it. 🙂",
+    "status": "needs_review"
+  },
+  {
+    "id": "w2-sun-soft_app",
+    "week": 2,
+    "type": "SOFT_APP",
+    "topic": "What I've been building — want to be first to try it?",
+    "slot": "Sun 19:00",
+    "text": "Okay — full honesty, here's what I've been building. It's called Caira. Care is the work. Caira handles the record.\n\nThe idea: take the documentation off a support worker's plate — notes, records and reporting — so the hours go back to care instead of paperwork. It's not out yet; I'm getting it ready properly and want a few real providers to help shape it before launch.\n\nIf you'd like to be first in line and have a say in how it works, comment or DM me. No cost, no pressure — just building this with the people who'll use it. 🙏",
+    "status": "needs_review"
+  }
+]
