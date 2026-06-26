@@ -49,6 +49,8 @@ export const Capability = {
   IncidentManage: "incident:manage",
   // Manage worker credentials / training records.
   CredentialManage: "credential:manage",
+  // De-identify ("right to erasure") a participant record. High-trust, admin-only.
+  ParticipantErase: "participant:erase",
 
   // Participant-scoped capabilities (used by external/family carer + guardian
   // grants, see GRANT_ROLE_CAPABILITIES). These are only ever held against a
@@ -92,6 +94,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
     Capability.NoteApprove,
     Capability.IncidentManage,
     Capability.CredentialManage,
+    Capability.ParticipantErase,
   ],
   SUPERADMIN: [],
 };

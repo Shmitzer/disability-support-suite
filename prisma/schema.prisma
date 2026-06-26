@@ -93,6 +93,35 @@ model Participant {
   ndisNumber     String?             @unique
   userId         String // owning user (e.g. solo worker), for future RLS
   organisationId String?
+
+  // NDIS plan + profile fields (Phase 1 — the coordinator console's participant
+  // records). All nullable/additive; populated from the console, never required to
+  // run the app. Direct/indirect identifiers here are cleared by anonymiseParticipant.
+  preferredName            String?
+  dateOfBirth              DateTime?
+  pronouns                 String?
+  primaryDisability        String?
+  communicationNeeds       String?
+  culturalNeeds            String?
+  address                  String?
+  phone                    String?
+  email                    String?
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+  gpName                   String?
+  gpPhone                  String?
+  ndisPlanStart            DateTime?
+  ndisPlanEnd              DateTime?
+  planManagementType       String? // SELF | PLAN_MANAGED | AGENCY_MANAGED
+  planManagerName          String?
+  planManagerContact       String?
+  supportCoordinator       String?
+
+  // Right-to-erasure (de-identification) tombstones — see src/lib/anonymise.ts.
+  anonymisedAt DateTime?
+  deletedAt    DateTime?
+
   notes          ProgressNote[]
   shifts         Shift[]
   workerLinks    WorkerParticipant[] // workers a manager has linked to this person
