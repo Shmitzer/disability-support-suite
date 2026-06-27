@@ -34,6 +34,15 @@
   --status: #34a07f;
   --status-bg: #e7f1ec;
 
+  /* Amber — meds-due / reminders (HANDOFF "due/amber") */
+  --amber: #e3a534;
+  --amber-bg: #fdf6ea;
+
+  /* Warm-neutral variants (HANDOFF: surface/sunk/faint extras) */
+  --surface-2: #fffaf3;
+  --surface-sunk-2: #efe6d6;
+  --text-faint: #9b8a72;
+
   /* Hairlines */
   --border: #ece0cf;       /* line */
 
@@ -56,6 +65,11 @@
   --color-clay-tint: var(--clay-tint);
   --color-status: var(--status);
   --color-status-bg: var(--status-bg);
+  --color-amber: var(--amber);
+  --color-amber-bg: var(--amber-bg);
+  --color-surface-2: var(--surface-2);
+  --color-surface-sunk-2: var(--surface-sunk-2);
+  --color-text-faint: var(--text-faint);
   --color-border: var(--border);
   --font-sans: var(--font-sans-base);
   --font-display: var(--font-display);
