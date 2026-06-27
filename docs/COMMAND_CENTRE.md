@@ -12,7 +12,7 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 ## 🤝 HANDOVER TO COWORK — Caira character + AI brain + audio + Rive (2026-06-26)
 
-All on branch **`claude/funny-brown-oinkli`** (NOT merged to `main`). Verified headless:
+All on branch **`claude/funny-brown-oinkli`** — **MERGED to `main`** (commit `899b35e`, 2026-06-27). Verified headless:
 `tsc` ✓ · `lint` ✓ · `npm test` (25/25, incl. 4 new Caira suites) ✓ · `npm run build` ✓.
 Asset master + every spec/handover doc are in the **"Caira UI"** Google Drive folder.
 
