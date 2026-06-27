@@ -136,7 +136,7 @@ test("purgeSynced + summarise", () => {
   q = markSyncing(q, "b");
   q = markFailed(q, "c", "x", 0);
 
-  let s = summarise(q);
+  const s = summarise(q);
   assert.equal(s.synced, 1);
   assert.equal(s.syncing, 1);
   assert.equal(s.pending, 1); // c retried back to pending
@@ -152,6 +152,6 @@ test("idempotency key is stable across re-enqueue of the same logical op", () =>
   const k2 = mintIdempotencyKey("dev1", "Shift", 5);
   assert.equal(k1, k2);
   // and an explicit key survives enqueue (crash-recovery reuse)
-  const q = enqueue([], { ...base({ id: "a", entityId: "E1", clientTs: 1 }), idempotencyKey: "kept" } as any);
+  const q = enqueue([], { ...base({ id: "a", entityId: "E1", clientTs: 1 }), idempotencyKey: "kept" } as Enq & { idempotencyKey: string });
   assert.equal(q[0].idempotencyKey, "kept");
 });
