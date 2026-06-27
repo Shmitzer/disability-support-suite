@@ -78,3 +78,85 @@ Food, Drink, Hygiene, Activity, Toilet, Medication (+ Note, Incident). Icons are
 - **Sync gap:** the phone `Caira Tracker` still uses the *older* model (mic-in-toggle, no urgent takeover, no reminders/alerts). Bring it in line with Tablet A if the phone is in scope.
 - **Not yet designed:** Settings screen (layout + palette switcher), real incident-report flow, finish-shift confirmation, and alerts/voice-message on the Web dashboards.
 - Accessibility intent: large hit targets (≥44px), calm/low-contrast urgency (reassurance over alarm), one-handed thumb-zone weighting on phone/Tablet A.
+
+
+## Phase G / G2 screens (added 2026-06-27 by cd)
+
+
+### Participant Hub — shared iPad (G2 — added 2026-06-27 by cd)
+
+- `Caira Participant Hub.dc.html` — **tablet** participant-anchored "care station" for Zef's 3:1
+  multi-org support (built to `PARTICIPANT_HUB_SPEC.md` + `HUB_DATA_MODEL.md`). Three columns:
+  **identity** (Zef care context, BSP, on-call), **capture** (on-shift avatar row + quick-log),
+  **shared timeline** (right). Flow: **tap-to-identify** — tap your photo in the "on shift now" row
+  → **PIN sheet** (full login once, then a PIN tap; AI may pre-highlight the likely worker but the
+  actor always confirms) → if capacity is ambiguous (the mother, Linda Mercer = worker *or* family)
+  a **capacity pick** sheet appears → you become the active actor ("Logging as …"). **Quick-log**
+  tiles (the six Paper category icons + Note + the clay *Report incident* → links the incident
+  register) stamp each entry with `loggedByWorkerId` + `actingCapacity` + org. The **unified
+  timeline** merges all orgs' entries, each attributed *name · capacity badge · org* (Worker=teal,
+  Family=amber, Guardian=clay), with a live **presence cue** ("Aria is adding a note…") for the
+  real-time multi-device model. **Lock** clears the actor → a **locked overlay** (shared-device
+  safeguard) requires tap-to-identify again; the hub session stays open for Zef. Tweak:
+  `participantName`. Capacity → funding: WORKER = billable/EVV via shift; FAMILY/GUARDIAN = unpaid
+  (per `HUB_DATA_MODEL` capacity routing).
+
+### eMAR-lite (G2 — added 2026-06-27 by cd)
+
+- `Caira eMAR.dc.html` — **phone** medication record, the **compact card/row list** (not a full
+  chart grid, per decision 6). Sections: **Due now** (amber, with Give / Withhold / Refused —
+  Withhold & Refused expand an inline reason picker), **Later today** (upcoming, scheduled time),
+  **PRN — as needed** (Give PRN), **Done** (given / withheld / refused with who · when · reason).
+  Chemical-restraint PRN (Lorazepam) carries a clay note and, once given, the
+  "also logs as a restrictive practice" cross-reference deep-linking the RP flow (per
+  `HUB_DATA_MODEL`: chemical restraint via eMAR must surface as RP). Tweak: `participantName`.
+
+### Notification center (G2 — added 2026-06-27 by cd)
+
+- `Caira Notifications.dc.html` — **phone** notification **feed + push-permission priming sheet**
+  (worker surface). Feed groups **New** (unread, teal dot) vs **Earlier** (read, dimmed); tapping a
+  row marks it read (moves to Earlier, decrements the clay unread badge); **Mark all read** clears.
+  Notification kinds carry calm per-type tints + line icons: coordinator **message** (teal),
+  **medication** due (meds pink), **reminder**/outing (amber), reportable **incident** (clay),
+  **shift** (sage), **on-call** (clay). The **push-permission prime** is a two-step soft-ask: an
+  inline primer card ("Turn on" / "Not now") opens a bottom **priming sheet** that explains *why*
+  before the OS prompt (meds & reminders / messages & on-call / reporting deadlines) — Allow →
+  "Notifications are on" strip; "Not now" dismisses without nagging. Calm, never marketing.
+  The phone surface is a fixed-height (844px) internal-scroll container so the sheet pins to the
+  visible bottom. Tweak: `participantName`.
+
+### Incident reporting (G2 — added 2026-06-27 by cd)
+
+- `Caira Incidents.dc.html` — **phone** incident **register + reportable-incident form** (worker
+  surface). The list shows this-shift incidents with calm status tints (Reportable = clay,
+  Open = amber, Recorded = sage) and a filter (All / Open / Reportable); the one deliberately-loud
+  **"REPORT AN INCIDENT"** affordance is the brand's muted-clay uppercase treatment — **never red**.
+  Create flow: pick incident type → (auto-detects reportable from type or "Serious" severity, showing
+  the calm-clay 24h Commission banner) → when, what happened, immediate-action chips, anyone-present,
+  and a notifications checklist (coordinator auto-notified; guardian/nominee; Commission) → save →
+  confirmation with reference + status. Selecting **Restrictive practice** routes out to the
+  specialised RP flow (deep-links `Caira RP Incident.dc.html`) rather than capturing it here.
+  Tapping a list row opens a read-only detail. Tweaks: `participantName`, `reportingWindowHours`.
+
+- `Caira RP Incident.dc.html` — **tablet** (shared hub iPad) **restrictive-practice capture**, the
+  speed-first "reportable" path that slots in right after the register. Built to
+  `docs/RP_INCIDENT_CD_BRIEF.md` + `HUB_DATA_MODEL.md §Restrictive-practice incidents`. Left rail =
+  pre-filled context (participant, BSP-0417, on-shift worker + capacity + org, PIN-confirmed note,
+  live "this record so far" summary); right pane = capture. Two paths converge on one
+  review-before-save: **Quick tap** (BSP-authorised one-tap buttons → pre-set chips) and **Dictate**
+  (clay mic with recording pulse → editable transcript). The fork: *authorised under BSP* → calm
+  confirm; *Unauthorised / emergency* (`rpAuthorised=false`) → auto-flags reportable, shows the
+  calm-clay Commission banner + notifications checklist. Chemical restraint picks drug/dose from the
+  **eMAR** (carries `medicationAdminId`). Calm clay throughout, never red. Tweaks: `participantName`,
+  `bspAuthorisedPractices`, `reportingWindowHours`, `initialMode` (quick | dictate).
+
+**Field → `Incident` column map (for cc wiring, RP screen):** RP type → `rpType`; authorised toggle
+→ `rpAuthorised` (false ⇒ `reportable=true`); routine/PRN → `rpRoutineOrPrn`; drug/dose →
+`rpMedication`/`rpDose` (+ `medicationAdminId` from eMAR); duration → `rpDurationMinutes`; strategies
+tried → `lessRestrictiveTried`; BSP ref → `bspReference`; narrative → `description` +
+`immediateAction`; notifications → `notified` JSON; always `restrictivePractice=true`.
+
+**Caveats:** all actions are mocks (no persistence/backend/real transcription — the mic fills a sample
+transcript). The reportable timeframe shown (`reportingWindowHours`, default 24h) is **not legally
+settled** — the lawyer + behaviour-support practitioner confirm RP reporting obligations before any
+real RP event is logged. Dummy data only.

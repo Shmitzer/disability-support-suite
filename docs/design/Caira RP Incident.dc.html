@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="design-system/tokens/fonts.css">
+<link rel="stylesheet" href="design-system/tokens/colors.css">
+<link rel="stylesheet" href="design-system/tokens/categories.css">
+<link rel="stylesheet" href="design-system/tokens/typography.css">
+<link rel="stylesheet" href="design-system/tokens/spacing.css">
+<link rel="stylesheet" href="design-system/tokens/shape.css">
+<link rel="stylesheet" href="design-system/styles.css">
+<script src="design-system/_ds_bundle.js"></script>
+<style>
+  *{ box-sizing:border-box; }
+  body{ margin:0; }
+  @keyframes rpPulse{ 0%{ transform:scale(1); opacity:.55; } 70%{ transform:scale(1.55); opacity:0; } 100%{ transform:scale(1.55); opacity:0; } }
+  @media (prefers-reduced-motion: reduce){ .rp-ring{ animation:none !important; } }
+</style>
+</helmet>
+<div style="min-height:100vh; background:var(--background); padding:28px; font-family:var(--font-sans-base); color:var(--text-body); -webkit-font-smoothing:antialiased;">
+  <div data-screen-label="RP incident capture" style="max-width:1240px; margin:0 auto; display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;">
+
+    <!-- ============ LEFT RAIL — identity + pre-filled context ============ -->
+    <div style="flex:1 1 320px; min-width:300px; max-width:380px; display:flex; flex-direction:column; gap:16px;">
+
+      <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Card" padding="20" hint-size="100%,auto">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Logo" variant="mark" size="30" hint-size="30px,30px"></x-import>
+          <div style="display:flex; flex-direction:column; gap:3px;">
+            <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--clay-strong);">Restrictive practice</span>
+            <span style="font:700 19px var(--font-display); letter-spacing:-0.01em; color:var(--foreground);">Incident record</span>
+          </div>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Card" padding="20" hint-size="100%,auto">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Avatar" name="{{ participantName }}" size="50" hint-size="50px,50px"></x-import>
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font:700 22px var(--font-display); letter-spacing:-0.01em; color:var(--foreground);">{{ participantName }}</span>
+              <span style="font:400 14px var(--font-sans-base); color:var(--muted);">Acquired brain injury · BSP in place</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Badge" tone="neutral" hint-size="auto,22px">3:1 support</x-import>
+            <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Badge" tone="brand" hint-size="auto,22px">Behaviour support plan</x-import>
+          </div>
+          <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; flex-direction:column; gap:4px;">
+            <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">Authorising plan</span>
+            <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">BSP-0417 · reviewed Apr 2026</span>
+          </div>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Card" padding="20" hint-size="100%,auto">
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--status);">On shift · {{ timeLabel }}</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Avatar" name="Maja Olsen" size="38" hint-size="38px,38px"></x-import>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font:600 15px var(--font-sans-base); color:var(--foreground);">Maja Olsen</span>
+              <span style="font:400 13px var(--font-sans-base); color:var(--muted);">Support worker · Northern Life Support</span>
+            </div>
+          </div>
+          <div style="display:flex; align-items:flex-start; gap:8px; background:var(--surface-well); border-radius:12px; padding:10px 12px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="m18 5 2 2"/><path d="m15 8 2 2"/></svg>
+            <span style="font:400 13px var(--font-sans-base); color:var(--muted); line-height:1.45;">Auto-selected from check-in · confirmed by PIN. The actor is always tapped to confirm.</span>
+          </div>
+        </div>
+      </x-import>
+
+      <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Card" padding="20" hint-size="100%,auto">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">This record so far</span>
+          <sc-for list="{{ summary }}" as="row" hint-placeholder-count="2">
+            <div style="display:flex; justify-content:space-between; gap:16px; align-items:baseline;">
+              <span style="font:400 13px var(--font-sans-base); color:var(--muted); flex-shrink:0;">{{ row.k }}</span>
+              <span style="font:600 14px var(--font-sans-base); color:var(--foreground); text-align:right;">{{ row.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </x-import>
+
+    </div>
+
+    <!-- ============ RIGHT PANE — capture ============ -->
+    <div style="flex:3 1 480px; min-width:320px; display:flex; flex-direction:column; gap:18px; min-height:660px; background:var(--surface-card); border:1px solid var(--border); border-radius:22px; box-shadow:var(--shadow-card); padding:26px;">
+
+      <!-- header -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; gap:5px; flex:1 1 240px;">
+          <span style="font:700 26px var(--font-display); letter-spacing:-0.01em; color:var(--foreground);">{{ stepTitle }}</span>
+          <span style="font:400 15px var(--font-sans-base); color:var(--muted); line-height:1.45;">{{ stepHint }}</span>
+        </div>
+        <sc-if value="{{ showModeToggle }}" hint-placeholder-val="{{ true }}">
+          <div style="min-width:208px;">
+            <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.SegmentedControl" options="{{ modeOptions }}" value="{{ mode }}" on-change="{{ setMode }}" hint-size="208px,52px"></x-import>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- reportable banner -->
+      <sc-if value="{{ showBanner }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; align-items:flex-start; gap:12px; background:var(--clay-tint); border:1px solid var(--clay-tint); border-radius:14px; padding:14px 16px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--clay-strong)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <span style="font:700 15px var(--font-sans-base); color:var(--clay-strong);">Reportable to the NDIS Commission</span>
+            <span style="font:400 14px var(--font-sans-base); color:var(--clay-strong); opacity:.85; line-height:1.45;">Due within {{ reportingWindowHours }}h of the event. The right people are notified at the review step — no separate form to chase.</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== STEP: TYPE ===== -->
+      <sc-if value="{{ isType }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:22px;">
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">Authorised under {{ participantName }}’s plan</span>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <sc-for list="{{ authorisedTypes }}" as="t" hint-placeholder-count="2">
+                <button type="button" onClick="{{ t.onClick }}" style="display:flex; align-items:center; gap:16px; width:100%; text-align:left; padding:18px 20px; min-height:84px; border-radius:18px; border:1px solid var(--border); background:var(--surface); cursor:pointer; transition:background .15s ease, border-color .15s ease;" style-hover="background:var(--surface-sunk); border-color:var(--brand);">
+                  <span style="width:52px; height:52px; border-radius:14px; background:var(--brand-tint); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--brand-strong)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                  </span>
+                  <span style="display:flex; flex-direction:column; gap:3px;">
+                    <span style="font:700 18px var(--font-display); letter-spacing:-0.01em; color:var(--foreground);">{{ t.label }}</span>
+                    <span style="font:400 14px var(--font-sans-base); color:var(--muted);">One tap · authorised under BSP-0417</span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="height:1px; background:var(--border);"></div>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">Outside the plan</span>
+            <sc-if value="{{ emergencyOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:400 14px var(--font-sans-base); color:var(--clay-strong);">This is the serious branch — it’s recorded as a reportable incident. Select the practice used:</span>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:10px;">
+                  <sc-for list="{{ emergencyTypes }}" as="e" hint-placeholder-count="5">
+                    <button type="button" onClick="{{ e.onClick }}" style="display:flex; align-items:center; gap:12px; text-align:left; padding:14px 16px; min-height:64px; border-radius:14px; border:1px solid var(--clay-tint); background:var(--clay-tint); cursor:pointer; transition:background .15s ease;" style-hover="background:#f7d6cc;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--clay-strong)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      <span style="font:700 15px var(--font-sans-base); color:var(--clay-strong);">{{ e.label }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ emergencyClosed }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ openEmergency }}" style="display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:16px 18px; min-height:60px; border-radius:14px; border:1px dashed var(--clay); background:transparent; cursor:pointer; transition:background .15s ease;" style-hover="background:var(--clay-tint);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--clay-strong)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font:700 15px var(--font-sans-base); color:var(--clay-strong);">Unauthorised or emergency use</span>
+                  <span style="font:400 13px var(--font-sans-base); color:var(--muted);">Anything not covered by the current plan</span>
+                </span>
+              </button>
+            </sc-if>
+          </div>
+
+        </div>
+      </sc-if>
+
+      <!-- ===== STEP: DETAILS ===== -->
+      <sc-if value="{{ isDetails }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px;">
+
+          <!-- dictate -->
+          <sc-if value="{{ isDictate }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:18px; align-items:center;">
+              <div style="position:relative; width:96px; height:96px; display:flex; align-items:center; justify-content:center;">
+                <sc-if value="{{ recording }}" hint-placeholder-val="{{ false }}">
+                  <span class="rp-ring" style="position:absolute; inset:0; border-radius:999px; background:var(--clay); animation:rpPulse 1.6s ease-out infinite;"></span>
+                </sc-if>
+                <button type="button" onClick="{{ toggleRecording }}" style="position:relative; width:84px; height:84px; border-radius:999px; border:none; background:var(--clay); box-shadow:var(--shadow-pop); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s ease;" style-hover="background:var(--clay-strong);">
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+                </button>
+              </div>
+              <span style="font:600 15px var(--font-sans-base); color:var(--foreground);">{{ micLabel }}</span>
+              <div style="width:100%; display:flex; flex-direction:column; gap:8px;">
+                <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Input" multiline="{{ true }}" rows="5" value="{{ narrative }}" onChange="{{ setNarrative }}" placeholder="Voice transcription is coming soon — type the narrative here, or dictate above and edit it." hint-size="100%,120px"></x-import>
+                <span style="font:400 13px var(--font-sans-base); color:var(--muted);">Read it back before saving — nothing is committed unreviewed.</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- quick: chemical -->
+          <sc-if value="{{ showChemical }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">Medication — picked from the eMAR</span>
+              <sc-for list="{{ emarRows }}" as="m" hint-placeholder-count="3">
+                <button type="button" onClick="{{ m.onClick }}" style="{{ m.style }}">
+                  <span style="display:flex; align-items:center; gap:12px;">
+                    <span style="width:36px; height:36px; border-radius:10px; background:var(--cat-meds-fill); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cat-meds-ink)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    </span>
+                    <span style="display:flex; flex-direction:column; gap:2px;">
+                      <span style="font:700 15px var(--font-sans-base); color:var(--foreground);">{{ m.name }} · {{ m.dose }}</span>
+                      <span style="font:400 13px var(--font-sans-base); color:var(--muted);">{{ m.kind }} · last given {{ m.time }}</span>
+                    </span>
+                  </span>
+                  <span style="font:700 12px var(--font-sans-base); letter-spacing:0.06em; text-transform:uppercase; color:var(--muted);">{{ m.adminId }}</span>
+                </button>
+              </sc-for>
+              <div style="display:flex; flex-direction:column; gap:10px; margin-top:6px;">
+                <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">Routine or PRN</span>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  <sc-for list="{{ routineChips }}" as="c" hint-placeholder-count="2">
+                    <button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <span style="font:400 13px var(--font-sans-base); color:var(--muted);">Linked to the eMAR so the same dose isn’t recorded twice.</span>
+            </div>
+          </sc-if>
+
+          <!-- quick: physical / other -->
+          <sc-if value="{{ showPhysical }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:18px;">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">How long</span>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  <sc-for list="{{ durationChips }}" as="c" hint-placeholder-count="5"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">What was happening</span>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  <sc-for list="{{ triggerChips }}" as="c" hint-placeholder-count="5"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">Tried first — least-restrictive options</span>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  <sc-for list="{{ strategyChips }}" as="c" hint-placeholder-count="6"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">Any injury</span>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  <sc-for list="{{ injuryChips }}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- both (non-dictate) -->
+          <sc-if value="{{ showBoth }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:18px; border-top:1px solid var(--border); padding-top:18px;">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">Immediate action</span>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  <sc-for list="{{ immediateChips }}" as="c" hint-placeholder-count="6"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:600 14px var(--font-sans-base); color:var(--foreground);">How is {{ participantName }} now</span>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  <sc-for list="{{ outcomeChips }}" as="c" hint-placeholder-count="5"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+        </div>
+      </sc-if>
+
+      <!-- ===== STEP: REVIEW ===== -->
+      <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Card" tone="sunk" padding="18" hint-size="100%,auto">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <sc-for list="{{ summary }}" as="row" hint-placeholder-count="4">
+                <div style="display:flex; justify-content:space-between; gap:20px; align-items:baseline; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                  <span style="font:600 13px var(--font-sans-base); color:var(--muted); flex-shrink:0;">{{ row.k }}</span>
+                  <span style="font:600 15px var(--font-sans-base); color:var(--foreground); text-align:right;">{{ row.v }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </x-import>
+
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Input" label="Note" multiline="{{ true }}" rows="3" value="{{ narrative }}" onChange="{{ setNarrative }}" placeholder="Add or edit the narrative before saving (optional)." hint-size="100%,90px"></x-import>
+          </div>
+
+          <sc-if value="{{ reportable }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">Who gets notified</span>
+              <sc-for list="{{ notifyRows }}" as="n" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--border); border-radius:14px; background:var(--surface);">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font:600 15px var(--font-sans-base); color:var(--foreground);">{{ n.label }}</span>
+                    <span style="font:400 13px var(--font-sans-base); color:var(--muted);">{{ n.sub }}</span>
+                  </div>
+                  <button type="button" onClick="{{ n.toggle }}" style="{{ n.toggleStyle }}">
+                    <span style="{{ n.knobStyle }}"></span>
+                  </button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ===== STEP: DONE ===== -->
+      <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:16px; padding:24px 0 8px;">
+          <span style="width:72px; height:72px; border-radius:999px; background:var(--status-bg); display:inline-flex; align-items:center; justify-content:center;">
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--status)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </span>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font:800 28px var(--font-display); letter-spacing:-0.01em; color:var(--foreground);">Record saved</span>
+            <span style="font:400 15px var(--font-sans-base); color:var(--muted);">Reference <span style="font:700 15px var(--font-display); color:var(--foreground);">{{ ref }}</span></span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+            <sc-if value="{{ reportable }}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Badge" tone="clay" hint-size="auto,22px">Reportable · Commission notified</x-import>
+            </sc-if>
+            <sc-if value="{{ notReportable }}" hint-placeholder-val="{{ true }}">
+              <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Badge" tone="status" hint-size="auto,22px">Recorded · authorised</x-import>
+            </sc-if>
+          </div>
+          <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Card" tone="sunk" padding="18" hint-size="100%,auto">
+            <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
+              <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">What happens next</span>
+              <sc-for list="{{ nextSteps }}" as="n" hint-placeholder-count="3">
+                <div style="display:flex; align-items:flex-start; gap:10px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                  <span style="font:400 14px var(--font-sans-base); color:var(--foreground); line-height:1.45;">{{ n }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </x-import>
+        </div>
+      </sc-if>
+
+      <!-- ===== FOOTER actions ===== -->
+      <sc-if value="{{ showFooter }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:auto; padding-top:18px; border-top:1px solid var(--border);">
+          <div>
+            <sc-if value="{{ isDetails }}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="ghost" onClick="{{ back }}" hint-size="auto,48px">← Back</x-import>
+            </sc-if>
+            <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="ghost" onClick="{{ editDetails }}" hint-size="auto,48px">Edit details</x-import>
+            </sc-if>
+          </div>
+          <div>
+            <sc-if value="{{ isDetails }}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="primary" size="lg" onClick="{{ toReview }}" disabled="{{ reviewDisabled }}" hint-size="auto,56px">Review record</x-import>
+            </sc-if>
+            <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="primary" size="lg" onClick="{{ save }}" hint-size="auto,56px">Save record</x-import>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- done footer -->
+      <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; justify-content:center; gap:12px; margin-top:auto; padding-top:18px; border-top:1px solid var(--border);">
+          <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="secondary" onClick="{{ reset }}" hint-size="auto,48px">Log another</x-import>
+          <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="primary" onClick="{{ reset }}" hint-size="auto,48px">Back to {{ participantName }}’s timeline</x-import>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:900},&quot;participantName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Zef&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;reportingWindowHours&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:24,&quot;min&quot;:1,&quot;max&quot;:72,&quot;unit&quot;:&quot;h&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Reporting&quot;},&quot;initialMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;quick&quot;,&quot;dictate&quot;],&quot;default&quot;:&quot;quick&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Capture&quot;},&quot;bspAuthorisedPractices&quot;:{&quot;editor&quot;:null,&quot;default&quot;:[&quot;Physical restraint&quot;,&quot;Chemical restraint&quot;],&quot;tsType&quot;:&quot;string[]&quot;}}">
+const DURATIONS = ['Under 1 min','1–2 min','2–5 min','5–10 min','Over 10 min'];
+const TRIGGERS = ['Escalating aggression','Risk to others','Risk to self','Property damage','Tried to leave unsafely'];
+const STRATEGIES = ['Verbal de-escalation','Offered space','Redirected activity','Reduced demands','Removed the trigger','Called for support'];
+const INJURIES = ['None','Minor — no first aid','First aid given','Needs review'];
+const IMMEDIATE = ['Stayed with him','Monitored closely','Offered reassurance','Checked breathing','Recorded straight away','Told the team lead'];
+const OUTCOMES = ['Calm and settled','Resting quietly','Re-engaged in activity','Still agitated','Sleeping'];
+const ROUTINE = ['Routine','PRN'];
+const EMERGENCY_TYPES = ['Physical restraint','Chemical restraint','Mechanical restraint','Environmental restraint','Seclusion'];
+const EMAR = [
+  { name:'Lorazepam', dose:'1 mg', kind:'PRN', time:'14:20', adminId:'MA-2291' },
+  { name:'Diazepam', dose:'5 mg', kind:'PRN', time:'—', adminId:'MA-2290' },
+  { name:'Risperidone', dose:'0.5 mg', kind:'Routine', time:'08:00', adminId:'MA-2284' },
+];
+const TRANSCRIPT = "Zef became distressed around 2:30, escalating to aggression toward another resident. I tried verbal de-escalation and offered him space first. With a risk to others I used a brief supporting hold for about two minutes. No injuries — he is calm and resting now.";
+
+class Component extends DCLogic {
+  state = {
+    mode: this.props.initialMode || 'quick',
+    step: 'type',
+    emergencyOpen: false,
+    rpType: null,
+    authorised: null,
+    duration: null,
+    triggers: [],
+    strategies: [],
+    injury: null,
+    med: null,
+    routineOrPrn: null,
+    immediate: [],
+    outcome: null,
+    narrative: '',
+    recording: false,
+    notify: { coordinator: true, guardian: true, commission: true },
+    ref: null,
+  };
+
+  pickType(label, authorised){ this.setState({ rpType: label, authorised, step: 'details' }); }
+  openEmergency(){ this.setState({ emergencyOpen: true }); }
+  setMode(m){ this.setState({ mode: m }); }
+  setVal(k, v){ this.setState({ [k]: v }); }
+  toggleArr(k, v){ this.setState(s => { const a = s[k]; return { [k]: a.includes(v) ? a.filter(x => x !== v) : a.concat(v) }; }); }
+  pickMed(m){ this.setState({ med: m }); }
+  toReview(){ this.setState({ step: 'review' }); }
+  editDetails(){ this.setState({ step: 'details' }); }
+  back(){ this.setState(s => ({ step: s.step === 'review' ? 'details' : 'type', emergencyOpen: s.step === 'details' ? false : s.emergencyOpen, rpType: s.step === 'details' ? null : s.rpType, authorised: s.step === 'details' ? null : s.authorised })); }
+  toggleNotify(k){ this.setState(s => ({ notify: { ...s.notify, [k]: !s.notify[k] } })); }
+  toggleRecording(){ this.setState(s => s.recording ? { recording:false, narrative: s.narrative || TRANSCRIPT } : { recording:true }); }
+  setNarrative(e){ const v = e.target.value; this.setState({ narrative: v }); }
+  save(){ const ref = 'RP-' + new Date().getFullYear() + '-' + String(Math.floor(Date.now()/1000) % 10000).padStart(4,'0'); this.setState({ step:'done', ref }); }
+  reset(){ this.setState({ step:'type', emergencyOpen:false, rpType:null, authorised:null, duration:null, triggers:[], strategies:[], injury:null, med:null, routineOrPrn:null, immediate:[], outcome:null, narrative:'', recording:false, ref:null }); }
+
+  chip(label, selected, onClick){
+    return { label, selected, onClick, style: {
+      display:'inline-flex', alignItems:'center', gap:8,
+      padding:'12px 16px', minHeight:50, borderRadius:14,
+      border:'1px solid ' + (selected ? 'var(--brand)' : 'var(--border)'),
+      background: selected ? 'var(--brand-tint)' : 'var(--surface)',
+      color: selected ? 'var(--brand-strong)' : 'var(--text-body)',
+      font:'600 15px var(--font-sans-base)', cursor:'pointer',
+      transition:'background .15s ease, border-color .15s ease', textAlign:'left'
+    }};
+  }
+
+  renderVals(){
+    const st = this.state;
+    const name = this.props.participantName || 'Zef';
+    const reportable = st.authorised === false;
+    const isChemical = st.rpType === 'Chemical restraint';
+    const isDictate = st.mode === 'dictate';
+    const mk = (list, key) => list.map(x => this.chip(x, st[key] === x, () => this.setVal(key, x)));
+    const mkMulti = (list, key) => list.map(x => this.chip(x, st[key].includes(x), () => this.toggleArr(key, x)));
+
+    const authorisedTypes = (this.props.bspAuthorisedPractices || ['Physical restraint','Chemical restraint'])
+      .map(label => ({ label, onClick: () => this.pickType(label, true) }));
+    const emergencyTypes = EMERGENCY_TYPES.map(label => ({ label, onClick: () => this.pickType(label, false) }));
+
+    const emarRows = EMAR.map(m => {
+      const selected = !!st.med && st.med.adminId === m.adminId;
+      return { ...m, onClick: () => this.pickMed(m), style: {
+        display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, width:'100%',
+        padding:'14px 16px', minHeight:60, borderRadius:14,
+        border:'1px solid ' + (selected ? 'var(--brand)' : 'var(--border)'),
+        background: selected ? 'var(--brand-tint)' : 'var(--surface)',
+        color:'var(--text-body)', cursor:'pointer', transition:'background .15s ease, border-color .15s ease', textAlign:'left'
+      }};
+    });
+
+    let canReview;
+    if (isDictate) canReview = !!st.rpType && st.narrative.trim().length > 0;
+    else if (isChemical) canReview = !!st.med && !!st.routineOrPrn;
+    else canReview = !!st.duration && !!st.injury;
+
+    const sum = [];
+    sum.push({ k:'Type', v: st.rpType || '—' });
+    sum.push({ k:'Authorisation', v: st.authorised == null ? '—' : (st.authorised ? 'Under BSP-0417' : 'Unauthorised / emergency') });
+    if (isChemical){
+      if (st.med) sum.push({ k:'Medication', v: st.med.name + ' · ' + st.med.dose });
+      if (st.routineOrPrn) sum.push({ k:'Routine / PRN', v: st.routineOrPrn });
+    } else if (st.rpType) {
+      if (st.duration) sum.push({ k:'Duration', v: st.duration });
+      if (st.triggers.length) sum.push({ k:'Trigger', v: st.triggers.join(', ') });
+      if (st.strategies.length) sum.push({ k:'Tried first', v: st.strategies.join(', ') });
+      if (st.injury) sum.push({ k:'Injury', v: st.injury });
+    }
+    if (st.immediate.length) sum.push({ k:'Immediate action', v: st.immediate.join(', ') });
+    if (st.outcome) sum.push({ k:'Outcome', v: st.outcome });
+    if (st.narrative) sum.push({ k:'Note', v: st.narrative });
+
+    const toggleStyle = (on) => ({ width:46, height:28, borderRadius:999, border:'none', cursor:'pointer', padding:3, display:'flex', alignItems:'center', justifyContent: on ? 'flex-end' : 'flex-start', background: on ? 'var(--brand)' : 'var(--surface-well)', transition:'background .15s ease, justify-content .15s ease', opacity:1 });
+    const knobStyle = { width:22, height:22, borderRadius:999, background:'#fff', boxShadow:'var(--shadow-soft)', display:'block' };
+    const notifyRows = [
+      { key:'coordinator', label:'Coordinator — NLS', sub:'Notified automatically', locked:true, on:true },
+      { key:'guardian', label:'Guardian / nominee', sub: name + '’s mother', locked:false, on:st.notify.guardian },
+      { key:'commission', label:'NDIS Commission', sub:'Reportable-incident form', locked:false, on:st.notify.commission },
+    ].map(r => ({ ...r, toggle: () => { if (!r.locked) this.toggleNotify(r.key); }, toggleStyle: toggleStyle(r.on), knobStyle }));
+
+    const now = new Date();
+    const timeLabel = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+    const stepTitle = st.step === 'type' ? 'What happened?'
+      : st.step === 'details' ? (isDictate ? 'Describe it' : (st.rpType || 'Details'))
+      : st.step === 'review' ? 'Check and save'
+      : 'Saved';
+    const stepHint = st.step === 'type' ? 'Tap the practice used — most of the record is already filled in.'
+      : st.step === 'details' ? (isDictate ? 'Speak the narrative, then read it back before saving.' : 'A few quick confirmations — nothing here is free typing unless you want it.')
+      : st.step === 'review' ? 'You can edit anything before it’s committed.'
+      : '';
+
+    const micLabel = st.recording ? 'Listening… tap to stop' : (st.narrative ? 'Tap to add more' : 'Tap to start dictating');
+
+    const nextSteps = reportable
+      ? ['This RP record is held on NLS’s audit trail, hash-chain verified.',
+         'A reportable-incident notification goes to the NDIS Commission within ' + (this.props.reportingWindowHours ?? 24) + ' hours.',
+         'The coordinator and ' + name + '’s nominee are notified now.',
+         'It appears on ' + name + '’s shared timeline, attributed to you.']
+      : ['This RP record is held on NLS’s audit trail, hash-chain verified.',
+         'It appears on ' + name + '’s shared timeline, attributed to you.',
+         'The behaviour support team can review it against the plan.'];
+
+    return {
+      participantName: name,
+      reportingWindowHours: this.props.reportingWindowHours ?? 24,
+      timeLabel,
+      mode: st.mode, isDictate,
+      modeOptions: [{ value:'quick', label:'Quick tap' }, { value:'dictate', label:'Dictate' }],
+      setMode: (v) => this.setMode(v),
+      isType: st.step === 'type', isDetails: st.step === 'details', isReview: st.step === 'review', isDone: st.step === 'done',
+      showModeToggle: st.step === 'type' || st.step === 'details',
+      showBanner: reportable && st.step !== 'done' && st.step !== 'type',
+      emergencyOpen: st.emergencyOpen, emergencyClosed: !st.emergencyOpen, openEmergency: () => this.openEmergency(),
+      authorisedTypes, emergencyTypes,
+      reportable, notReportable: !reportable, isChemical,
+      showChemical: !isDictate && isChemical,
+      showPhysical: !isDictate && !!st.rpType && !isChemical,
+      showBoth: !isDictate && !!st.rpType,
+      rpType: st.rpType,
+      durationChips: mk(DURATIONS, 'duration'),
+      triggerChips: mkMulti(TRIGGERS, 'triggers'),
+      strategyChips: mkMulti(STRATEGIES, 'strategies'),
+      injuryChips: mk(INJURIES, 'injury'),
+      immediateChips: mkMulti(IMMEDIATE, 'immediate'),
+      outcomeChips: mk(OUTCOMES, 'outcome'),
+      routineChips: mk(ROUTINE, 'routineOrPrn'),
+      emarRows,
+      recording: st.recording, toggleRecording: () => this.toggleRecording(), micLabel,
+      narrative: st.narrative, setNarrative: (e) => this.setNarrative(e),
+      canReview, reviewDisabled: !canReview,
+      toReview: () => this.toReview(), editDetails: () => this.editDetails(), back: () => this.back(), save: () => this.save(), reset: () => this.reset(),
+      summary: sum, notifyRows,
+      showFooter: st.step === 'details' || st.step === 'review',
+      ref: st.ref, nextSteps,
+      stepTitle, stepHint,
+    };
+  }
+}
+</script>
+</body>
+</html>

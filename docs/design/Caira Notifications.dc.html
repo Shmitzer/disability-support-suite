@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="design-system/tokens/fonts.css">
+<link rel="stylesheet" href="design-system/tokens/colors.css">
+<link rel="stylesheet" href="design-system/tokens/categories.css">
+<link rel="stylesheet" href="design-system/tokens/typography.css">
+<link rel="stylesheet" href="design-system/tokens/spacing.css">
+<link rel="stylesheet" href="design-system/tokens/shape.css">
+<link rel="stylesheet" href="design-system/styles.css">
+<script src="design-system/_ds_bundle.js"></script>
+<style>
+  *{ box-sizing:border-box; }
+  body{ margin:0; }
+  @keyframes rpSheetUp{ from{ transform:translateY(100%); } to{ transform:translateY(0); } }
+  @keyframes rpFade{ from{ opacity:0; } to{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){ .rp-sheet,.rp-scrim{ animation:none !important; } }
+</style>
+</helmet>
+<div style="min-height:100vh; background:var(--background); padding:32px 20px; font-family:var(--font-sans-base); color:var(--text-body); display:flex; justify-content:center; -webkit-font-smoothing:antialiased;">
+  <div data-screen-label="Notification center" style="width:412px; max-width:100%; height:844px; position:relative; background:var(--surface-card); border:1px solid var(--border); border-radius:30px; box-shadow:var(--shadow-card); overflow:hidden; display:flex; flex-direction:column;">
+
+    <!-- ===== HEADER ===== -->
+    <div style="flex-shrink:0; padding:18px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; background:var(--surface-card);">
+      <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Logo" variant="mark" size="26" hint-size="26px,26px"></x-import>
+      <div style="display:flex; align-items:center; gap:8px; flex:1;">
+        <span style="font:800 21px var(--font-display); letter-spacing:-0.01em; color:var(--foreground);">Notifications</span>
+        <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+          <span style="min-width:22px; height:22px; padding:0 7px; border-radius:999px; background:var(--clay); color:#fff; font:700 12px var(--font-sans-base); display:inline-flex; align-items:center; justify-content:center;">{{ unreadCount }}</span>
+        </sc-if>
+      </div>
+      <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+        <button type="button" onClick="{{ markAll }}" style="background:none; border:none; cursor:pointer; font:600 14px var(--font-sans-base); color:var(--brand); padding:6px 4px;">Mark all read</button>
+      </sc-if>
+    </div>
+
+    <div style="flex:1; overflow-y:auto; padding:16px 20px 24px; display:flex; flex-direction:column; gap:18px;">
+
+      <!-- ===== PERMISSION PRIMER (inline) ===== -->
+      <sc-if value="{{ showPrimerCard }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:14px; background:var(--brand-tint); border:1px solid var(--brand-tint); border-radius:18px; padding:18px;">
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <span style="width:42px; height:42px; border-radius:12px; background:var(--surface-card); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-strong)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </span>
+            <div style="display:flex; flex-direction:column; gap:3px; flex:1;">
+              <span style="font:700 16px var(--font-sans-base); color:var(--brand-strong);">Turn on notifications</span>
+              <span style="font:400 14px var(--font-sans-base); color:var(--brand-strong); opacity:.9; line-height:1.45;">So meds, reminders and messages reach you while you’re focused on {{ participantName }}.</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button type="button" onClick="{{ openPrimer }}" style="flex:1; min-height:44px; border-radius:13px; border:none; background:var(--brand); color:#fff; font:700 15px var(--font-sans-base); cursor:pointer; transition:background .15s ease;" style-hover="background:var(--brand-strong);">Turn on</button>
+            <button type="button" onClick="{{ dismissPrimer }}" style="min-height:44px; padding:0 16px; border-radius:13px; border:none; background:transparent; color:var(--brand-strong); font:600 15px var(--font-sans-base); cursor:pointer;">Not now</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== PERMISSION GRANTED strip ===== -->
+      <sc-if value="{{ granted }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; align-items:center; gap:10px; background:var(--status-bg); border-radius:14px; padding:12px 16px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--status)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <span style="font:600 14px var(--font-sans-base); color:var(--status);">Notifications are on · you’re all set</span>
+        </div>
+      </sc-if>
+
+      <!-- ===== NEW ===== -->
+      <sc-if value="{{ hasNew }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">New</span>
+          <sc-for list="{{ newItems }}" as="n" hint-placeholder-count="3">
+            <button type="button" onClick="{{ n.onClick }}" style="display:flex; align-items:flex-start; gap:13px; width:100%; text-align:left; padding:14px; border-radius:16px; border:1px solid var(--border); background:var(--surface); cursor:pointer; transition:background .15s ease;" style-hover="background:var(--surface-sunk);">
+              <span style="width:42px; height:42px; border-radius:12px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; background:{{ n.bg }};">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ n.fg }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" dangerouslySetInnerHTML="{{ n.icon }}"></svg>
+              </span>
+              <span style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
+                <span style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+                  <span style="flex:1; min-width:0; font:700 15px/1.3 var(--font-sans-base); color:var(--foreground);">{{ n.title }}</span>
+                  <span style="flex-shrink:0; font:400 12px var(--font-sans-base); color:var(--muted);">{{ n.time }}</span>
+                </span>
+                <span style="display:block; font:400 14px/1.4 var(--font-sans-base); color:var(--text-body);">{{ n.body }}</span>
+              </span>
+              <span style="width:9px; height:9px; border-radius:999px; background:var(--brand); flex-shrink:0; margin-top:6px;"></span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- ===== EARLIER ===== -->
+      <sc-if value="{{ hasEarlier }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">Earlier</span>
+          <sc-for list="{{ earlierItems }}" as="n" hint-placeholder-count="2">
+            <button type="button" onClick="{{ n.onClick }}" style="display:flex; align-items:flex-start; gap:13px; width:100%; text-align:left; padding:14px; border-radius:16px; border:1px solid transparent; background:transparent; cursor:default; opacity:.72;">
+              <span style="width:42px; height:42px; border-radius:12px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; background:{{ n.bg }};">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ n.fg }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" dangerouslySetInnerHTML="{{ n.icon }}"></svg>
+              </span>
+              <span style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
+                <span style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+                  <span style="flex:1; min-width:0; font:600 15px/1.3 var(--font-sans-base); color:var(--foreground);">{{ n.title }}</span>
+                  <span style="flex-shrink:0; font:400 12px var(--font-sans-base); color:var(--muted);">{{ n.time }}</span>
+                </span>
+                <span style="display:block; font:400 14px/1.4 var(--font-sans-base); color:var(--muted);">{{ n.body }}</span>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <!-- ===== PRIMING SHEET (overlay) ===== -->
+    <sc-if value="{{ primerOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="rp-scrim" onClick="{{ closePrimer }}" style="position:absolute; inset:0; background:rgb(43 42 38 / 0.34); z-index:10; animation:rpFade .18s ease;"></div>
+      <div class="rp-sheet" style="position:absolute; left:0; right:0; bottom:0; z-index:11; background:var(--surface-card); border-radius:26px 26px 30px 30px; padding:24px 22px 26px; display:flex; flex-direction:column; gap:18px; box-shadow:0 -10px 34px rgb(30 34 42 / 0.14); animation:rpSheetUp .26s cubic-bezier(.2,.8,.2,1);">
+        <span style="width:40px; height:4px; border-radius:999px; background:var(--border); align-self:center;"></span>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
+          <span style="width:60px; height:60px; border-radius:18px; background:var(--brand-tint); display:inline-flex; align-items:center; justify-content:center;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--brand-strong)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          </span>
+          <span style="font:800 23px var(--font-display); letter-spacing:-0.01em; color:var(--foreground);">Stay on top of the shift</span>
+          <span style="font:400 15px var(--font-sans-base); color:var(--muted); line-height:1.5;">Caira only sends what matters during a shift — never marketing. You can change this any time in Settings.</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:14px; padding:4px 4px 0;">
+          <sc-for list="{{ primerBenefits }}" as="b" hint-placeholder-count="3">
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+              <span style="width:36px; height:36px; border-radius:10px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; background:{{ b.bg }};">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ b.fg }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" dangerouslySetInnerHTML="{{ b.icon }}"></svg>
+              </span>
+              <div style="display:flex; flex-direction:column; gap:2px; flex:1;">
+                <span style="font:600 15px var(--font-sans-base); color:var(--foreground);">{{ b.title }}</span>
+                <span style="font:400 13px var(--font-sans-base); color:var(--muted); line-height:1.4;">{{ b.body }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+          <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="primary" size="lg" fullWidth="{{ true }}" onClick="{{ allow }}" hint-size="100%,56px">Turn on notifications</x-import>
+          <button type="button" onClick="{{ dismissPrimer }}" style="min-height:48px; border:none; background:transparent; color:var(--muted); font:600 15px var(--font-sans-base); cursor:pointer;">Not now</button>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940},&quot;participantName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Zef&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const ICONS = {
+  message: { __html: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
+  meds:    { __html: '<rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/>' },
+  reminder:{ __html: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>' },
+  incident:{ __html: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
+  shift:   { __html: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>' },
+  oncall:  { __html: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>' },
+};
+const TINT = {
+  message:  { bg:'var(--brand-tint)', fg:'var(--brand-strong)' },
+  meds:     { bg:'var(--cat-meds-fill)', fg:'var(--cat-meds-ink)' },
+  reminder: { bg:'var(--amber-bg)', fg:'#a9781f' },
+  incident: { bg:'var(--clay-tint)', fg:'var(--clay-strong)' },
+  shift:    { bg:'var(--status-bg)', fg:'var(--status)' },
+  oncall:   { bg:'var(--clay-tint)', fg:'var(--clay-strong)' },
+};
+
+class Component extends DCLogic {
+  state = {
+    permission: 'default',
+    primerOpen: false,
+    primerDismissed: false,
+    notifs: [
+      { id:'n1', kind:'message',  title:'Message from Dana (NLS)', body:'Can you confirm Zef’s transport for Thursday’s appointment?', time:'5m', unread:true },
+      { id:'n2', kind:'meds',     title:'Medication due soon',     body:'Zef · Risperidone 0.5 mg due at 8:00pm.', time:'12m', unread:true },
+      { id:'n3', kind:'reminder', title:'Outing in 1 hour',        body:'Community garden visit at 4:00pm. Pack his water bottle.', time:'20m', unread:true },
+      { id:'n4', kind:'incident', title:'Reportable incident due', body:'RP-2026-8526 — NDIS Commission notification due in 22h.', time:'1h', unread:true },
+      { id:'n5', kind:'shift',    title:'Shift ends at 9:00pm',     body:'Remember to finish your shift and add a handover note.', time:'2h', unread:false },
+      { id:'n6', kind:'oncall',   title:'Missed on-call',           body:'You called the on-call line at 1:14pm — Priya called back.', time:'3h', unread:false },
+      { id:'n7', kind:'message',  title:'Handover acknowledged',    body:'Maja read your note from this morning’s shift.', time:'Yesterday', unread:false },
+    ],
+  };
+
+  markRead(id){ this.setState(s => ({ notifs: s.notifs.map(n => n.id === id ? { ...n, unread:false } : n) })); }
+  markAll(){ this.setState(s => ({ notifs: s.notifs.map(n => ({ ...n, unread:false })) })); }
+  openPrimer(){ this.setState({ primerOpen:true }); }
+  closePrimer(){ this.setState({ primerOpen:false }); }
+  dismissPrimer(){ this.setState({ primerOpen:false, primerDismissed:true }); }
+  allow(){ this.setState({ permission:'granted', primerOpen:false }); }
+
+  decorate(n){ const t = TINT[n.kind] || TINT.message; return { ...n, bg:t.bg, fg:t.fg, icon: ICONS[n.kind] || ICONS.message, onClick: () => this.markRead(n.id) }; }
+
+  renderVals(){
+    const st = this.state;
+    const name = this.props.participantName || 'Zef';
+    const unread = st.notifs.filter(n => n.unread);
+    const read = st.notifs.filter(n => !n.unread);
+    const granted = st.permission === 'granted';
+
+    return {
+      participantName: name,
+      unreadCount: unread.length, hasUnread: unread.length > 0,
+      newItems: unread.map(n => this.decorate(n)), hasNew: unread.length > 0,
+      earlierItems: read.map(n => this.decorate(n)), hasEarlier: read.length > 0,
+      markAll: () => this.markAll(),
+      showPrimerCard: st.permission === 'default' && !st.primerDismissed && !st.primerOpen,
+      granted,
+      primerOpen: st.primerOpen,
+      openPrimer: () => this.openPrimer(), closePrimer: () => this.closePrimer(), dismissPrimer: () => this.dismissPrimer(), allow: () => this.allow(),
+      primerBenefits: [
+        { kind:'meds', title:'Meds & reminders, on time', body:'A nudge before each dose or outing — nothing slips.', bg:TINT.meds.bg, fg:TINT.meds.fg, icon:ICONS.meds },
+        { kind:'message', title:'Messages & on-call', body:'Hear from your coordinator the moment it matters.', bg:TINT.message.bg, fg:TINT.message.fg, icon:ICONS.message },
+        { kind:'incident', title:'Reporting deadlines', body:'Reminders before a reportable incident is due.', bg:TINT.incident.bg, fg:TINT.incident.fg, icon:ICONS.incident },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

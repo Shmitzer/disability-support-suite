@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="design-system/tokens/fonts.css">
+<link rel="stylesheet" href="design-system/tokens/colors.css">
+<link rel="stylesheet" href="design-system/tokens/categories.css">
+<link rel="stylesheet" href="design-system/tokens/typography.css">
+<link rel="stylesheet" href="design-system/tokens/spacing.css">
+<link rel="stylesheet" href="design-system/tokens/shape.css">
+<link rel="stylesheet" href="design-system/styles.css">
+<script src="design-system/_ds_bundle.js"></script>
+<style>*{ box-sizing:border-box; } body{ margin:0; }</style>
+</helmet>
+<div style="min-height:100vh; background:var(--background); padding:32px 20px; font-family:var(--font-sans-base); color:var(--text-body); display:flex; justify-content:center; -webkit-font-smoothing:antialiased;">
+  <div data-screen-label="eMAR-lite" style="width:412px; max-width:100%; height:844px; position:relative; background:var(--surface-card); border:1px solid var(--border); border-radius:30px; box-shadow:var(--shadow-card); overflow:hidden; display:flex; flex-direction:column;">
+
+    <!-- HEADER -->
+    <div style="flex-shrink:0; padding:18px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+      <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Logo" variant="mark" size="26" hint-size="26px,26px"></x-import>
+      <div style="display:flex; flex-direction:column; gap:1px; flex:1;">
+        <span style="font:800 21px var(--font-display); letter-spacing:-0.01em; color:var(--foreground);">Medications</span>
+        <span style="font:400 13px var(--font-sans-base); color:var(--muted);">{{ participantName }} · {{ today }}</span>
+      </div>
+      <span style="font:700 12px var(--font-sans-base); color:var(--amber); background:var(--amber-bg); padding:5px 11px; border-radius:999px;">{{ dueCount }} due</span>
+    </div>
+
+    <div style="flex:1; overflow-y:auto; padding:16px 20px 28px; display:flex; flex-direction:column; gap:22px;">
+
+      <!-- DUE NOW -->
+      <sc-if value="{{ hasDue }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--amber);">Due now</span>
+          <sc-for list="{{ dueMeds }}" as="m" hint-placeholder-count="1">
+            <div style="display:flex; flex-direction:column; gap:14px; padding:16px; border:1px solid var(--amber); border-radius:18px; background:var(--surface);">
+              <div style="display:flex; align-items:flex-start; gap:13px;">
+                <span style="width:42px; height:42px; border-radius:12px; background:var(--cat-meds-fill); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cat-meds-ink)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </span>
+                <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
+                  <span style="font:700 17px var(--font-sans-base); color:var(--foreground);">{{ m.name }} · {{ m.dose }}</span>
+                  <span style="font:400 14px var(--font-sans-base); color:var(--muted);">{{ m.route }} · scheduled {{ m.time }}</span>
+                </div>
+              </div>
+              <sc-if value="{{ m.noReason }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex; gap:8px;">
+                  <div style="flex:1;"><x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="primary" fullWidth="{{ true }}" onClick="{{ m.give }}" hint-size="100%,48px">Give</x-import></div>
+                  <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="secondary" onClick="{{ m.startWithhold }}" hint-size="auto,48px">Withhold</x-import>
+                  <x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="secondary" onClick="{{ m.startRefuse }}" dc-props="{{ refusedStyle }}" hint-size="auto,48px">Refused</x-import>
+                </div>
+              </sc-if>
+              <sc-if value="{{ m.reasonOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                  <span style="font:600 13px var(--font-sans-base); color:var(--foreground);">{{ m.reasonPrompt }}</span>
+                  <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <sc-for list="{{ m.reasonChips }}" as="r" hint-placeholder-count="3">
+                      <button type="button" onClick="{{ r.onClick }}" style="padding:9px 14px; min-height:42px; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--text-body); font:600 14px var(--font-sans-base); cursor:pointer;" style-hover="background:var(--surface-sunk);">{{ r.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- LATER -->
+      <sc-if value="{{ hasLater }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">Later today</span>
+          <sc-for list="{{ laterMeds }}" as="m" hint-placeholder-count="2">
+            <div style="display:flex; align-items:center; gap:13px; padding:14px 16px; border:1px solid var(--border); border-radius:16px; background:var(--surface);">
+              <span style="width:38px; height:38px; border-radius:11px; background:var(--cat-meds-fill); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; opacity:.85;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cat-meds-ink)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </span>
+              <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
+                <span style="font:600 15px var(--font-sans-base); color:var(--foreground);">{{ m.name }} · {{ m.dose }}</span>
+                <span style="font:400 13px var(--font-sans-base); color:var(--muted);">{{ m.route }}</span>
+              </div>
+              <span style="font:700 14px var(--font-display); color:var(--muted); flex-shrink:0;">{{ m.time }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- PRN -->
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">As needed · PRN</span>
+        <sc-for list="{{ prnMeds }}" as="m" hint-placeholder-count="2">
+          <div style="display:flex; flex-direction:column; gap:12px; padding:16px; border:1px solid var(--border); border-radius:16px; background:var(--surface);">
+            <div style="display:flex; align-items:flex-start; gap:13px;">
+              <span style="width:40px; height:40px; border-radius:11px; background:var(--cat-meds-fill); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--cat-meds-ink)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </span>
+              <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
+                <span style="font:700 16px var(--font-sans-base); color:var(--foreground);">{{ m.name }} · {{ m.dose }}</span>
+                <span style="font:400 13px var(--font-sans-base); color:var(--muted);">{{ m.sub }}</span>
+              </div>
+              <sc-if value="{{ m.notGiven }}" hint-placeholder-val="{{ true }}">
+                <div style="flex-shrink:0;"><x-import component-from-global-scope="CairaDesignSystem_e5cfc1.Button" variant="primary" size="sm" onClick="{{ m.give }}" hint-size="auto,44px">Give PRN</x-import></div>
+              </sc-if>
+              <sc-if value="{{ m.given }}" hint-placeholder-val="{{ false }}">
+                <span style="flex-shrink:0; display:inline-flex; align-items:center; gap:5px; font:700 13px var(--font-sans-base); color:var(--status); background:var(--status-bg); padding:6px 11px; border-radius:999px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--status)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{{ m.at }}
+                </span>
+              </sc-if>
+            </div>
+            <sc-if value="{{ m.showRpNote }}" hint-placeholder-val="{{ false }}">
+              <a href="Caira RP Incident.dc.html" style="display:flex; align-items:center; gap:9px; text-decoration:none; background:var(--clay-tint); border-radius:12px; padding:11px 13px;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--clay-strong)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span style="font:600 13px var(--font-sans-base); color:var(--clay-strong); flex:1; line-height:1.35;">Chemical restraint — also records as a restrictive practice. Open RP flow →</span>
+              </a>
+            </sc-if>
+            <sc-if value="{{ m.showRpHint }}" hint-placeholder-val="{{ false }}">
+              <span style="font:400 12px var(--font-sans-base); color:var(--clay-strong); background:var(--clay-tint); padding:8px 12px; border-radius:10px;">Chemical restraint · this dose also logs as a restrictive practice.</span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- DONE -->
+      <sc-if value="{{ hasDone }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <span style="font:700 11px var(--font-sans-base); letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);">Done</span>
+          <sc-for list="{{ doneMeds }}" as="m" hint-placeholder-count="1">
+            <div style="display:flex; align-items:center; gap:13px; padding:14px 16px; border:1px solid var(--border); border-radius:16px; background:var(--surface-well);">
+              <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
+                <span style="font:600 15px var(--font-sans-base); color:var(--foreground);">{{ m.name }} · {{ m.dose }}</span>
+                <span style="font:400 13px var(--font-sans-base); color:var(--muted);">{{ m.doneLine }}</span>
+              </div>
+              <span style="flex-shrink:0; font:700 12px var(--font-sans-base); letter-spacing:0.03em; padding:5px 11px; border-radius:999px; background:{{ m.pillBg }}; color:{{ m.pillFg }};">{{ m.statusText }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940},&quot;participantName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Zef&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const WITHHOLD_REASONS = ['Asleep','Clinically withheld','Not available','Nil by mouth'];
+const REFUSE_REASONS = ['Declined','Spat it out','Too distressed'];
+const STATUS_PILL = {
+  given:    { text:'Given',    bg:'var(--status-bg)', fg:'var(--status)' },
+  withheld: { text:'Withheld', bg:'var(--surface-card)', fg:'var(--muted)' },
+  refused:  { text:'Refused',  bg:'var(--clay-tint)', fg:'var(--clay-strong)' },
+};
+
+class Component extends DCLogic {
+  state = {
+    pending: null, // { id, mode: 'withhold'|'refuse' }
+    meds: [
+      { id:'m1', name:'Risperidone', dose:'0.5 mg', route:'Oral tablet', time:'08:00', group:'scheduled', status:'given', by:'Maja O.', at:'08:04', reason:null },
+      { id:'m2', name:'Paracetamol', dose:'500 mg', route:'Oral tablet', time:'12:30', group:'due', status:null, by:null, at:null, reason:null },
+      { id:'m3', name:'Levetiracetam', dose:'500 mg', route:'Oral tablet', time:'20:00', group:'scheduled', status:null, by:null, at:null, reason:null },
+      { id:'m4', name:'Macrogol', dose:'1 sachet', route:'Oral', time:'20:00', group:'scheduled', status:null, by:null, at:null, reason:null },
+      { id:'p1', name:'Lorazepam', dose:'1 mg', route:'Oral', sub:'Behaviour · chemical restraint', group:'prn', rp:true, status:null, by:null, at:null },
+      { id:'p2', name:'Paracetamol', dose:'500 mg', route:'Oral', sub:'Pain · max 4 in 24h', group:'prn', rp:false, status:null, by:null, at:null },
+    ],
+  };
+
+  now(){ const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+  give(id){ this.setState(s => ({ pending: s.pending && s.pending.id===id ? null : s.pending, meds: s.meds.map(m => m.id===id ? { ...m, status:'given', by:'You', at:this.now(), reason:null } : m) })); }
+  startReason(id, mode){ this.setState({ pending: { id, mode } }); }
+  pickReason(id, mode, reason){ this.setState(s => ({ pending:null, meds: s.meds.map(m => m.id===id ? { ...m, status: mode==='withhold'?'withheld':'refused', by:'You', at:this.now(), reason } : m) })); }
+
+  reasonChips(id, mode){ const list = mode==='withhold' ? WITHHOLD_REASONS : REFUSE_REASONS; return list.map(r => ({ label:r, onClick: () => this.pickReason(id, mode, r) })); }
+
+  renderVals(){
+    const st = this.state;
+    const name = this.props.participantName || 'Zef';
+    const today = new Date().toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'short' });
+
+    const dueMeds = st.meds.filter(m => m.group==='due' && !m.status).map(m => {
+      const open = st.pending && st.pending.id===m.id;
+      return { ...m,
+        noReason: !open,
+        reasonOpen: !!open,
+        reasonPrompt: open && st.pending.mode==='withhold' ? 'Why withheld?' : 'Why refused?',
+        reasonChips: open ? this.reasonChips(m.id, st.pending.mode) : [],
+        give: () => this.give(m.id),
+        startWithhold: () => this.startReason(m.id, 'withhold'),
+        startRefuse: () => this.startReason(m.id, 'refuse'),
+      };
+    });
+
+    const laterMeds = st.meds.filter(m => m.group==='scheduled' && !m.status);
+
+    const prnMeds = st.meds.filter(m => m.group==='prn').map(m => ({ ...m,
+      notGiven: m.status!=='given', given: m.status==='given',
+      give: () => this.give(m.id),
+      showRpNote: m.rp && m.status!=='given',
+      showRpHint: m.rp && m.status==='given',
+    }));
+
+    const doneMeds = st.meds.filter(m => (m.group==='due' || m.group==='scheduled') && m.status).map(m => {
+      const p = STATUS_PILL[m.status];
+      const reasonStr = m.reason ? ' · ' + m.reason : '';
+      return { ...m, statusText:p.text, pillBg:p.bg, pillFg:p.fg, doneLine: m.status==='given' ? ('Given ' + m.at + ' · ' + m.by) : (p.text + ' ' + m.at + ' · ' + m.by + reasonStr) };
+    });
+
+    return {
+      refusedStyle: { style: { color:'var(--clay-strong)', background:'var(--clay-tint)', border:'1px solid var(--clay-tint)' } },
+      participantName: name, today,
+      dueCount: st.meds.filter(m => m.group==='due' && !m.status).length,
+      dueMeds, hasDue: dueMeds.length > 0,
+      laterMeds, hasLater: laterMeds.length > 0,
+      prnMeds,
+      doneMeds, hasDone: doneMeds.length > 0,
+    };
+  }
+}
+</script>
+</body>
+</html>
