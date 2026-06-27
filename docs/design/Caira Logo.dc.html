@@ -8,137 +8,61 @@
 <body>
 <x-dc>
 <helmet>
-<meta name="design_doc_mode" content="canvas">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
-<style>
-* { box-sizing: border-box; font-family:'Figtree',sans-serif; }
-.card { background:#fff; border:1px solid #e7e9ed; border-radius:22px; box-shadow:0 8px 28px rgba(30,34,42,.07); padding:24px; display:flex; flex-direction:column; }
-.nm { font:800 18px 'Bricolage Grotesque'; color:#23272e; }
-.rat { font:600 12px 'Figtree'; color:#8a909a; margin-top:4px; line-height:1.5; min-height:54px; }
-.tile { width:104px; height:104px; border-radius:26px; display:flex; align-items:center; justify-content:center; }
-.lock { display:flex; align-items:center; gap:10px; margin-top:18px; padding-top:16px; border-top:1px solid #f0f1f4; }
-.word { font:800 26px 'Bricolage Grotesque'; color:#0f766e; letter-spacing:-.01em; }
-.appicon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; }
-svg { display:block; overflow:visible; }
-</style>
+<link rel="stylesheet" href="design-system/tokens/fonts.css">
+<link rel="stylesheet" href="design-system/tokens/colors.css">
+<link rel="stylesheet" href="design-system/tokens/typography.css">
 </helmet>
-
-<div style="position:absolute; left:60px; top:26px; width:1200px;">
-  <div data-drags-parent="1" style="font:800 16px 'Figtree'; color:#3a3128;">CAIRA · LOGO DIRECTIONS</div>
-  <div data-drags-parent="1" style="font:600 13px 'Figtree'; color:#9aa1ab; margin-top:4px;">Six marks for a warm, human support-logging app. Each shows the symbol, a wordmark lockup, and an app-icon tile. Sage &amp; Clay palette.</div>
-</div>
-
-<!-- ROW 1 -->
-<!-- 1 CRADLE -->
-<div style="position:absolute; left:60px; top:104px; width:300px;">
-  <div data-drags-parent="1" class="card">
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div class="tile" style="background:#eef5f3;">
-        <svg width="64" height="64" viewBox="0 0 64 64"><path d="M13 30 a19 19 0 0 0 38 0" fill="none" stroke="#0f766e" stroke-width="6" stroke-linecap="round"></path><circle cx="32" cy="21" r="7.5" fill="#df5b40"></circle></svg>
-      </div>
-      <div class="appicon" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="40" height="40" viewBox="0 0 64 64"><path d="M13 30 a19 19 0 0 0 38 0" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"></path><circle cx="32" cy="21" r="7.5" fill="#f6b3a2"></circle></svg></div>
-    </div>
-    <div class="nm" style="margin-top:18px;">1 · Cradle</div>
-    <div class="rat">A person held in cupped hands. Care as holding — protective and gentle.</div>
-    <div class="lock">
-      <svg width="34" height="34" viewBox="0 0 64 64"><path d="M13 30 a19 19 0 0 0 38 0" fill="none" stroke="#0f766e" stroke-width="6" stroke-linecap="round"></path><circle cx="32" cy="21" r="7.5" fill="#df5b40"></circle></svg>
-      <span class="word">Caira</span>
-    </div>
-  </div>
-</div>
-
-<!-- 2 BLOOM -->
-<div style="position:absolute; left:400px; top:104px; width:300px;">
-  <div data-drags-parent="1" class="card">
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div class="tile" style="background:#eef5f1;">
-        <svg width="64" height="64" viewBox="0 0 64 64"><path d="M32 52 V30" stroke="#0f766e" stroke-width="5.5" stroke-linecap="round"></path><path d="M31 33 C20 33 15 24 17 16 C27 16 32 25 32 33 Z" fill="#0f766e"></path><path d="M33 29 C44 29 49 20 47 12 C37 12 32 21 33 29 Z" fill="#df5b40"></path></svg>
-      </div>
-      <div class="appicon" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="40" height="40" viewBox="0 0 64 64"><path d="M32 52 V30" stroke="#fff" stroke-width="5.5" stroke-linecap="round"></path><path d="M31 33 C20 33 15 24 17 16 C27 16 32 25 32 33 Z" fill="#9fd9cf"></path><path d="M33 29 C44 29 49 20 47 12 C37 12 32 21 33 29 Z" fill="#f6b3a2"></path></svg></div>
-    </div>
-    <div class="nm" style="margin-top:18px;">2 · Bloom</div>
-    <div class="rat">A young sprout. Growth, nurture and gentle progress over a shift.</div>
-    <div class="lock">
-      <svg width="34" height="34" viewBox="0 0 64 64"><path d="M32 52 V30" stroke="#0f766e" stroke-width="5.5" stroke-linecap="round"></path><path d="M31 33 C20 33 15 24 17 16 C27 16 32 25 32 33 Z" fill="#0f766e"></path><path d="M33 29 C44 29 49 20 47 12 C37 12 32 21 33 29 Z" fill="#df5b40"></path></svg>
-      <span class="word">Caira</span>
-    </div>
-  </div>
-</div>
-
-<!-- 3 EMBRACE -->
-<div style="position:absolute; left:740px; top:104px; width:300px;">
-  <div data-drags-parent="1" class="card">
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div class="tile" style="background:#eef5f3;">
-        <svg width="64" height="64" viewBox="0 0 64 64"><path d="M47 19 a18 18 0 1 0 0 26" fill="none" stroke="#0f766e" stroke-width="7" stroke-linecap="round"></path><circle cx="39" cy="32" r="6.5" fill="#df5b40"></circle></svg>
-      </div>
-      <div class="appicon" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="40" height="40" viewBox="0 0 64 64"><path d="M47 19 a18 18 0 1 0 0 26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"></path><circle cx="39" cy="32" r="6.5" fill="#f6b3a2"></circle></svg></div>
-    </div>
-    <div class="nm" style="margin-top:18px;">3 · Embrace</div>
-    <div class="rat">The “C” of Caira curved like an arm around someone. Initial + a hug.</div>
-    <div class="lock">
-      <svg width="34" height="34" viewBox="0 0 64 64"><path d="M47 19 a18 18 0 1 0 0 26" fill="none" stroke="#0f766e" stroke-width="7" stroke-linecap="round"></path><circle cx="39" cy="32" r="6.5" fill="#df5b40"></circle></svg>
-      <span class="word">Caira</span>
-    </div>
-  </div>
-</div>
-
-<!-- ROW 2 -->
-<!-- 4 HEART NOTE -->
-<div style="position:absolute; left:60px; top:430px; width:300px;">
-  <div data-drags-parent="1" class="card">
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div class="tile" style="background:#eef5f3;">
-        <svg width="64" height="64" viewBox="0 0 64 64"><path d="M16 14 h32 a8 8 0 0 1 8 8 v16 a8 8 0 0 1 -8 8 h-18 l-10 8 v-8 h-4 a8 8 0 0 1 -8 -8 v-16 a8 8 0 0 1 8 -8 z" fill="#0f766e"></path><path d="M32 38 l-8.5 -8.4 a5 5 0 0 1 8.5 -6.5 a5 5 0 0 1 8.5 6.5 z" fill="#fff"></path></svg>
-      </div>
-      <div class="appicon" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="42" height="42" viewBox="0 0 64 64"><path d="M32 40 l-10 -9.8 a5.8 5.8 0 0 1 10 -7.6 a5.8 5.8 0 0 1 10 7.6 z" fill="#f6b3a2"></path></svg></div>
-    </div>
-    <div class="nm" style="margin-top:18px;">4 · Heart note</div>
-    <div class="rat">A speech bubble holding a heart. Logging and communication, done with care.</div>
-    <div class="lock">
-      <svg width="34" height="34" viewBox="0 0 64 64"><path d="M16 14 h32 a8 8 0 0 1 8 8 v16 a8 8 0 0 1 -8 8 h-18 l-10 8 v-8 h-4 a8 8 0 0 1 -8 -8 v-16 a8 8 0 0 1 8 -8 z" fill="#0f766e"></path><path d="M32 38 l-8.5 -8.4 a5 5 0 0 1 8.5 -6.5 a5 5 0 0 1 8.5 6.5 z" fill="#fff"></path></svg>
-      <span class="word">Caira</span>
-    </div>
-  </div>
-</div>
-
-<!-- 5 DAYBREAK -->
-<div style="position:absolute; left:400px; top:430px; width:300px;">
-  <div data-drags-parent="1" class="card">
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div class="tile" style="background:#fbeee9;">
-        <svg width="64" height="64" viewBox="0 0 64 64"><path d="M14 44 H50" stroke="#0f766e" stroke-width="5" stroke-linecap="round"></path><path d="M22 44 a10 10 0 0 1 20 0 Z" fill="#df5b40"></path><path d="M32 22 V16 M46 30 l4 -4 M18 30 l-4 -4" stroke="#df5b40" stroke-width="4" stroke-linecap="round"></path></svg>
-      </div>
-      <div class="appicon" style="background:#df5b40; width:64px; height:64px; border-radius:17px;"><svg width="42" height="42" viewBox="0 0 64 64"><path d="M14 44 H50" stroke="#fff" stroke-width="5" stroke-linecap="round"></path><path d="M22 44 a10 10 0 0 1 20 0 Z" fill="#fff"></path></svg></div>
-    </div>
-    <div class="nm" style="margin-top:18px;">5 · Daybreak</div>
-    <div class="rat">A sun on the horizon. Warmth and the daily rhythm of a care shift.</div>
-    <div class="lock">
-      <svg width="34" height="34" viewBox="0 0 64 64"><path d="M14 44 H50" stroke="#0f766e" stroke-width="5" stroke-linecap="round"></path><path d="M22 44 a10 10 0 0 1 20 0 Z" fill="#df5b40"></path><path d="M32 22 V16 M46 30 l4 -4 M18 30 l-4 -4" stroke="#df5b40" stroke-width="4" stroke-linecap="round"></path></svg>
-      <span class="word">Caira</span>
-    </div>
-  </div>
-</div>
-
-<!-- 6 KIN -->
-<div style="position:absolute; left:740px; top:430px; width:300px;">
-  <div data-drags-parent="1" class="card">
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div class="tile" style="background:#eef5f3;">
-        <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="24" cy="23" r="8" fill="#0f766e"></circle><path d="M10 48 a14 14 0 0 1 28 0 Z" fill="#0f766e"></path><circle cx="42" cy="25" r="7" fill="#df5b40"></circle><path d="M30 48 a12 12 0 0 1 24 0 Z" fill="#df5b40"></path></svg>
-      </div>
-      <div class="appicon" style="background:#0f766e; width:64px; height:64px; border-radius:17px;"><svg width="42" height="42" viewBox="0 0 64 64"><circle cx="24" cy="23" r="8" fill="#fff"></circle><path d="M10 48 a14 14 0 0 1 28 0 Z" fill="#fff"></path><circle cx="42" cy="25" r="7" fill="#f6b3a2"></circle><path d="M30 48 a12 12 0 0 1 24 0 Z" fill="#f6b3a2"></path></svg></div>
-    </div>
-    <div class="nm" style="margin-top:18px;">6 · Kin</div>
-    <div class="rat">A carer beside the person they support. Companionship and presence.</div>
-    <div class="lock">
-      <svg width="34" height="34" viewBox="0 0 64 64"><circle cx="24" cy="23" r="8" fill="#0f766e"></circle><path d="M10 48 a14 14 0 0 1 28 0 Z" fill="#0f766e"></path><circle cx="42" cy="25" r="7" fill="#df5b40"></circle><path d="M30 48 a12 12 0 0 1 24 0 Z" fill="#df5b40"></path></svg>
-      <span class="word">Caira</span>
-    </div>
-  </div>
-</div>
+<div style="display:inline-flex;align-items:center">{{ content }}</div>
 </x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:200,&quot;height&quot;:72},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;teal&quot;,&quot;white&quot;],&quot;default&quot;:&quot;teal&quot;,&quot;tsType&quot;:&quot;'teal'|'white'&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:34,&quot;min&quot;:16,&quot;max&quot;:120,&quot;tsType&quot;:&quot;number&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;lockup&quot;,&quot;mark&quot;],&quot;default&quot;:&quot;lockup&quot;,&quot;tsType&quot;:&quot;'lockup'|'mark'&quot;}}">
+class Component extends DCLogic {
+  _n = 0;
+
+  heartMark(size, fill) {
+    const R = React.createElement;
+    const uid = 'logo' + (this._n++);
+    const HEART = "M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z";
+    const CARVE = "M29.5 18.5 A9 9 0 1 0 29.5 35.5";
+    return R('svg', { width: size, height: size, viewBox: '0 0 64 64', style: { display: 'block', overflow: 'visible', flexShrink: 0 } },
+      R('defs', null, R('mask', { id: uid },
+        R('rect', { x: 0, y: 0, width: 64, height: 64, fill: '#fff' }),
+        R('path', { d: CARVE, fill: 'none', stroke: '#000', strokeWidth: 5.5, strokeLinecap: 'round', transform: 'rotate(-18 21 27)' })
+      )),
+      R('path', { d: HEART, fill: fill, mask: `url(#${uid})` })
+    );
+  }
+
+  text(t, px, color) {
+    return React.createElement('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: px + 'px', lineHeight: 1, color, letterSpacing: '-0.02em', whiteSpace: 'pre' } }, t);
+  }
+
+  // the 'i' as a stem on the baseline with the heart mark as its tittle
+  iStem(px, color) {
+    const R = React.createElement;
+    const w = 0.165 * px;
+    const sp = 0.085;
+    return R('span', { style: { position: 'relative', display: 'inline-block', width: w + 'px', height: (px * 0.515) + 'px', background: color, borderRadius: '99px', verticalAlign: 'baseline', marginLeft: (px * sp) + 'px', marginRight: (px * (sp + 0.01)) + 'px' } },
+      R('span', { style: { position: 'absolute', left: '50%', bottom: '100%', transform: 'translateX(-50%)', marginBottom: (px * 0.04) + 'px', lineHeight: 0 } }, this.heartMark(px * 0.4, 'var(--clay)'))
+    );
+  }
+
+  word(px, color) {
+    const R = React.createElement;
+    return R('span', { style: { display: 'inline-flex', alignItems: 'baseline' } },
+      this.text('Ca', px, color),
+      this.iStem(px, color),
+      this.text('ra', px, color)
+    );
+  }
+
+  renderVals() {
+    const tone = this.props.tone ?? 'teal';
+    const size = Number(this.props.size ?? 40);
+    const variant = this.props.variant ?? 'lockup';
+    const color = tone === 'white' ? '#fff' : 'var(--brand)';
+    return { content: variant === 'mark' ? this.heartMark(size, color) : this.word(size, color) };
+  }
+}
+</script>
 </body>
 </html>

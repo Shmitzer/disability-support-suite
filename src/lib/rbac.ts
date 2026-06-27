@@ -185,6 +185,11 @@ export function can(
 ): boolean {
   // Legacy/shorthand form: a bare org-role string (or null).
   if (subject === null || subject === undefined || typeof subject === "string") {
+    // The internal platform seat (SUPERADMIN) is all-powerful in the legacy gates
+    // too — this mirrors the Principal-form `platformAdmin` override below, so the
+    // platform admin passes the existing org-staff capability checks. String literal
+    // (not Role.SUPERADMIN) because Role is a type-only import here to avoid a cycle.
+    if (subject === "SUPERADMIN") return true;
     return capabilitiesFor(subject).includes(capability);
   }
 

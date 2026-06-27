@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="design-system/tokens/fonts.css">
+<link rel="stylesheet" href="design-system/tokens/colors.css">
+<link rel="stylesheet" href="design-system/tokens/typography.css">
+<link rel="stylesheet" href="design-system/styles.css">
+</helmet>
+
+<div style="min-height:100%;background:var(--background);font-family:var(--font-sans-base);padding:clamp(28px,5vw,72px)">
+  <div style="max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:28px">
+
+    <div>
+      <div style="font:700 11px var(--font-sans-base);letter-spacing:.16em;text-transform:uppercase;color:var(--clay-strong)">Caira wordmark · refined</div>
+      <div style="font-family:var(--font-display);font-weight:800;font-size:clamp(26px,3.4vw,38px);color:var(--foreground);margin-top:6px;letter-spacing:-.01em">The Mark-i, finished</div>
+      <div style="font:400 15px/1.5 var(--font-sans-base);color:var(--muted);margin-top:6px;max-width:54em">Bricolage Grotesque, i-stem matched to the letter weight, and the heart-mark tittle optically sized so it reads as a dot first. The mark sits at the word's centre, giving &ldquo;Caira&rdquo; a balanced axis.</div>
+    </div>
+
+    <!-- HERO standalone -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow-card);padding:clamp(36px,6vw,72px);display:flex;align-items:center;justify-content:center">
+      <div>{{ hero }}</div>
+    </div>
+
+    <!-- reversed -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px">
+      <div style="background:var(--brand);border-radius:22px;padding:clamp(28px,4vw,52px);display:flex;align-items:center;justify-content:center">{{ heroWhite }}</div>
+      <div style="background:var(--foreground);border-radius:22px;padding:clamp(28px,4vw,52px);display:flex;align-items:center;justify-content:center">{{ heroWhite2 }}</div>
+    </div>
+
+    <!-- LOCKUP SYSTEM -->
+    <div>
+      <div style="font:700 11px var(--font-sans-base);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Lockups · with the mark present, the i becomes a simple dot</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:40px;display:flex;align-items:center;justify-content:center">{{ lockH }}</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:40px;display:flex;align-items:center;justify-content:center">{{ lockStack }}</div>
+      </div>
+    </div>
+
+    <!-- SMALL SIZES -->
+    <div>
+      <div style="font:700 11px var(--font-sans-base);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Holds up small</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:34px 40px;display:flex;align-items:flex-end;gap:48px;flex-wrap:wrap">
+        <div>{{ small1 }}</div>
+        <div>{{ small2 }}</div>
+        <div>{{ small3 }}</div>
+      </div>
+    </div>
+
+    <!-- TITTLE OPTIONS -->
+    <div>
+      <div style="font:700 11px var(--font-sans-base);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Fine-tune the tittle (use the Tweaks panel)</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:40px;display:flex;align-items:center;justify-content:space-around;gap:32px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px"><div>{{ optDot }}</div><div style="font:600 12px var(--font-sans-base);color:var(--muted)">Plain dot</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px"><div>{{ optHeart }}</div><div style="font:600 12px var(--font-sans-base);color:var(--muted)">Plain heart</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px"><div>{{ optMark }}</div><div style="font:600 12px var(--font-sans-base);color:var(--brand-strong)">Heart mark (recommended)</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1040,&quot;height&quot;:1200},&quot;markScale&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0.4,&quot;min&quot;:0.28,&quot;max&quot;:0.56,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;},&quot;stemWeight&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0.165,&quot;min&quot;:0.12,&quot;max&quot;:0.22,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;},&quot;iSpace&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0.1,&quot;min&quot;:0.04,&quot;max&quot;:0.18,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;},&quot;tracking&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:-0.02,&quot;min&quot;:-0.06,&quot;max&quot;:0.02,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  _n = 0;
+  CLAY = 'var(--clay)';
+  FONT = 'var(--font-display)';
+
+  heartMark(size, fill) {
+    const R = React.createElement;
+    const uid = 'wmk' + (this._n++);
+    const HEART = "M32 49 C10 34 11 17 23 17 C28.5 17 31.5 21 32 24 C32.5 21 35.5 17 41 17 C53 17 54 34 32 49 Z";
+    const CARVE = "M29.5 18.5 A9 9 0 1 0 29.5 35.5";
+    return R('svg', { width: size, height: size, viewBox: '0 0 64 64', style: { display: 'block', overflow: 'visible' } },
+      R('defs', null, R('mask', { id: uid },
+        R('rect', { x: 0, y: 0, width: 64, height: 64, fill: '#fff' }),
+        R('path', { d: CARVE, fill: 'none', stroke: '#000', strokeWidth: 5.5, strokeLinecap: 'round', transform: 'rotate(-18 21 27)' })
+      )),
+      R('path', { d: HEART, fill: fill, mask: `url(#${uid})` })
+    );
+  }
+
+  heartGlyph(size, fill) {
+    const R = React.createElement;
+    return R('svg', { width: size, height: size, viewBox: '0 0 24 24', style: { display: 'block' } },
+      R('path', { d: 'M12 21 C12 21 3.5 14.5 3.5 8.8 C3.5 6 5.4 4 7.9 4 C9.8 4 11.2 5.3 12 6.6 C12.8 5.3 14.2 4 16.1 4 C18.6 4 20.5 6 20.5 8.8 C20.5 14.5 12 21 12 21 Z', fill: fill })
+    );
+  }
+
+  tittle(kind, px, accentColor) {
+    if (kind === 'mark') return this.heartMark(px * (this.props.markScale ?? 0.4), accentColor);
+    if (kind === 'heart') return this.heartGlyph(px * 0.3, accentColor);
+    // dot
+    const w = (this.props.stemWeight ?? 0.165) * px;
+    return React.createElement('span', { style: { display: 'block', width: w + 'px', height: w + 'px', borderRadius: '99px', background: accentColor } });
+  }
+
+  iStem(px, color, kind, accentColor) {
+    const R = React.createElement;
+    const w = (this.props.stemWeight ?? 0.165) * px;
+    const sp = this.props.iSpace ?? 0.085;
+    const baseGap = kind === 'mark' ? px * 0.04 : (kind === 'heart' ? px * 0.05 : px * 0.07);
+    return R('span', { style: { position: 'relative', display: 'inline-block', width: w + 'px', height: (px * 0.515) + 'px', background: color, borderRadius: '99px', verticalAlign: 'baseline', marginLeft: (px * sp) + 'px', marginRight: (px * (sp + 0.01)) + 'px' } },
+      R('span', { style: { position: 'absolute', left: '50%', bottom: '100%', transform: 'translateX(-50%)', marginBottom: baseGap + 'px', lineHeight: 0 } }, this.tittle(kind, px, accentColor))
+    );
+  }
+
+  text(t, px, color) {
+    return React.createElement('span', { style: { fontFamily: this.FONT, fontWeight: 800, fontSize: px + 'px', lineHeight: 1, color, letterSpacing: (this.props.tracking ?? -0.02) + 'em', whiteSpace: 'pre' } }, t);
+  }
+
+  word(px, color, kind, accentColor) {
+    const R = React.createElement;
+    return R('span', { style: { display: 'inline-flex', alignItems: 'baseline' } },
+      this.text('Ca', px, color),
+      this.iStem(px, color, kind, accentColor || this.CLAY),
+      this.text('ra', px, color)
+    );
+  }
+
+  lockH(px, color, accentColor) {
+    const R = React.createElement;
+    return R('span', { style: { display: 'inline-flex', alignItems: 'center', gap: px * 0.42 } },
+      this.heartMark(px * 1.15, color),
+      this.word(px, color, 'dot', accentColor)
+    );
+  }
+
+  lockStack(px, color, accentColor) {
+    const R = React.createElement;
+    return R('span', { style: { display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: px * 0.26 } },
+      this.heartMark(px * 1.5, color),
+      this.word(px, color, 'dot', accentColor)
+    );
+  }
+
+  renderVals() {
+    const teal = 'var(--brand)';
+    const white = '#fff';
+    const clay = this.CLAY;
+    return {
+      hero: this.word(118, teal, 'mark', clay),
+      heroWhite: this.word(70, white, 'mark', white),
+      heroWhite2: this.word(70, white, 'mark', clay),
+      lockH: this.lockH(40, teal, clay),
+      lockStack: this.lockStack(38, teal, clay),
+      small1: this.word(34, teal, 'mark', clay),
+      small2: this.word(22, teal, 'mark', clay),
+      small3: this.word(15, teal, 'mark', clay),
+      optDot: this.word(64, teal, 'dot', clay),
+      optHeart: this.word(64, teal, 'heart', clay),
+      optMark: this.word(64, teal, 'mark', clay),
+    };
+  }
+}
+</script>
+</body>
+</html>
