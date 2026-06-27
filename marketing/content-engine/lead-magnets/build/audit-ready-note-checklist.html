@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Audit-Ready Shift Note Checklist — Caira</title>
+<style>
+  @page { size: A4; margin: 13mm 16mm 11mm; }
+  :root {
+    --bg:#fffaf2; --ink:#3a3128; --muted:#8a7a66;
+    --brand:#0f766e; --brand-strong:#0b5d56; --clay:#df5b40; --border:#ece0cf; --tint:#e9f3f1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink); margin: 0; font-size: 10.5pt; line-height: 1.4;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  header { border-bottom: 3px solid var(--brand); padding-bottom: 8px; margin-bottom: 12px; }
+  .brand { color: var(--brand); font-weight: 800; letter-spacing: .02em; font-size: 12pt; }
+  h1 { font-size: 18pt; margin: 6px 0 4px; line-height: 1.12; }
+  .lede { color: var(--muted); margin: 0; font-style: italic; }
+  .note { background: var(--tint); border-left: 4px solid var(--brand); padding: 8px 14px; border-radius: 8px; margin: 11px 0; font-size: 9.5pt; color: var(--ink); }
+  h2 { color: var(--brand-strong); font-size: 12.5pt; margin: 13px 0 5px; }
+  ul.check { list-style: none; padding: 0; margin: 0; }
+  ul.check li { padding: 3px 0 3px 26px; position: relative; }
+  ul.check li::before { content: "☐"; position: absolute; left: 0; color: var(--brand); font-size: 13pt; top: 1px; }
+  em.eg { color: var(--muted); }
+  .self { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; margin: 11px 0; }
+  .self strong { color: var(--brand-strong); }
+  footer { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; color: var(--muted); font-size: 8.5pt; }
+  .tag { color: var(--clay); font-weight: 700; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">CAIRA</div>
+    <h1>The Audit-Ready Shift Note Checklist</h1>
+    <p class="lede">A free one-pager from Edward at Caira — a support worker who got sick of writing notes from memory at 9pm.</p>
+  </header>
+
+  <div class="note">
+    This is general guidance to help you write your <strong>own</strong> clear, factual notes.
+    It is not legal or compliance advice, and it does not guarantee any audit outcome.
+    Always follow your provider's policies and the current NDIS rules.
+  </div>
+
+  <h2>The 5 bones of a note that holds up</h2>
+  <ul class="check">
+    <li><strong>When</strong> — date and start/finish time of the support</li>
+    <li><strong>Who</strong> — participant and who else was present</li>
+    <li><strong>Goal</strong> — which support goal this shift was working toward</li>
+    <li><strong>What happened</strong> — what you actually did and what the participant did</li>
+    <li><strong>Response</strong> — how the participant responded / any change observed</li>
+  </ul>
+
+  <h2>The factual-language test</h2>
+  <ul class="check">
+    <li>Written in plain language a stranger could follow in two years</li>
+    <li>States <strong>observations</strong>, not opinions dressed up as facts <em class="eg">("declined lunch" ✓ — "was being difficult" ✗)</em></li>
+    <li>Person-first and respectful (about the person, not a label)</li>
+    <li>Any incident recorded calmly: what / when / who / what you did / who you told</li>
+    <li>No guesses at cause written as if confirmed</li>
+  </ul>
+
+  <h2>The habit that makes it painless</h2>
+  <ul class="check">
+    <li><strong>Captured in the moment</strong>, not reconstructed at home (voice memo, notes app, or paper — then tidy later)</li>
+    <li>Written, checked and saved <strong>same day</strong></li>
+    <li>Stored consistently — one place per participant, same structure each time</li>
+  </ul>
+
+  <div class="self">
+    <strong>Quick self-check:</strong> If someone read this note in two years with zero context,
+    would they understand what happened, why, and how the participant responded?
+    If yes — you're done. If no — add the missing bone above.
+  </div>
+
+  <footer>
+    Caira is the tool I'm building to make this automatic — capture a note in the moment and keep
+    the bones above by default, so the time goes back to care. It's pre-launch; if you'd like to help
+    shape it and be first in line, just reach out.<br>
+    <span class="tag">Care is the work. Caira handles the record.</span> &nbsp;·&nbsp; caira.net.au
+  </footer>
+</body>
+</html>

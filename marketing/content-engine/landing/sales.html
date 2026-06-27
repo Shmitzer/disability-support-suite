@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Caira — The shift logger built by a support worker</title>
+  <meta name="description" content="Caira takes the documentation off your plate — capture a clear, structured NDIS shift note in the moment, one-handed. So the time goes back to care." />
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Caira — The shift logger built by a support worker" />
+  <meta property="og:description" content="Capture a shift note in the moment, one-handed, and let the records look after themselves." />
+  <meta property="og:url" content="https://caira.net.au" />
+
+  <!--
+    Caira sales page — generated from landing/landing-copy.md.
+    Standalone, no build step, deploy anywhere. Pre-launch (waitlist) variant.
+    Palette = "Sage & Clay" tokens, mirrored from src/app/globals.css.
+    Compliance: no "NDIS approved/endorsed", no guaranteed outcomes, no "audit-proof".
+    AT LAUNCH: swap the two data-cta blocks (see <!-- AT LAUNCH --> notes) and
+    drop the real waitlist form (waitlist/embed.html) into #signup.
+  -->
+  <style>
+    :root {
+      --background: #f3ebdd;
+      --surface: #fffaf2;
+      --surface-sunk: #f3ebdd;
+      --foreground: #3a3128;
+      --muted: #8a7a66;
+      --brand: #0f766e;
+      --brand-strong: #0b5d56;
+      --brand-tint: #d8e9e6;
+      --clay: #df5b40;
+      --clay-strong: #c2492f;
+      --clay-tint: #fbe4dd;
+      --status: #34a07f;
+      --border: #ece0cf;
+      --radius: 14px;
+      --maxw: 760px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--foreground);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      font-size: 18px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--brand); }
+
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+    /* Skip link for keyboard / screen-reader users */
+    .skip {
+      position: absolute; left: -9999px; top: 0;
+      background: var(--surface); color: var(--foreground);
+      padding: 10px 16px; border-radius: 8px; z-index: 100;
+    }
+    .skip:focus { left: 12px; top: 12px; }
+
+    header.site {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    header.site .wrap {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 16px; padding-bottom: 16px;
+    }
+    .brand { font-weight: 700; font-size: 22px; letter-spacing: -0.01em; color: var(--brand); text-decoration: none; }
+    .brand span { color: var(--clay); }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      background: var(--brand);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 14px 26px;
+      border-radius: var(--radius);
+      border: 0;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background .15s ease;
+    }
+    .btn:hover, .btn:focus { background: var(--brand-strong); }
+    .btn:focus-visible { outline: 3px solid var(--clay); outline-offset: 2px; }
+    .btn.small { padding: 10px 18px; font-size: 16px; }
+    .btn.ghost {
+      background: transparent; color: var(--brand);
+      border: 2px solid var(--brand);
+    }
+    .btn.ghost:hover, .btn.ghost:focus { background: var(--brand-tint); }
+
+    /* Hero */
+    .hero { padding: 64px 0 48px; text-align: center; }
+    .hero h1 {
+      font-size: clamp(34px, 6vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin: 0 0 18px;
+    }
+    .hero .sub { font-size: clamp(18px, 2.4vw, 22px); color: var(--muted); max-width: 620px; margin: 0 auto 28px; }
+
+    .demo {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      aspect-ratio: 16 / 9;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted);
+      font-size: 16px;
+      margin: 0 auto 28px;
+      max-width: 640px;
+      text-align: center;
+      padding: 24px;
+    }
+    .demo .play {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--clay); color: #fff;
+      display: grid; place-items: center; margin: 0 auto 12px;
+      font-size: 22px;
+    }
+
+    .tagline-strip {
+      background: var(--brand-tint);
+      color: var(--brand-strong);
+      text-align: center;
+      font-weight: 600;
+      padding: 14px 20px;
+    }
+
+    section { padding: 52px 0; }
+    section + section { border-top: 1px solid var(--border); }
+    h2 { font-size: clamp(26px, 4vw, 34px); letter-spacing: -0.01em; margin: 0 0 18px; }
+    .muted { color: var(--muted); }
+    .fine { font-size: 15px; color: var(--muted); }
+
+    /* Feature cards */
+    .cards { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 19px; }
+    .card p { margin: 0; color: var(--muted); font-size: 16px; }
+
+    /* Founder */
+    .founder {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+    }
+
+    blockquote.quote {
+      margin: 0;
+      background: var(--clay-tint);
+      border-left: 4px solid var(--clay);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 20px 24px;
+      font-size: 19px;
+    }
+    blockquote.quote cite { display: block; margin-top: 10px; font-size: 15px; color: var(--muted); font-style: normal; }
+
+    /* Signup / lead magnet */
+    #signup .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 32px;
+      text-align: center;
+    }
+    .ml-form { max-width: 460px; margin: 20px auto 0; text-align: left; }
+    .ml-form label { display: block; font-weight: 600; margin: 14px 0 6px; font-size: 15px; }
+    .ml-form input[type="text"],
+    .ml-form input[type="email"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      font-size: 16px;
+      background: #fff;
+      color: var(--foreground);
+    }
+    .ml-form input:focus-visible { outline: 3px solid var(--brand); outline-offset: 1px; }
+    .ml-form .check { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; }
+    .ml-form .check input { margin-top: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
+    .ml-form .check label { margin: 0; font-size: 15px; }
+
+    footer.site {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    footer.site a { color: var(--muted); }
+
+    .cta-final { text-align: center; }
+    .cta-final h2 { margin-bottom: 22px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .btn { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site">
+    <div class="wrap">
+      <a class="brand" href="/">Cair<span>a</span></a>
+      <!-- AT LAUNCH: change label to "Start free →" and href to the app sign-up -->
+      <a class="btn small" href="#signup" data-cta="header">Join the early list →</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Above the fold -->
+    <div class="hero">
+      <div class="wrap">
+        <h1>The shift logger built by a support worker.</h1>
+        <p class="sub">
+          Caira takes the documentation off your plate — capture a shift note in the
+          moment, one-handed, and let the records and reporting look after themselves.
+          So the time goes back to care.
+        </p>
+
+        <div class="demo" role="img" aria-label="Demo video placeholder: a 30-second, one-handed voice note becoming a finished, structured note.">
+          <div>
+            <div class="play" aria-hidden="true">▶</div>
+            30-second demo — one-handed voice note → finished, structured note
+          </div>
+        </div>
+
+        <!-- AT LAUNCH: swap to "Start logging notes free →" pointing at the app -->
+        <a class="btn" href="#signup" data-cta="hero">Join the early list →</a>
+      </div>
+    </div>
+
+    <div class="tagline-strip">Care is the work. Caira handles the record.</div>
+
+    <!-- The problem -->
+    <section>
+      <div class="wrap">
+        <h2>The problem (you already know it)</h2>
+        <p class="muted">
+          You finish a run of shifts, then sit down at night to write notes from memory.
+          The admin eats the hours that should go to the people you support. And there's
+          that quiet worry: would these notes actually hold up if anyone asked?
+        </p>
+      </div>
+    </section>
+
+    <!-- How Caira helps -->
+    <section>
+      <div class="wrap">
+        <h2>How Caira helps</h2>
+        <div class="cards">
+          <div class="card">
+            <h3>Capture in the moment</h3>
+            <p>A note in seconds during the shift, not an hour at 9pm.</p>
+          </div>
+          <div class="card">
+            <h3>The right bones, by default</h3>
+            <p>When, who, goal, what happened, response — structured for you, in plain factual language.</p>
+          </div>
+          <div class="card">
+            <h3>Built for one hand and a phone</h3>
+            <p>Because that's how the work actually happens.</p>
+          </div>
+          <div class="card">
+            <h3>Your records, organised</h3>
+            <p>Consistent, in one place, ready when you need them.</p>
+          </div>
+        </div>
+        <p class="fine" style="margin-top:18px;">
+          Caira helps you write your own compliant notes — it doesn't replace your
+          provider's policies or your professional judgement.
+        </p>
+      </div>
+    </section>
+
+    <!-- Founder -->
+    <section>
+      <div class="wrap">
+        <div class="founder">
+          <h2 style="margin-top:0;">Built by someone who's done the shifts</h2>
+          <p class="muted">
+            Hi, I'm Edward. I've spent 6+ years in disability support on the Central
+            Coast. I built Caira because I was tired of the paperwork stealing the part
+            of the job that matters. I'm building it with support workers, in the open.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Social proof -->
+    <section>
+      <div class="wrap">
+        <h2>From the people doing the work</h2>
+        <blockquote class="quote">
+          “I log my notes in 90 seconds in the car instead of 20 minutes at home.”
+          <cite>— Sarah, sole-trader support worker, Gosford</cite>
+        </blockquote>
+        <p class="fine" style="margin-top:12px;">More founding-user stories coming as our beta cohort grows.</p>
+      </div>
+    </section>
+
+    <!-- Privacy -->
+    <section>
+      <div class="wrap">
+        <h2>Privacy first</h2>
+        <p class="muted">
+          Participant notes are sensitive. Caira is built to treat them that way, handled
+          under the Privacy Act 1988. <a href="/privacy">Read our privacy policy.</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Final CTA + lead-magnet capture -->
+    <section id="signup">
+      <div class="wrap">
+        <div class="panel">
+          <h2 class="cta-final">Want your evenings back?</h2>
+          <!-- AT LAUNCH: swap to "Start logging notes free →" pointing at the app -->
+          <a class="btn" href="#signup" data-cta="final">Join the early list →</a>
+          <p class="muted" style="margin-top:14px;">Be first in line and help shape it.</p>
+
+          <hr style="border:0;border-top:1px solid var(--border);margin:28px 0;" />
+
+          <p style="margin:0 0 6px;font-weight:600;">
+            Not ready to sign up? Grab the free guides.
+          </p>
+          <p class="muted" style="margin:0;">
+            <em>The Audit-Ready Shift Note Checklist</em> and <em>Person-First Language
+            Cheat-Sheet.</em> Enter your email and we'll send both.
+          </p>
+
+          <!--
+            Real ESP form (mirrors waitlist/embed.html). MailerLite field names:
+            fields[email] / fields[name] / groups[] / fields[magnet].
+            >>> Before launch: set the form `action` to your MailerLite embedded-form
+            POST URL (Forms → Embedded → "form action"). Until then it posts nowhere.
+            Easiest alternative: paste MailerLite's own embed snippet over this block.
+            Signup → emails both magnets (Email 1) → runs the 5-email nurture; the
+            checkbox tags warm beta leads into the "Caira Early Access" group.
+          -->
+          <form class="ml-form" action="REPLACE_WITH_YOUR_MAILERLITE_FORM_ACTION_URL" method="post" aria-label="Get the free guides">
+            <!-- which magnet this page offers: checklist | cheatsheet | both -->
+            <input type="hidden" name="fields[magnet]" value="both" />
+
+            <label for="cw-name">First name <span class="muted" style="font-weight:400;">(optional)</span></label>
+            <input id="cw-name" type="text" name="fields[name]" autocomplete="given-name" />
+
+            <label for="cw-email">Email</label>
+            <input id="cw-email" type="email" name="fields[email]" required autocomplete="email" inputmode="email" placeholder="you@example.com" />
+
+            <div class="check">
+              <input id="cw-early" type="checkbox" name="groups[]" value="Caira Early Access" />
+              <label for="cw-early" style="font-weight:400;">I'd like to help shape Caira and be first in line when it launches.</label>
+            </div>
+
+            <button class="btn" type="submit" style="width:100%;margin-top:18px;">Send me the free guides</button>
+          </form>
+          <p class="fine" style="margin-top:14px;">
+            You're joining Caira's email list — practical, no spam, unsubscribe any time.
+            We'll never imply NDIS endorsement or share your details.
+            <a href="/privacy">Privacy policy</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap">
+      <p>Caira — the shift logger built by a support worker. Central Coast, NSW.</p>
+      <p><a href="/privacy">Privacy</a> · <a href="mailto:edward@caira.net.au">Contact</a></p>
+      <p class="fine">Caira helps you write your own clear, compliant notes. It is not NDIS endorsed and does not guarantee outcomes.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,96 @@
+{
+  "_basedOn": "docs/PLAYBOOK.md — keep this config aligned to the playbook.",
+  "positioning": "The shift logger built by a support worker.",
+  "brand": {
+    "displayName": "Edward @ Caira",
+    "voice": "Warm, plain-spoken, practical. A Central Coast NDIS-world insider with 6+ years on the job who built a tool to fix a real pain. Never salesy, never corporate. Australian spelling.",
+    "founderStory": "I work in disability support and got sick of the admin eating the hours that should go to participants. So I built a tool to fix it. Sharing what I learn along the way.",
+    "disclosure": "I built this app — when I mention it I'll always say so. Posts are from me, not a bot."
+  },
+  "audience": {
+    "primary": "NDIS sole traders / frontline support workers in Australia (≈70% women, casualised, mobile-first)",
+    "secondary": "Small and medium NDIS providers, support coordinators and plan managers (the buyer tier)",
+    "pains": [
+      "Writing shift notes from memory hours after the shift",
+      "Admin and paperwork eating support hours",
+      "Audit and compliance anxiety",
+      "Confusing NDIS price guide and line-item changes",
+      "Invoicing, claims and getting paid on time",
+      "Isolation of working solo"
+    ],
+    "tone_notes": "Wary of being sold to and protective of participants. Lead with usefulness. Respect, never hype."
+  },
+  "app": {
+    "name": "Caira",
+    "fullName": "Consistent Advanced Integrated Reportable Aid",
+    "tagline": "Care is the work. Caira handles the record.",
+    "oneLiner": "Caira takes the documentation off a support worker's plate — notes, records and reporting handled, so the time goes back to care.",
+    "link": "https://caira.net.au",
+    "status": "pre-launch — site not live yet; legal/go-to-market in progress",
+    "earlyInterest": "Join the early list / grab the free guides",
+    "waitlistUrl": "<YOUR_ESP_FORM_URL>",
+    "waitlistSetup": "See waitlist/SETUP.md — hosted form + ESP (MailerLite), auto-delivers magnet + runs the 5-email nurture.",
+    "mentionPolicy": "Soft. App appears as 'the tool I built' only after value is established. Earn the right to mention it (~50 helpful comments before pitching in any community). Max ~1 in 4 posts references it in weeks 1-2."
+  },
+  "channels": {
+    "_priority": "Facebook (communities) -> founder LinkedIn -> Instagram -> TikTok. This engine schedules the Facebook Page; LinkedIn/community engagement stays human.",
+    "facebook_page": {
+      "active": true,
+      "pageId": "<YOUR_FB_PAGE_ID>",
+      "postsPerWeek": 4,
+      "preferredTimesAEST": ["Tue 12:30", "Wed 19:30", "Thu 12:30", "Sun 19:00"]
+    },
+    "linkedin": {
+      "active": false,
+      "note": "Post manually from your PERSONAL profile (5-7x reach), 3-5x/week, links in first comment. Build-in-public home. Not automated here."
+    },
+    "communities": {
+      "note": "Join and be helpful (real name, support worker who built a tool). Earn trust before any mention.",
+      "groups": [
+        "NDIS Grassroots Discussion (~54K)",
+        "NDIS Community (~15K)",
+        "NDIS Service Providers Discussion (~13K)",
+        "NDIS Support Coordinators (CoS) & Plan Managers groups",
+        "Regional NSW groups (e.g. NDIS Northern NSW)",
+        "r/NDIS (participate as a person, not a brand)"
+      ]
+    }
+  },
+  "arc": {
+    "week1": "Pure value + introduce yourself. Zero app pitch. Build trust and show you live in this world.",
+    "week2": "More value, first founder-story posts, one gentle pre-launch invite to shape Caira.",
+    "ongoing": "70% useful content, 20% community/conversation, 10% honest app updates + case studies."
+  },
+  "compliance": {
+    "_basedOn": "PLAYBOOK.md §Australia/NDIS compliance. ACCC/NDIA/NDIS Commission penalise misleading NDIS advertising.",
+    "bannedPhrases": [
+      "ndis approved",
+      "ndis endorsed",
+      "ndia approved",
+      "ndia endorsed",
+      "approved by the ndis",
+      "endorsed by the ndis",
+      "official ndis",
+      "guarantees compliance",
+      "guaranteed compliant",
+      "audit-proof",
+      "100% compliant",
+      "never fail an audit"
+    ],
+    "cautionPhrases": [
+      "guarantee",
+      "guaranteed",
+      "endorsed",
+      "approved",
+      "compliant",
+      "free money",
+      "covered by your ndis funding"
+    ],
+    "rules": [
+      "Never imply NDIS/NDIA approval, endorsement or affiliation.",
+      "Never overstate outcomes or guarantee compliance — Caira HELPS workers write their own compliant notes.",
+      "Substantiate every factual claim.",
+      "Treat participant data as sensitive information under the Privacy Act 1988; lead on privacy as a trust differentiator."
+    ]
+  }
+}

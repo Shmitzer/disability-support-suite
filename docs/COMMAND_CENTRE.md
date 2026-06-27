@@ -5,8 +5,280 @@
 MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
-- **Working branch:** `claude/sharp-hypatia-6zdy2h` (Caira overnight build)
-- **Last updated:** 2026-06-25 night (SOFT LAUNCH — Supabase live, seeded, build fixed; handoff to Cowork)
+- **Working branch:** `claude/funny-brown-oinkli` (Caira character system + AI brain + audio + Rive) · prior: `claude/nifty-ritchie-nqmsxh`
+- **Last updated:** 2026-06-26 (Caira character/AI/audio build + real-creature Rive rebrand on `claude/funny-brown-oinkli`; **handover to Cowork** immediately below)
+
+---
+
+## 🤝 HANDOVER TO COWORK — Caira character + AI brain + audio + Rive (2026-06-26)
+
+All on branch **`claude/funny-brown-oinkli`** (NOT merged to `main`). Verified headless:
+`tsc` ✓ · `lint` ✓ · `npm test` (25/25, incl. 4 new Caira suites) ✓ · `npm run build` ✓.
+Asset master + every spec/handover doc are in the **"Caira UI"** Google Drive folder.
+
+### Delivered (on `claude/funny-brown-oinkli`)
+- **Character system** — `components/caira/`: nav `CairaBar` (wandering mark), `CairaAIOverlay`,
+  `CairaRecordingOverlay`, `CairaEmpty/Loading/Error`, `caira.css` animations. Wired into the root
+  layout behind a **provider**; org-wide enable/disable toggle (`Organisation.cairaEnabled`).
+- **AI brain** — `app/api/caira/route.ts` (role personas: worker/participant/supervisor via
+  `lib/caira/systemPrompts.ts`), `lib/ai.ts#cairaChat` (Gemini, no tools unless web granted),
+  participant safety pre-check + `CairaFlag` + flag badge, `preference` + `flags` routes.
+- **Web-access permissions** — per-user `cairaWebAccess` (admin/supervisor grant via
+  `app/api/admin/caira-access`); **participant lockout enforced in 3 places** (Prisma default, the
+  chat route, the grant route). Admin UI in `/admin/settings`.
+- **Audio** — `lib/caira/audioManager.ts` (Web Audio, synth state sounds, no assets) + mute toggle.
+- **Real-creature rebrand** — replaced the spec-drawn SVG with the actual clay creature. Retouched
+  cutout master at **`public/caira/caira-master.png`**. New **5-state** model
+  (greet/cheer/reassure/idle/goal), `CairaCharacter` renders **Rive** (`@rive-app/react-canvas`,
+  two-way: pushes `state`/`quiet`, reads events) with the static cutout as fallback + reduced-motion
+  + Quiet variant. Palette retired `#4db8b0` → canonical Sage & Clay (`--brand #0f766e`).
+- Root layout hardened against DB outages (no longer 500s every route on a DB hiccup).
+- **DB:** `prisma/sql/caira_ai.sql` + `org_caira_enabled.sql` (UNAPPLIED) + `schema_baseline.sql`
+  updated; new `CairaFlag` model and `Worker` columns (`participantAILevel`, `cairaWebAccess*`).
+
+### NEXT (Cowork / Edward — in order)
+1. **Apply SQL by hand** (NOT `db push`): `prisma/sql/caira_ai.sql`, `prisma/sql/org_caira_enabled.sql`.
+   Both readers tolerate the columns/table being absent, so the app runs before they're applied.
+2. **Review + merge** `claude/funny-brown-oinkli` once `tsc/lint/build` pass on the laptop after
+   `prisma generate`. Set `GEMINI_API_KEY` for Caira chat (degrades gracefully without it).
+3. **Author `public/caira/caira.riv`** in the Rive editor from `caira-master.png` to the contract in
+   the Drive docs *"Caira Rive — Rig & Integration Spec"* + *"…Per-State Animation Direction"*
+   (state machine `Caira`; number `state` 0–4; bool `quiet`). **This is the only piece that gives
+   per-state facial expression + posture** — until it lands, all states share one cutout (motion only).
+   Drop the file in → animates with zero code changes (static fallback if absent).
+4. **cd**: optional higher-res creature render for a crisper rig; design any net-new Caira surfaces.
+
+---
+
+## 🤝 HANDOVER TO COWORK — Phase 0 cc hardening complete (2026-06-26)
+
+cc finished the **Phase 0 foundation-hardening** slice (no design dependency). Code is on
+branch **`claude/serene-feynman-p80kpr`** (commit `78661b9`, pushed); detail in the Decision log.
+
+### Delivered (branch `claude/serene-feynman-p80kpr`)
+- **0.1 Ordered SQL apply + RLS sweep** — `prisma/sql/apply_all_features.sql` (one idempotent,
+  `ON_ERROR_STOP`'d `\i`-include script: 13 unapplied feature files in dependency order,
+  `audit_hash_chain`+`rbac_grants` first, RLS sweep last) + `prisma/sql/feature_tables_rls.sql`
+  (enables RLS + per-table `tenant_isolation` on the feature tables that shipped DDL **without**
+  it — incl. `Membership`/`ParticipantAccessGrant`/`Consent`/`ParticipantCareProfile`, whose RLS
+  was only commented-out SQL). **Validated against a throwaway Postgres 16**: clean, idempotent,
+  every swept table RLS-enabled.
+- **0.2 SUPERADMIN wiring** — legacy `can(role,cap)` now honours SUPERADMIN as platform override.
+- **0.3 Hard LLM spend cap + budget alarm** — `rate-limit.ts checkSpendCap()` wired into
+  `/api/generate-note` + `/api/transcribe`; env-gated, fail-open, PostHog `llm_budget_alarm`.
+- **0.4 CI tenant-scope guard** — `npm run check:tenant-scope` + CI step (unscoped tenant read = leak).
+- **0.5** — verified all four integrations env-gated; PostHog behind `hasAnalyticsConsent()`.
+
+### NEXT (Cowork / Edward — gated ops, in order)
+1. **Apply the SQL (by hand, NOT `db push`):** from repo root, `psql "$DIRECT_URL" -f
+   prisma/sql/apply_all_features.sql`, then re-run `prisma/sql/verify_rls_editor.sql` in the
+   Supabase SQL editor (expect every public table RLS-enabled).
+2. **Turn the spend cap on:** provision Upstash (`UPSTASH_REDIS_REST_URL/_TOKEN`) + set
+   `LLM_DAILY_CAP`; without keys the throttle + cap are inert (dev behaviour unchanged).
+3. **Rotate the DB password** + provision remaining keys (Stripe/Sentry/PostHog/Resend/VAPID,
+   `shift-photos` bucket) per `SECRETS.md`.
+4. **Enable MFA on the SUPERADMIN seat** (Supabase dashboard) — never the default login.
+5. **CI** runs `prisma generate` so `tsc/lint/test/build` go green there (the web sandbox can't —
+   Prisma engine CDN network-gated; cc verified tests/lint headless, residual failures are all
+   missing-generated-client cascades).
+
+### What's next for cc
+Phase 1 screens are **design-gated** (cd must land `.dc.html` + screenshots first). Phase 2 is
+after-first-revenue. The next cc-startable work is **Track L** (legal drafts: privacy/ToS/DPA/
+consent + acceptance-logging to `ParticipantAccessGrant`/`Consent`) — parallel, no design gate.
+
+### ⚠️ Multi-session note
+Several cc sessions push ccu entries to `main` concurrently and have repeatedly overwritten this
+Phase 0 entry from a stale copy. When editing `docs/COMMAND_CENTRE.md`, branch from the **latest**
+`origin/main` and re-fetch right before pushing, or serialize ccu updates to one owner.
+
+---
+
+## 🤝 HANDOVER TO COWORK — Phase 2 logic cores (2026-06-26)
+
+cc (Phase-2 lane) built every Phase 2 item that's cleanly startable **headless** — no design, no
+`node_modules`, no first-revenue gate. **4 pure, unit-tested logic cores, 30/30 tests green** via
+`tsx`. All on branch **`claude/elegant-davinci-551vkd`** (NOT merged to `main`); full detail in
+**`docs/PHASE_2_HANDOFF.md`** + the decision-log entries below.
+
+> Sandbox caveat: `node_modules` is network-gated in the web session, so `tsc/lint/build` couldn't
+> run — cores verified with `tsx`. Server actions + the new Prisma model type-check/build on the
+> laptop after `prisma generate`.
+
+### Delivered (on `claude/elegant-davinci-551vkd`)
+- **2.4 — NDIS price guide + claims.** `src/lib/price-guide.ts` (NDIA Support-Catalogue CSV importer,
+  per-region price caps, over-cap validation) + `toNdisBulkCsv()` (real 16-col NDIA bulk template) in
+  `billing-claims.ts`, wired into `billing-claims-actions.ts` (`importPriceGuide`, `checkClaimAgainstGuide`).
+  New `NdisSupportItem` model + `prisma/sql/ndis_price_guide.sql` (UNAPPLIED).
+- **2.2 — Offline sync core.** `src/lib/offline-sync.ts` — outbox with per-entity-serialised drain,
+  retry/backoff, conflict reconcile (server duplicate = success), `pending/syncing/synced/failed` state.
+- **2.5 — SCHADS award core.** `src/lib/schads.ts` — day penalties + overtime + shift loadings
+  (higher-of) + casual loading + allowances, parameterised by a verify-before-use config.
+
+### NEXT (Cowork / Edward — in order)
+1. **Review + merge** `claude/elegant-davinci-551vkd` (or cherry-pick the 4 cores) once `tsc/lint/build`
+   pass on the laptop after `prisma generate`.
+2. **Apply SQL by hand** (NOT `db push`): `prisma/sql/ndis_price_guide.sql`, add `"NdisSupportItem"`
+   to `schema_baseline.sql`, re-run `verify_rls.sql`.
+3. **Supply/verify reference data:** confirm the NDIA price-guide file/version to import; verify/replace
+   `DEFAULT_SCHADS_CONFIG` against the current Fair Work **MA000100** pay guide (defaults marked UNVERIFIED).
+4. **2.2 service-worker half (laptop):** `@serwist/next` (app-shell precache + read caching + offline
+   fallback ONLY — do NOT cache/replay server-action POSTs), web manifest, IndexedDB binding for the
+   `offline-sync` outbox, + a route-handler replay mirror for Background Sync. Server idempotency is done.
+5. **cd** designs the still-gated surfaces (`/portal` 2.1, messaging/handover 2.3, offline badges, the
+   budgets/claims + price-guide-import screens) before cc wires them.
+6. **Suggested next cc work** (no design/deps): **Track L** legal drafts.
+
+---
+
+## 🤝 HANDOVER TO COWORK — game review + sales page (2026-06-26)
+
+Session worked on the **claude/awesome-mccarthy-ue78ce** branch; everything below is
+**merged to `main`** (commit `2caf909`). Two deliverables + clear next actions.
+
+### Delivered (on `main`)
+1. **`docs/design/GAME_SUITE_REVIEW.md`** — three-lens (NDIS / game-design / engineering)
+   appropriateness review of the 100-game catalogue, graded Must / Should / Consider, plus a
+   **staged deployment shortlist** (§7). Recommended go-live = **Stage 0 + Stage 1 = 11 games**
+   (smallest set that proves the engine *and* covers every NDIS goal category, zero
+   safety/IP-gated titles). Top "Must" fixes: reframe `safe-crossing` to signal-recognition;
+   age-band art decoupled from tier; IP pass on chess/go/KenKen/tangram; honest engine-cost on
+   chess/go/circuit-logic; CI-enforce the a11y contract.
+2. **`marketing/content-engine/landing/sales.html`** — standalone, no-build, Sage & Clay sales
+   page generated from `landing/landing-copy.md`. Pre-launch (waitlist) variant,
+   compliance-safe (no NDIS endorsement / guaranteed outcomes), WCAG-conscious. The MailerLite
+   form is wired to the real `embed.html` field schema (`fields[email]`, `fields[name]`,
+   `groups[]=Caira Early Access`, `fields[magnet]=both`).
+
+### NEXT (Cowork / Edward — in order)
+1. **Set the form action.** `sales.html` form `action` is still
+   `REPLACE_WITH_YOUR_MAILERLITE_FORM_ACTION_URL`. Paste the MailerLite embedded-form POST URL
+   (Forms → Embedded → "form action"), or paste MailerLite's own embed snippet over the
+   `<form>` block.
+2. **Deploy to get an *active* URL.** The file is in the repo but **not hosted** — no live
+   link exists yet. Pick a host: drop into the caira.net.au host root, OR GitHub Pages, OR
+   paste into a MailerLite Sites page (best while the domain isn't pointed). The intended live
+   home is `https://caira.net.au`.
+3. **At launch:** swap the three pre-launch CTAs ("Join the early list →") to the trial CTA
+   ("Start logging notes free →"), and point `/privacy` at the live policy page (don't promote
+   publicly until privacy policy is live — see LAUNCH_CHECKLIST).
+4. **Game suite:** the review is advisory only — the catalogue/registry edits it recommends
+   (`docs/GAME_SUITE_SINGLEPLAYER_100.md` + `src/lib/games/catalogue.ts`, both on
+   `claude/nifty-ritchie-nqmsxh`) are NOT yet applied. Apply the "Must" items before any game
+   ships to participants.
+
+---
+
+## 📣 MARKETING — Caira content engine seeded (2026-06-26)
+
+Transparent, ToS-compliant marketing engine for Caira's pre-launch, founder-led
+organic push. Lives at `marketing/content-engine/` — **merged to `main`**. A
+copy-from set of these docs is also in Google Drive → **"Caira Marketing"**
+folder (Email Nurture paste-pack, 12-week Posts, FB Page Setup, Launch Checklist).
+
+**DONE (on branch `claude/festive-tesla-lebjxq`):**
+- `docs/PLAYBOOK.md` — canonical strategy (warm-network-first, organic-first;
+  channel priority Facebook → founder LinkedIn → IG → TikTok).
+- `config.json` — positioning ("the shift logger built by a support worker"),
+  audience, channels, + NDIS-advertising compliance ruleset.
+- `src/` — `cli.js` (plan/draft/review/check/schedule), `generate.js` (drafts in
+  voice; optional Claude API + voice pass), `meta.js` (official Graph API
+  scheduling, own Page only), `compliance.js` (blocks "NDIS approved/endorsed",
+  "guarantees compliance", etc.).
+- `drafts/queue.json` — **48 founder-voice posts (12 weeks)**, all `needs_review`,
+  all clear of compliance hard-fails.
+- `lead-magnets/` — audit-ready note checklist + person-first cheat-sheet.
+- `landing/landing-copy.md` — caira.net.au copy (pre-launch + launch variants).
+- `email/nurture-sequence.md` — 5-email nurture (magnet → value → founder story
+  → proof → soft CTA); `email/broadcast-ideas.md` — ongoing ~monthly broadcast bank.
+- `content/seo/` — 3 GEO/SEO pages (best-ndis-shift-note-app, caira-vs-spreadsheets,
+  how-to-write-ndis-progress-notes) for buyer-intent search + AI citation.
+- `waitlist/` — `SETUP.md` (MailerLite: form → instant magnet → 5-email nurture)
+  + `embed.html` (on-brand, accessible form). No custom code; ESP-hosted.
+
+**Guardrails baked in:** own Page only, every post human-approved before schedule,
+compliance-gated, app mentions disclosed. No fake personas / auto-engagement —
+warm-network outreach + community + LinkedIn stay human (Edward's call on ban risk).
+
+**LIVE BUILD STATE (2026-06-26 — handoff to Cowork mid-setup):**
+- **MailerLite** account created ("Caira", 14-day trial → drops to free tier which keeps automations ≤1k subs).
+- **Domain auth:** DKIM CNAME (`litesrv._domainkey` → `litesrv._domainkey.mlsend.com`) added at **Crazy Domains**, status pending/propagating — hit "Check records" later. ⚠️ Crazy Domains' DNS manager has **no TXT/SPF option** (only A/AAAA/CNAME/MX/CAA), so SPF/return-path TXT could NOT be added. DKIM alone usually verifies MailerLite. For full SPF + deliverability, **move DNS to Cloudflare (free)** later (recreate the 2 A records → 27.124.125.171, add SPF `v=spf1 a mx include:_spf.mlsend.com ?all`).
+- **Groups** `Caira Waitlist` + `Caira Early Access` ✓. (Custom field `magnet` optional — skipped; Email 1 sends both PDFs to all.)
+- **Embedded form** "Caira Waitlist" ✓ — branded sage, our copy, email + early-access checkbox (→ Early Access group) + reCAPTCHA + privacy line. NOT yet hosted/public.
+- **Lead-magnet PDFs** uploaded to **Google Drive, set public** (both `anyone with link` verified): checklist `1iiH6fPVhUIluEO5oZHyN-Hpj_G9z8IrL`, cheat-sheet `1uRdTchJXTx66xfHIyiBKQrbRaG8T9WLx`.
+- **Nurture automation** started: trigger = joins Caira Waitlist ✓; **Email 1 DONE** (subject/sender/preheader set, both PDFs linked, sender = edward.neppl@gmail.com for testing).
+
+**NEXT (Cowork / Edward — in order):**
+1. **Finish the nurture:** add Emails 2–5 with delays +2/+2/+3/+3 days. Copy from Drive "Caira – Email Nurture (paste-pack)" or `email/nurture-sequence.md`. Link the checklist PDF in Email 2's P.S.; link form/Page + both PDFs in Email 5.
+2. **Verify domain** in MailerLite (Check records) — expect DKIM ✓. If MailerLite blocks sending without SPF, do the Cloudflare move.
+3. **Switch sender** to `edward@caira.net.au` once verified (gmail-from won't deliver well), THEN **test the full automation** (PDFs land, unsubscribe works, mobile view).
+4. **Host the form** — easiest now: a free MailerLite **Sites** landing page (caira.net.au not live). That URL → `config.json` `app.waitlistUrl` + Email 5 EARLY_LINK + FB Page button.
+5. **Don't go public** (don't promote the form/Page) until **privacy policy live at caira.net.au/privacy** + legal go-to-market gate clears.
+6. Then: create FB Page (Drive "Caira – Facebook Page Setup"); warm-network outreach; post weeks 1–2 (value only). Optional: FB Page ID + long-lived token for `schedule`.
+
+Full step list: Drive "Caira – Launch Checklist" or `marketing/content-engine/LAUNCH_CHECKLIST.md`.
+
+---
+
+## 🎮 GAME SUITE — plan FINAL, building Wave 0 (2026-06-26)
+
+> **▶ START HERE to build the games: [Issue #5 — Wave 0 (probe): single build
+> checklist](https://github.com/Shmitzer/disability-support-suite/issues/5).**
+> That issue is the one checklist to work against (engine-hardening P0s → foundation +
+> Caira companion → 3 probe games → exit gate). Build on branch
+> `claude/nifty-ritchie-nqmsxh` (engine code). Plan is **FINAL** and canonical on `main`:
+> `docs/GAME_SUITE_SINGLEPLAYER_100.md` + `docs/CAIRA_AI_RECONCILIATION.md`. Companion
+> design handoff is in Google Drive → **design** folder.
+
+**Plan status (reviewed + finalised this session):** 100 games catalogued and partitioned into
+build waves (**11 + 27 + 37 + 22 + 3 = 100**, verified — every game one wave, one of nine
+build-by-template archetypes). All 11 Wave-1 games specced; remaining 89 archetype-mapped.
+Three-lens dev-team review folded in (engineering / accessibility-clinical / product). **Wave 0
+= Foundation + 3 games** (`touch-bloom`, `word-match`, `breathe-caira`), evidence-gated before
+Wave 1; Waves 4–5 (ceiling) deferred. Bound to the Sage & Clay language + the Caira companion.
+
+**Wave 0 first move (gated DB op, then code):** apply `prisma/sql/games.sql` → `games_rls.sql`
+via the direct connection → `npx prisma generate`, then work Issue #5 top-down (the engine P0s
+— tenant check into `recordSession`, `ParticipantXP` `(participantId, organisationId)` key,
+idempotency key — come first, each with a test).
+
+---
+
+## 🎮 GAME SUITE — System A foundation built · handoff to Cowork (2026-06-26)
+
+Step 5 (participant game suite) kicked off. Catalogue **re-scoped to 100 purely
+single-player therapeutic games** spanning a 5-tier difficulty spine (T1 severe-ABI /
+single-switch → T5 savant ceiling) so one suite serves the whole ability range.
+Multiplayer (old System B) **deferred** — single-player only for now.
+
+**DONE (on branch `claude/nifty-ritchie-nqmsxh`):**
+- `docs/GAME_SUITE_SINGLEPLAYER_100.md` — full catalogue (100 games, tiered, NDIS-mapped,
+  build-waved) + 5 deep-designed engine-proving games + build plan.
+- **Prisma models** (`schema.prisma`): `NDISGoal`, `GoalProgress`, `GoalGameLink`,
+  `GameSession`, `ParticipantXP` — tenant-stamped; the ONLY place therapeutic XP / goal
+  progress lives (no social crossover).
+- **Engine shell** (`src/lib/games/`): unified-input + accessibility-profile types, the
+  canonical 100-game catalogue, a pure adaptive-difficulty/tier controller, and the
+  session recorder (one txn → session + XP + linked-goal progress).
+- `POST /api/games/session` to record a finished session.
+- **16 unit tests** (`test/games-engine.test.ts`) — catalogue integrity + adaptive/XP
+  logic — all passing (ran via locally-installed tsx; full `npm` blocked here, Prisma
+  engine binary download is network-gated).
+- **Migration SQL** (`prisma/sql/games.sql` + `games_rls.sql`) hand-applied style,
+  matching repo convention. **Validated against a throwaway Postgres 16**: applies clean,
+  idempotent, FK cascade + unique + the recordSession upsert all verified, RLS enabled.
+
+**NEXT (Cowork / Edward — gated DB op):**
+1. **Apply the migration** with the direct connection string (not done — no DB creds in
+   the web sandbox): `psql "$DIRECT_URL" -f prisma/sql/games.sql` then
+   `psql "$DIRECT_URL" -f prisma/sql/games_rls.sql` (both safe to re-run, in that order).
+2. `npx prisma generate` (or next `npm run build`) so `session.ts` + the API route compile
+   against the new models — **not type-checkable here** without the generated client.
+3. Then build is clear for **Wave 1 game bodies** (`word-match` adaptive reference,
+   `touch-bloom`, `pairs-pals`, `choose-ask`, `type-it`, …) + the `/games` launcher UI.
+
+**Guardrail unchanged:** dummy data only until the legal gate clears — creating the empty
+tables is fine; do not load real participant goals yet.
 
 ---
 
@@ -136,6 +408,18 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 ---
 
 ## Decision log (newest first)
+
+- **2026-06-26** — **Phase 0 (cc): foundation hardening — ordered SQL apply + RLS sweep, LLM spend cap, tenant-scope CI guard, SUPERADMIN wiring** (branch `claude/serene-feynman-p80kpr`, commit `78661b9`). The "safe to take money + real data" layer, no design dependency (IMPLEMENTATION_PLAN_MVP §2). **0.1 Ordered SQL apply:** `prisma/sql/apply_all_features.sql` — one `ON_ERROR_STOP`'d, idempotent, `\i`-include script that applies the 13 unapplied feature files **in dependency order** (`audit_hash_chain` + `rbac_grants` FIRST), then the RLS sweep LAST; plus `prisma/sql/feature_tables_rls.sql` — a post-apply sweep that enables RLS + a per-table `tenant_isolation` policy on the feature tables whose DDL shipped **without** RLS (incl. `Membership`/`ParticipantAccessGrant`/`Consent`/`ParticipantCareProfile`, whose RLS existed only as commented-out SQL). **Validated against a throwaway Postgres 16** (clean, idempotent, every swept table RLS-enabled). **0.2 SUPERADMIN wiring:** legacy `can(role, cap)` now honours `SUPERADMIN` as the platform override without polluting `ROLE_CAPABILITIES`. **0.3 Hard LLM spend cap + budget alarm:** `rate-limit.ts checkSpendCap()` (global per-UTC-day ceiling) wired into `/api/generate-note` + `/api/transcribe` (503 on breach), env-gated, fail-open, PostHog `llm_budget_alarm`; new `UPSTASH_*`/`LLM_DAILY_CAP`/`LLM_DAILY_ALARM_FRACTION` env. **0.4 CI tenant-scope guard:** `scripts/check-tenant-scope.mjs` + `npm run check:tenant-scope` + CI step — an unscoped tenant-table list/bulk read is a cross-tenant leak (the Prisma-RLS-bypass is load-bearing); 5 legitimate cross-tenant reads annotated `// tenant-ok:`. **0.5** all four integrations env-gated + PostHog behind `hasAnalyticsConsent()`. **+tests.** **Headless caveat:** Prisma engine CDN network-gated in the web sandbox, so `prisma generate → tsc/build` can't run here — changed tests pass, lint clean, residual failures are all missing-generated-client cascades (green in CI). **Edward TODO:** `psql "$DIRECT_URL" -f prisma/sql/apply_all_features.sql` by hand (NOT `db push`) then `verify_rls_editor.sql`; provision Upstash + set `LLM_DAILY_CAP`; MFA on the SUPERADMIN seat.
+
+- **2026-06-26** — **Phase 2.5 (cc): SCHADS award (MA000100) pay-interpretation core** (branch `claude/elegant-davinci-551vkd`). Enterprise-depth payroll interpretation built as a **rules engine parameterised by a swappable, verify-before-use config** — SCHADS multipliers change at every Fair Work annual wage review (+3.5% from 2025-07) and the rate-table sites 403 through the agent proxy, so hardcoding numbers as authoritative would be wrong. Same pattern as the NDIA price guide: **the engine owns the structure, Edward verifies the numbers.** `src/lib/schads.ts` (pure): `ordinaryMultiplier` (permanent vs casual; casual loading *added* per SCHADS, or *compounded*, via config), `splitOvertime` (daily ordinary→first-2h→after buckets), `payForShift` (day penalty Sat/Sun/PH, evening/night **shift loading applied higher-of** with weekend/PH — no double-stacking, overtime, casual loading on OT, flat sleepover + broken-shift allowances), `classifyDay` (PH > Sun > Sat > weekday). `DEFAULT_SCHADS_CONFIG` is clearly marked **UNVERIFIED** — confirm against the current MA000100 pay guide before real payroll. **10 pure tests (custom round-number config so they test the engine, not the defaults), green via tsx.** **Edward TODO:** verify/replace the default multipliers + allowance amounts against the live Fair Work MA000100 pay guide; later wire to roster hours + a state public-holiday calendar.
+
+- **2026-06-26** — **Phase 2.2 (cc): offline outbox / sync-engine core** (branch `claude/elegant-davinci-551vkd`). Researched + reassessed 2.2 first: the app's writes are **idempotent server actions** (client `@unique idempotencyKey`, server dedupes a replay → no-op), so replay is already safe; and per the current Serwist/Next-16 guidance, **service workers must not cache/replay server-action POSTs** (RSC-encoded, build-varying action IDs) — the architecture is SW(app-shell+reads) + client IndexedDB outbox + server idempotency + optional route-handler replay mirror. So 2.2 splits into a buildable core and an env/design-gated wiring half. Built the core: `src/lib/offline-sync.ts` (PURE — no IndexedDB/SW/network/`Date.now()`, time injected, fully headless-testable): `enqueue` (monotonic seq + stable idempotency key), `drainBatch` with **per-entity serialisation** (a clock-off can never replay before its clock-on; distinct entities sync in parallel), retry-with-exponential-backoff + terminal-failure, `reconcile` (a server **duplicate = success**, a rejection = terminal, transient = retry), `purgeSynced`, `summarise` (the pending/syncing/synced/failed badge state). **10 pure tests, green via tsx.** **Deferred (env/design-gated):** `@serwist/next` service worker + manifest + PWA shell (needs `node_modules` + the local Next 16 docs + live browser test), the IndexedDB binding + route-handler replay mirror, and cd's offline UI states. Same headless caveat (`tsc/lint/build` not runnable in the web sandbox).
+
+- **2026-06-26** — **Phase 2.4 (cc): NDIS price-guide importer + real bulk-upload claim CSV** (branch `claude/elegant-davinci-551vkd`, commits `7b864e5`+`b840e51`). Built the AU NDIS Support Catalogue importer — the periodic NDIA spreadsheet has no public API, and it's national **reference data, not participant data**, so it sits outside the legal/real-data gate. `src/lib/price-guide.ts` (pure): RFC-4180 CSV parser, fuzzy NDIA header mapping (case/punctuation-insensitive, survives release-to-release column drift), dollars→integer-cents, per-region price caps (`act_nsw_qld_vic` / `nt_sa_tas_wa` / `remote` / `very_remote` / `national`, with national fallback), and `validateClaimLine()` — the load-bearing over-cap/quote/unknown compliance check. `billing-claims.ts`: `toNdisBulkCsv()` realises the exact 16-column NDIA **bulk payment request** template that `toClaimCsv` had left as "a later refinement" (GST defaults to P2/GST-free). Schema: `NdisSupportItem` reference model — global like `LearnedOption` seeds (`organisationId` NULL = shared) with org-private override rows, integer-cent caps per region; SQL artifact `prisma/sql/ndis_price_guide.sql` (**UNAPPLIED**, world-readable RLS for globals, hand-apply convention — NOT `db push`). Wired into `billing-claims-actions.ts`: `importPriceGuide()` (BillingManage-gated, audited `PRICE_GUIDE_IMPORTED`, upsert by code+org) + `checkClaimAgainstGuide()` (warn-don't-block, org override beats global seed, region from state). **7 new pure tests (10/10 green via tsx).** Headless caveat unchanged: `tsc/lint/build` not runnable in the web sandbox (deps network-gated, no `node_modules`) — the server action + new model type-check/build on the laptop after `prisma generate`. **Edward TODO:** apply `ndis_price_guide.sql` by hand + add `NdisSupportItem` to `schema_baseline.sql`; confirm which NDIA price-guide file/version to load (open Phase-2 decision). Phase 2.4 budgets/claims item is now code-complete; rest of Phase 2 (2.1 `/portal`, 2.2 offline/PWA, 2.3 messaging/handover, 2.5 enterprise depth) remains design-gated / after-first-revenue.
+
+- **2026-06-26** — **Caira email + domain decisions (handover from Cowork chat).** Q: personal Gmail to manage Caira, or a dedicated `@caira.net.au`? **Decision: dedicated custom-domain email via Google Workspace** (Gmail UI/reliability, but `@caira.net.au` addresses) — professionalism/trust, domain-as-asset (mailboxes outlive any individual), separation from `edward.neppl@gmail.com`, and it scales to staff. Cheaper fallbacks if needed: Zoho free tier, or registrar forwarding into Gmail with "send as" (outgrow quickly). **Mailbox plan:** real seats `admin@` (root/owner/billing — never public), `hello@` (public front door / contact form), `support@` (participant/NDIS day-to-day, → shared inbox as staff grow); free aliases `accounts@`/`invoices@`, `noreply@` (app outbound), `privacy@`, `careers@`, `info@`→`hello@`. Solo-stage: run `admin@` as the one seat, others as aliases; split out later. **Setup must-dos:** SPF + DKIM + DMARC DNS records (or mail → spam) and catch-all routed (not rejected). **Domain/`www`:** `caira.net.au` already registered (sole-trader ABN — see 2026-06-25 below); no `www` needed — use the **bare apex as primary** + a `www → apex` 301 redirect for safety. Email is independent of `www` (uses MX records). ⚠️ **Allowlist mismatch flagged for follow-up:** the app trusts **`@caira.app`** for login (`.env.example` line 51 `AUTH_ALLOWLIST`, `test/allowlist.test.ts`), but marketing + the registered domain are **`caira.net.au`**. Staff mailboxes on `caira.net.au` would be **denied login** until `AUTH_ALLOWLIST` (and the test) include `@caira.net.au`. **Edward to confirm canonical domain(s)** — likely both (`caira.app` for the app, `caira.net.au` for AU marketing, allowlist covers both) — then a one-line `.env`/test update lands it. No code changed this session (advisory + this ccu only).
+
+- **2026-06-25** — **Overnight build runbook codified** (`docs/OVERNIGHT_BUILD.md`, on branch `claude/ecstatic-maxwell-i094f9`). A checkpointed work queue for the two autonomous roles — **cc** (logic, `src/`) and **cd** (design, `docs/design/`) — built off locked decisions. Resume protocol up top (reattach → `npm ci` → confirm headless-green baseline → one atomic task), an atomic definition-of-done (green `tsc`/`lint`/`test`/`build` + commit + unapplied `prisma/sql` + graceful degradation + ledger tick + "Next up" pointer + ccu), a two-lane progress ledger, and an **Edward-gated fence** (live DB apply, keys/credentials, secret rotation, `/privacy` legal review, deploy/Vercel/Supabase toggles/tester invites) agents must never touch. Queue derived from `backlog.md` (remaining cc-startable = participant/NDIS-plan #4 → `anonymiseUser()` erasure → populate `activitiesLog`/`incidentFields` → verify Phase-5 competency gate) + `design/HANDOFF.md` (Modules/Pricing `.dc.html`, reconcile Home to `.dc.html`, design the shipped-but-undesigned product surfaces). Decision-gated items (offline sync, NDIS price-guide feed, embeddings provider, server TTS) held out until Edward locks the decision.
 
 - **2026-06-25** — **AI entry-clarifying prompts (chips + voice) with an admin-tunable cap.** While logging, the worker gets short, human, entry-specific questions ("Did Sam buy anything while you were out?") instead of generic prompts — tailored to category + picked detail + participant first name. `ai.suggestEntryQuestions` (factual-only per house rules: no mood/feeling inference; PII-scrubbed name placeholdered→restored; ≤3; fails quietly). Server actions `getEntryQuestions` (chip, groups-based) + `getDraftQuestions` (voice review, detail-based), own-shift validated. UI: tap **"✨ Suggest what to add"** on a chip or any voice-review draft; **auto-suggest** also fires once for sparse-note chip entries and empty-note drafts. **Auto fetches are capped per shift** (manual taps uncapped), persisted in localStorage; the cap is an **org setting** — `Organisation.autoSuggestCap` (default 3, clamp 0–20, 0 = off) edited at **`/admin/settings`** (`Capability.OrgSettingsManage`, ADMIN, audited `ORG_SETTINGS_UPDATED`), read resiliently by `getOrgAutoSuggestCap`. Schema → `prisma/sql/org_auto_suggest_cap.sql` (+ baseline), **NOT applied** (falls back to 3). 85 tests; tsc/lint/build green.
 

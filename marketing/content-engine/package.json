@@ -1,0 +1,19 @@
+{
+  "name": "ndis-content-engine",
+  "version": "0.1.0",
+  "description": "Transparent, ToS-compliant content + scheduling engine to market an NDIS app to sole traders and small/medium providers via an honest founder-story funnel.",
+  "type": "module",
+  "bin": {
+    "ndis-content": "./src/cli.js"
+  },
+  "scripts": {
+    "plan": "node src/cli.js plan",
+    "draft": "node src/cli.js draft",
+    "review": "node src/cli.js review",
+    "schedule": "node src/cli.js schedule"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.65.0"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Person-First Language Cheat-Sheet — Caira</title>
+<style>
+  @page { size: A4; margin: 13mm 16mm 11mm; }
+  :root {
+    --bg:#fffaf2; --ink:#3a3128; --muted:#8a7a66;
+    --brand:#0f766e; --brand-strong:#0b5d56; --clay:#df5b40; --border:#ece0cf; --tint:#e9f3f1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink); margin: 0; font-size: 10.5pt; line-height: 1.4;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  header { border-bottom: 3px solid var(--brand); padding-bottom: 8px; margin-bottom: 12px; }
+  .brand { color: var(--brand); font-weight: 800; letter-spacing: .02em; font-size: 12pt; }
+  h1 { font-size: 18pt; margin: 6px 0 4px; line-height: 1.12; }
+  .lede { color: var(--muted); margin: 0; font-style: italic; }
+  .note { background: var(--tint); border-left: 4px solid var(--brand); padding: 8px 14px; border-radius: 8px; margin: 11px 0; font-size: 9.5pt; }
+  h2 { color: var(--brand-strong); font-size: 12.5pt; margin: 13px 0 5px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 4px; font-size: 10pt; }
+  th { text-align: left; background: var(--brand); color: #fff; padding: 7px 10px; }
+  th:first-child { border-top-left-radius: 8px; } th:last-child { border-top-right-radius: 8px; }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td.good { color: var(--brand-strong); font-weight: 600; }
+  td.bad { color: var(--muted); }
+  ul { margin: 4px 0; padding-left: 20px; }
+  ul li { margin: 3px 0; }
+  footer { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; color: var(--muted); font-size: 8.5pt; }
+  .tag { color: var(--clay); font-weight: 700; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">CAIRA</div>
+    <h1>Person-First Language Cheat-Sheet</h1>
+    <p class="lede">A free one-pager from Edward at Caira. The short, practical version — for your notes and your everyday work.</p>
+  </header>
+
+  <div class="note">
+    <strong>The golden rule:</strong> ask the person how <em>they</em> describe themselves.
+    These are general conventions for Australian disability support; individual preference and
+    identity-first choices always win. This is guidance, not a rulebook.
+  </div>
+
+  <h2>Say this → not that</h2>
+  <table>
+    <tr><th>Lead with the person</th><th>Instead of</th></tr>
+    <tr><td class="good">a person with disability</td><td class="bad">a disabled person / the disabled</td></tr>
+    <tr><td class="good">uses a wheelchair</td><td class="bad">wheelchair-bound / confined to a wheelchair</td></tr>
+    <tr><td class="good">a person with autism / an autistic person <em>(ask their preference)</em></td><td class="bad">suffers from autism</td></tr>
+    <tr><td class="good">has an intellectual disability</td><td class="bad">intellectually disabled / "low-functioning"</td></tr>
+    <tr><td class="good">communicates using…</td><td class="bad">non-verbal <em>(as a label)</em></td></tr>
+    <tr><td class="good">receives support with…</td><td class="bad">dependent on / a burden</td></tr>
+    <tr><td class="good">a person without disability</td><td class="bad">normal / able-bodied <em>(as the contrast)</em></td></tr>
+  </table>
+
+  <h2>Principles behind it</h2>
+  <ul>
+    <li><strong>Person first, condition second.</strong> The person isn't their diagnosis.</li>
+    <li><strong>Describe the support, not the deficit.</strong> "needs support with meals", not "can't feed themselves".</li>
+    <li><strong>Neutral, not pity or praise.</strong> Avoid "suffers from", "brave", "inspiring" by default.</li>
+    <li><strong>Observable, not assumed.</strong> In notes, write what you saw — not what you guessed they felt.</li>
+    <li><strong>Their words win.</strong> Identity-first ("autistic person", "Deaf") is many people's preference. Ask.</li>
+  </ul>
+
+  <h2>In your notes specifically</h2>
+  <ul>
+    <li>Factual and respectful — about the person, not the label.</li>
+    <li>"Participant declined the activity" ✓ — not "was uncooperative" ✗</li>
+    <li>Record support and response, not character judgements.</li>
+  </ul>
+
+  <footer>
+    I built these habits into Caira so respectful, factual notes are the default, not extra work.
+    Pre-launch — reach out if you'd like to shape it and be first in line.<br>
+    <span class="tag">Care is the work. Caira handles the record.</span> &nbsp;·&nbsp; caira.net.au
+  </footer>
+</body>
+</html>
