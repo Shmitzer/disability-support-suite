@@ -6,7 +6,7 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/funny-brown-oinkli` (Caira character system + AI brain + audio + Rive) · prior: `claude/nifty-ritchie-nqmsxh`
-- **Last updated:** 2026-06-27 (**Phase G — hub backend slice built on `claude/pensive-hamilton-hj1cpu`** — section immediately below) · **cw 2026-06-27:** live `AUTH_ALLOWLIST` set (domains only) + redeployed, and `apply_phase_g_supabase.sql` committed to `main` (`6b65aac`); hub backend slice merged to `main` (`b955b8c`) — see decision log
+- **Last updated:** 2026-06-27 (**Phase G — hub backend slice built on `claude/pensive-hamilton-hj1cpu`** — section immediately below) · **cw 2026-06-27:** live `AUTH_ALLOWLIST` set (domains only) + redeployed, and `apply_phase_g_supabase.sql` committed to `main` (`6b65aac`); hub backend slice merged to `main` (`b955b8c`); **site LIVE on caira.net.au**; G2 design screens landed (`1b82a12`) → cc unblocked for wire-up — see decision log
 
 ---
 
@@ -481,6 +481,8 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 ---
 
 ## Decision log (newest first)
+
+- **2026-06-27** — **cw: site LIVE on caira.net.au · G2 design SSOT landed · expanded seed staged.** (1) Vercel custom domain **www.caira.net.au** (apex 308→www) is public & live — marketing at `/`, `/login` magic-link, `/dashboard` still `@caira`-allowlisted. Standard Protection left ON (custom domains are exempt; the `*.vercel.app` URLs + previews stay private). Verified the marketing page renders publicly. (2) Landed cd's **5 Phase G design screens** into `docs/design/` SSOT (`1b82a12`): Participant Hub + RP Incident (tablet), Incidents + Notifications + eMAR (phone), + 25 screenshots, a DC-runtime `support.js` bump, and HANDOFF.md G2 entries (incl. the **RP field→`Incident` column map** for wiring). Repointed each DC's `_ds/<uuid>/` refs to the in-folder `design-system/` (byte-identical bundle). **→ cc is now UNBLOCKED for the G2 wire-up** (see refreshed `START_PROMPT_CC.md`). (3) Staged an **expanded `prisma/seed.ts`** (one account per Role + hub WORKER/FAMILY/GUARDIAN capacities for participant 'Zef') at `_seed_expanded/` for cc to verify-gates + push. **Testing note:** `DEV_AUTH` act-as-anyone can't run on Vercel (hard `NODE_ENV` gate) — local-only.
 
 - **2026-06-27** — **cw: hub + RP schema applied live.** `prisma/sql/hub.sql` and `prisma/sql/restrictive_practice.sql` applied to the live Supabase DB via the SQL Editor (idempotent, additive); `verify_rls_editor.sql` re-run **green — ALL RLS CHECKS PASSED**, confirming the three new `Hub*` tables enabled RLS. Live schema now matches `main` (`faa4e21`). Still dummy-data only; real-data gate unchanged (lawyer).
 
