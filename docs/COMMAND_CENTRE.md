@@ -6,7 +6,66 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/funny-brown-oinkli` (Caira character system + AI brain + audio + Rive) · prior: `claude/nifty-ritchie-nqmsxh`
-- **Last updated:** 2026-06-27 (**Phase G — hub backend slice built on `claude/pensive-hamilton-hj1cpu`** — section immediately below) · **cw 2026-06-27:** live `AUTH_ALLOWLIST` set (domains only) + redeployed, and `apply_phase_g_supabase.sql` committed to `main` (`6b65aac`); hub backend slice merged to `main` (`b955b8c`); **site LIVE on caira.net.au**; G2 design screens landed (`1b82a12`) → cc unblocked for wire-up; **Medication Verification + Authorisation** spec captured (`docs/MED_VERIFICATION_SPEC.md`) — building in parallel — see decision log
+- **Last updated:** 2026-06-27 (**cc handover — G2 wire-up (5 screens) + Caira animation track** — top section below) · prior: Phase G hub backend slice · **cc 2026-06-27:** the 5 G2 design screens wired into real App-Router routes (`/hub`, `/incidents`, `/incidents/rp`, `/notifications`, `/emar`) + Caira animation reconciliation draft + interactive marketing site-guide prototype — all merged to `main` (`d5c23b9`); ⚠️ gates not runnable in sandbox — run `tsc/lint/test/build` post-`prisma generate`. **cw 2026-06-27:** live `AUTH_ALLOWLIST` set (domains only) + redeployed; hub backend slice merged to `main` (`b955b8c`); **site LIVE on caira.net.au**; G2 design screens landed (`1b82a12`); **Medication Verification + Authorisation** spec captured (`docs/MED_VERIFICATION_SPEC.md`) — see decision log
+
+---
+
+## 🤝 HANDOVER TO COWORK — G2 wire-up + Caira animation track (cc, 2026-06-27)
+
+Session built on `claude/keen-gauss-gfpe99` — **already merged to `main`**
+(`d5c23b9`). Three deliverables; dummy data only throughout.
+
+### Delivered (on `main`)
+1. **G2 wire-up — the 5 committed design screens are now real App-Router routes**
+   under `src/app/(protected)/`, wired to the live hub/incident/medication/notification
+   backends already on `main`. Each = server component (data fetch) + `"use client"`:
+   - `/hub` — Participant Hub (tablet): tap-to-identify → PIN sheet → capacity pick →
+     "Logging as…"; quick-log tiles → `logHubEntry`; cross-org consent-gated timeline;
+     Lock clears the actor. PIN entered at check-in is held in session memory and
+     re-attested on each entry (cleared on Lock).
+   - `/incidents` — register + reportable form (phone); "Restrictive practice"
+     deep-links `/incidents/rp`. UI→backend type/severity mapping.
+   - `/incidents/rp` — RP capture (tablet): quick-tap | dictate → review-before-save →
+     `reportIncident` with RP fields per the HANDOFF column map; unauthorised use
+     auto-flags reportable + Commission banner. Calm clay, never red.
+   - `/notifications` — feed (New/Earlier) + two-step push-permission priming sheet.
+   - `/emar` — eMAR-lite (phone): due/later/PRN/done; chemical-restraint PRN
+     cross-references the RP flow.
+   - Adds `--amber` + warm-neutral tokens to `globals.css` (HANDOFF reconciliation).
+2. **Caira animation reconciliation** — `docs/design/CAIRA_ANIMATION_RECONCILIATION.md`
+   (DRAFT): reconciles the new "Caira animation overhaul" blueprint (sprite-sheet +
+   GSAP wander) against the already-scaffolded **Rive** approach. **Recommendation:
+   keep Rive as the renderer; adopt the overhaul's behaviour/movement layer as a
+   `CairaWanderController` wrapping the existing `CairaCharacter`** (two orthogonal
+   axes — positional × expressive). 4 open questions; chief one = is the Rive-authoring
+   resource committed?
+3. **Interactive marketing site-guide prototype** — `docs/design/Caira Site Guide.dc.html`
+   (DRAFT, design-prototype only per Edward): a large Caira "host" waits on the left
+   (idle waves/jumps + soft synth blips), click → introduces herself + offers a
+   walk-through, Yes → wanders the page stopping at each section with a responding
+   pop-up box (Next/Skip). **No voice — noises only**; honours reduced-motion. Character
+   is the static `caira-master` cutout stand-in; the tour logic IS the renderer-agnostic
+   `CairaWanderController` → swaps to `<CairaCharacter>` (Rive) with no behaviour change.
+
+### ⚠️ NOT verified here (sandbox limitation — please run on a real toolchain)
+`node_modules` + the generated Prisma client are network-gated in the web session, so
+**`tsc` / `lint` / `npm test` / `npm run build` could not run.** Cross-repo wiring for
+the 5 screens is verified by inspection only (action imports + enum mappings all match
+the backends). **Run the full gate set after `prisma generate`** before relying on the
+routes. No SQL/schema changes — reuses backends already on `main`. PR #6 was the review
+vehicle (now merged via `d5c23b9`).
+
+### NEXT
+- **(cw/Edward)** run `tsc/lint/test/build` post-`prisma generate`; visual-pass the 5
+  routes vs the `.dc.html` screenshots (Hub uses an initials-disc Avatar stand-in; some
+  design-only CSS vars mapped to existing tokens).
+- **(Edward — gated)** answer the Rive-authoring question (unblocks the animation path);
+  decide whether to author `caira.riv` or fall back to sprite-sheets.
+- **(cc/cd)** Edward is **revamping the sales site** — leave `Caira Site Guide.dc.html`
+  as the prototype; lift `.kyra`/`.kyra-bubble` + the `TOUR` script into the new site
+  later (point each `data-tour` stop at the real sections).
+- **(Edward — gated, unchanged)** apply `prisma/sql/hub.sql` + `restrictive_practice.sql`
+  by hand if not already live; the routes degrade gracefully until then.
 
 ---
 
