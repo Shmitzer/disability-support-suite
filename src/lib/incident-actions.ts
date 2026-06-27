@@ -10,10 +10,25 @@ import { getCurrentPrincipal } from "@/lib/access";
 import { can, Capability } from "@/lib/rbac";
 import { recordAudit } from "@/lib/audit";
 import { notifyOrgManagers } from "@/lib/notifications";
+import { deriveRpReportable, isRpType, type RpType } from "@/lib/hub";
 import { revalidatePath } from "next/cache";
 
 const TYPES = new Set(["physical", "behavioural", "environmental", "medical", "other"]);
 const SEVERITIES = new Set(["low", "medium", "high", "critical"]);
+
+// Restrictive-practice (RP) capture — HUB_DATA_MODEL.md §RP. Promotes RP use to a
+// first-class compliant Incident; an unauthorised/emergency use auto-flags reportable.
+export type RestrictivePracticeInput = {
+  rpType: RpType | string;
+  rpAuthorised: boolean; // under the current BSP? false → unauthorised/emergency
+  rpRoutineOrPrn?: "ROUTINE" | "PRN" | null;
+  rpMedication?: string | null; // chemical restraint drug
+  rpDose?: string | null; // chemical restraint dose
+  rpDurationMinutes?: number | null; // physical / seclusion duration
+  lessRestrictiveTried?: string | null;
+  bspReference?: string | null;
+  medicationAdminId?: string | null; // eMAR cross-reference
+};
 
 export type IncidentResult = { ok: boolean; error?: string; incidentId?: string };
 
@@ -30,12 +45,25 @@ export async function reportIncident(input: {
   notified?: { participant?: boolean; guardian?: boolean; supervisor?: boolean; commission?: boolean };
   followUp?: string;
   reportable?: boolean;
+  // When present, this incident records a restrictive practice. An unauthorised use
+  // (rpAuthorised=false) auto-flags reportable=true regardless of the reportable arg.
+  restrictivePractice?: RestrictivePracticeInput | null;
 }): Promise<IncidentResult> {
   const worker = await getCurrentWorker();
   if (!worker) return { ok: false, error: "Not signed in." };
   if (!TYPES.has(input.type)) return { ok: false, error: "Pick an incident type." };
   if (!SEVERITIES.has(input.severity)) return { ok: false, error: "Pick a severity." };
   if (!input.description?.trim()) return { ok: false, error: "Describe what happened." };
+
+  const rp = input.restrictivePractice ?? null;
+  if (rp && !isRpType(rp.rpType)) return { ok: false, error: "Pick a restrictive-practice type." };
+
+  // Unauthorised/emergency RP is always reportable to the NDIS Commission.
+  const reportable = deriveRpReportable({
+    restrictivePractice: Boolean(rp),
+    rpAuthorised: rp?.rpAuthorised,
+    reportable: input.reportable,
+  });
 
   try {
     const incident = await prisma.incident.create({
@@ -51,17 +79,37 @@ export async function reportIncident(input: {
         immediateAction: input.immediateAction ?? null,
         notified: input.notified ?? undefined,
         followUp: input.followUp ?? null,
-        reportable: Boolean(input.reportable),
+        reportable,
         status: "OPEN",
+        ...(rp
+          ? {
+              restrictivePractice: true,
+              rpType: rp.rpType,
+              rpAuthorised: rp.rpAuthorised,
+              rpRoutineOrPrn: rp.rpRoutineOrPrn ?? null,
+              rpMedication: rp.rpMedication ?? null,
+              rpDose: rp.rpDose ?? null,
+              rpDurationMinutes: rp.rpDurationMinutes ?? null,
+              lessRestrictiveTried: rp.lessRestrictiveTried ?? null,
+              bspReference: rp.bspReference ?? null,
+              medicationAdminId: rp.medicationAdminId ?? null,
+            }
+          : {}),
       },
     });
     await recordAudit({
-      action: "INCIDENT_REPORTED",
+      action: rp ? "RESTRICTIVE_PRACTICE_RECORDED" : "INCIDENT_REPORTED",
       targetType: input.participantId ? "Participant" : "Incident",
       targetId: input.participantId ?? incident.id,
       actorId: worker.id,
       organisationId: worker.organisationId,
-      detail: { incidentId: incident.id, type: input.type, severity: input.severity, reportable: Boolean(input.reportable) },
+      detail: {
+        incidentId: incident.id,
+        type: input.type,
+        severity: input.severity,
+        reportable,
+        ...(rp ? { restrictivePractice: true, rpType: rp.rpType, rpAuthorised: rp.rpAuthorised } : {}),
+      },
     });
     await notifyOrgManagers(worker.organisationId, {
       type: "incident",
