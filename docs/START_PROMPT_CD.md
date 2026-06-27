@@ -1,3 +1,18 @@
+> ## ▶ OVERNIGHT MODE — 2026-06-28 (read this first)
+>
+> You are **cd**. Run on branch **`claude/cd-enterprise`**. Your work list is the **cd queue** in
+> **`docs/OVERNIGHT_PLAN_2026-06-28.md`** — follow its **resume protocol**: author each screen as a
+> `.dc.html` in `docs/design/` + a `HANDOFF.md` entry, then **commit + tick the box in the plan +
+> push your branch** (SSOT-first, so cc can wire it). On any restart, `git fetch`, re-read the plan,
+> and work the **first non-`[x]` cd item** (never redo `[x]`). Hard rules + Edward-gated list are in
+> the plan. The notes below remain your design reference.
+>
+> **Kickoff (paste to start):** "You are cd, on branch `claude/cd-enterprise`. Open
+> `docs/OVERNIGHT_PLAN_2026-06-28.md`, find the first non-done item in the cd queue, and work it per
+> the resume protocol — commit `.dc.html` + HANDOFF, tick+push after each, mark `[!]` and move on if blocked."
+
+---
+
 # cd start prompt — Phase G (design / `docs/design/`)
 
 Paste this to a fresh Claude Code session. You are **cd** — the design role. `docs/design/` is the

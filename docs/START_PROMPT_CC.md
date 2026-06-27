@@ -1,3 +1,18 @@
+> ## ▶ OVERNIGHT MODE — 2026-06-28 (read this first)
+>
+> You are **cc**. Run on branch **`claude/cc-enterprise`**. Your work list is the **cc queue** in
+> **`docs/OVERNIGHT_PLAN_2026-06-28.md`** — follow its **resume protocol**: after each task, keep
+> `tsc`/`lint`/`npm test`/`npm run build` green, **commit + tick the box in that file + push your
+> branch**; on any restart, `git fetch`, re-read the plan, and work the **first non-`[x]` cc item**
+> (never redo `[x]`). Hard rules + the Edward-gated list (build up to it, mark `[!]`, move on) are in
+> the plan. The Phase-G/Phase-I notes below remain your reference for the Caira + medication work.
+>
+> **Kickoff (paste to start):** "You are cc, on branch `claude/cc-enterprise`. Open
+> `docs/OVERNIGHT_PLAN_2026-06-28.md`, find the first non-done item in the cc queue, and work it per
+> the resume protocol — keep gates green, commit+tick+push after each, mark `[!]` and move on if blocked."
+
+---
+
 # cc start prompt — Phase G **G2 wire-up** (logic / backend / wiring)
 
 Paste this to a fresh Claude Code session. You are **cc** — the logic/backend/wiring role. **cd** owns
