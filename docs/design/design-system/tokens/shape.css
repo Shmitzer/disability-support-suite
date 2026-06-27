@@ -1,0 +1,29 @@
+/*
+  Caira shape & depth — soft, paper-like, never harsh.
+  Rounded corners everywhere; shadows are low, warm-tinted, and subtle.
+*/
+:root {
+  /* Corner radii */
+  --radius-xs:   8px;
+  --radius-sm:   12px;
+  --radius:      16px;   /* default — cards, panels (1rem) */
+  --radius-lg:   20px;   /* category tiles */
+  --radius-xl:   22px;   /* hero cards */
+  --radius-full: 999px;  /* pills, avatars, on-call */
+
+  /* Shadows — warm-tinted, soft. Cards barely lift off the paper. */
+  --shadow-soft:  0 1px 2px rgb(43 42 38 / 0.04), 0 1px 3px rgb(43 42 38 / 0.06);
+  --shadow-card:  0 8px 28px rgb(30 34 42 / 0.07);
+  --shadow-pop:   0 12px 24px rgb(223 91 64 / 0.40);  /* clay mic button glow */
+
+  /* Paper-icon blob drop shadow (matches PaperIcon feDropShadow) */
+  --shadow-paper: 0 2.5px 2.2px rgb(122 90 54 / 0.22);
+
+  /* Borders */
+  --border-width: 1px;
+  --border-line:  1px solid var(--border);
+
+  /* Focus ring — always visible (switch-access / keyboard users) */
+  --focus-ring:   2px solid var(--brand);
+  --focus-offset: 2px;
+}

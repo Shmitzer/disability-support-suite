@@ -1,0 +1,25 @@
+/*
+  Caira spacing — 4px base grid. Generous, calm, never cramped.
+  Hit targets are >=44px (accessibility intent for switch/one-handed use).
+*/
+:root {
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Layout */
+  --gutter:        24px;
+  --page-pad:      24px;
+  --content-max:   768px;   /* max-w-3xl in the app */
+
+  /* Accessibility — minimum tap target */
+  --hit-target:    44px;
+}

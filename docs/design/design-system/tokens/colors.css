@@ -1,0 +1,69 @@
+/*
+  Caira colour system — "Sage & Clay".
+  Warm, calm, paper-like. Teal is the primary; clay/terracotta is the warm
+  accent; surfaces sit on a soft warm-paper canvas. Hexes mirror the repo's
+  globals.css + HANDOFF.md exactly — if a hex changes there, change it here.
+*/
+:root {
+  /* ---- Base palette (raw scales) ---------------------------------- */
+
+  /* Teal — primary / brand */
+  --caira-teal-700: #0f766e;   /* brand */
+  --caira-teal-800: #0b5d56;   /* pressed / hover */
+  --caira-teal-100: #d8e9e6;   /* light wash — selected / headers */
+
+  /* Clay — warm accent (on-call, mic, urgent) */
+  --caira-clay-500: #df5b40;
+  --caira-clay-600: #c2492f;
+  --caira-clay-100: #fbe4dd;
+
+  /* Sage green — "on shift" status */
+  --caira-green-500: #34a07f;
+  --caira-green-50:  #e7f1ec;
+
+  /* Amber — reminders / meds-due */
+  --caira-amber-500: #e3a534;
+  --caira-amber-50:  #fdf6ea;
+
+  /* Warm paper neutrals */
+  --caira-paper:      #f3ebdd;  /* canvas */
+  --caira-surface:    #fffaf2;  /* cards / headers */
+  --caira-surface-2:  #fffaf3;  /* alt surface */
+  --caira-sunk:       #efe6d6;  /* inset wells / segmented track */
+  --caira-ink:        #3a3128;  /* primary text */
+  --caira-muted:      #8a7a66;  /* secondary text */
+  --caira-line:       #ece0cf;  /* hairlines */
+  --caira-ink-soft:   #9b8a72;  /* tertiary / disabled text */
+
+  /* ---- Semantic aliases (use these in components) ----------------- */
+  --background:    var(--caira-paper);
+  --surface:       var(--caira-surface);
+  --surface-sunk:  var(--caira-sunk);
+  --foreground:    var(--caira-ink);
+  --muted:         var(--caira-muted);
+
+  --brand:         var(--caira-teal-700);
+  --brand-strong:  var(--caira-teal-800);
+  --brand-tint:    var(--caira-teal-100);
+
+  --clay:          var(--caira-clay-500);
+  --clay-strong:   var(--caira-clay-600);
+  --clay-tint:     var(--caira-clay-100);
+
+  --status:        var(--caira-green-500);
+  --status-bg:     var(--caira-green-50);
+  --amber:         var(--caira-amber-500);
+  --amber-bg:      var(--caira-amber-50);
+
+  --border:        var(--caira-line);
+
+  /* Text roles */
+  --text-body:     var(--caira-ink);
+  --text-muted:    var(--caira-muted);
+  --text-faint:    var(--caira-ink-soft);
+  --text-on-brand: #ffffff;
+
+  /* Surface roles */
+  --surface-card:  var(--caira-surface);
+  --surface-well:  var(--caira-sunk);
+}

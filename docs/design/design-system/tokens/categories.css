@@ -1,0 +1,20 @@
+/*
+  Caira log-category tints — the "Paper" icon palette.
+  Each category has a soft cut-paper blob FILL and a darker stroked-glyph INK.
+  Six tile categories (Food/Drink/Hygiene/Activity/Toilet/Medication); Note and
+  Incident don't get a Paper tile. Values mirror PaperIcon.tsx + HANDOFF.md.
+*/
+:root {
+  --cat-food-fill:     #f6d99a;  --cat-food-ink:     #8a5a18;
+  --cat-drink-fill:    #a9ddd7;  --cat-drink-ink:    #0e5e58;
+  --cat-hygiene-fill:  #cdd6f0;  --cat-hygiene-ink:  #4d5b9e;
+  --cat-activity-fill: #aedcb6;  --cat-activity-ink: #256b3f;
+  --cat-toilet-fill:   #b9e0da;  --cat-toilet-ink:   #14756a;
+  --cat-meds-fill:     #f3c2d8;  --cat-meds-ink:     #962f63;
+
+  /* Incident — calm, never alarmist (reassurance over alarm) */
+  --incident-line:  #ecd9d2;
+  --incident-bg:    #f9f1ef;
+  --incident-dot:   #d2a596;
+  --incident-text:  #ad9087;
+}
