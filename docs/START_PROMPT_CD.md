@@ -29,8 +29,21 @@ No need to stop and ask — these are decided. Proceed on them.
 7. **Incident form** — design the full **NDIS reportable-incident** field set.
 8. **`/console` density** — **information-dense data tables + side nav** (desktop direction, distinct
    from the airy mobile worker aesthetic).
-9. **Participant Hub leads the order** — shared tablet for Zef's 3:1 multi-org support; it's the
+9. **Participant Hub leads the order** — shared iPad for Zef's 3:1 multi-org support; it's the
    trial wedge (first user = his mother). Full brief in **`docs/PARTICIPANT_HUB_SPEC.md`**.
+10. **Hub + RP specifics (locked 2026-06-27):**
+    - **Build scope = all** — design the hub, the restrictive-practice screen, AND the simpler
+      worker screens in parallel.
+    - **Device sign-in UI** — full login once per worker, then an **avatar row + PIN tap** to switch
+      actor; the hub may **pre-highlight the likely worker** (who's checked in / voice hint) but the
+      worker always taps to confirm. No biometrics UI.
+    - **Restrictive-practice screen** — design it now per **`docs/RP_INCIDENT_CD_BRIEF.md`**:
+      speed-first, BSP-authorised quick-buttons, AI-dictation path, authorised-vs-emergency fork,
+      review-before-save. Calm clay, never red — it logs a restraint on a real person.
+    - **Timeline** — shows every attendee's entries attributed (name · org · capacity); each org
+      owns its own rows (no single shared record). Design it to **update live** as entries arrive
+      from any device (phone or iPad), with a presence cue ("Aria is adding a note…") so two people
+      don't log the same event.
 
 ---
 

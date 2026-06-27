@@ -28,11 +28,28 @@ No need to stop and ask — these are decided. Proceed on them.
    verifies against the live MA000100 guide later.
 9. **LearnedOption picklists** — **no change**: keep global seeds + per-org overrides (already built).
 10. **`anonymiseUser()` erasure** — **land it now** (on `pensive-allen`; closes the last gate item).
-11. **Participant Hub** — build it in Phase G (shared tablet for Zef's 3:1 multi-org support). First
-    user = his mother, modelled as **one identity, three capacities**: Solo Worker (own org) +
-    `participant_guardian` (`consent:manage`) + `family_carer_clinical` on Zef. Attribution =
-    quick-unlock PIN tap. **Capacity captured per entry** (new `actingCapacity`). Multi-org consent
-    routes through the nominee. Full slice in **`docs/PARTICIPANT_HUB_SPEC.md`**.
+11. **Participant Hub** — build it in Phase G (shared iPad for Zef's 3:1 multi-org support). First
+    user = his mother: **one identity, three capacities** — Solo Worker (own org) +
+    `participant_guardian` (`consent:manage`) + `family_carer_clinical` on Zef. **Capacity captured
+    per entry** (`actingCapacity`). Full slice in **`docs/HUB_DATA_MODEL.md`** + `PARTICIPANT_HUB_SPEC.md`.
+12. **Hub specifics (locked 2026-06-27):**
+    - **Build scope = all** — hub + RP + the simpler G2 screens, in parallel. No staging.
+    - **Device auth** — full login once per worker, then **PIN tap**; persist a hashed `pinHash` on
+      `Worker`. **AI assists** identification (context: who's checked in/rostered; voice hints during
+      dictation) but the actor is **always confirmed** — never AI-auto-committed (audit integrity).
+      **Voiceprint biometrics deferred** (lawyer sign-off first).
+    - **Data controller = each org controls its own entries.** No single controller; the cross-org
+      timeline is a `authorizeParticipantAccess`-gated read-across of independently-owned rows (matches
+      per-row `organisationId`). Drop any "nominee-as-controller" wiring.
+    - **Restrictive practices = full build now** on dummy data. Extend `Incident` per
+      `HUB_DATA_MODEL.md` §Restrictive-practice (`rpType`, `rpAuthorised`→auto-`reportable`,
+      drug/dose + `medicationAdminId` eMAR link, duration, `lessRestrictiveTried`, `bspReference`).
+      The global no-real-data gate already covers real RP events.
+    - **Multi-device real-time sync** — personal phones + the shared iPad are clients of the **same
+      participant-anchored session**. Supabase Realtime broadcast (keyed by participant) + presence
+      keep them live-consistent; every write carries an `idempotencyKey` and goes through the
+      `offline-sync` outbox, so retries / same-event-from-two-devices can't double-write. See
+      `HUB_DATA_MODEL.md` §Real-time multi-device sync.
 
 ---
 

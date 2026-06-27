@@ -8,11 +8,22 @@ go-to-market onboarding that uses both as a wedge into NLS + a second provider.
 
 ## The scenario
 
-Zef is supported **3:1** by a rotating mix from up to three organisations: **NLS**, his **mother's
-independent sole-trader** practice, and a **second company**. At any moment up to three of them are
-physically with him. We want a **single tablet at Zef's place** where whoever is on shift can log
-events to **one accurate, attributed record** — instead of three phones producing three fragmented
-note sets.
+Zeph (a.k.a. Zef) is supported **3:1** by a rotating mix from up to three organisations: **NLS**, his
+**mother's independent sole-trader** practice, and a **second company**. At any moment up to three of
+them are physically with him. We want a **single shared iPad at Zeph's place** where whoever is on
+shift can authenticate and log events to **one accurate, attributed record** — instead of three
+phones producing three fragmented note sets, or one tablet per org.
+
+**Clinical complexity (drives the requirements).** Zeph has a severe traumatic brain injury with
+impaired impulse control — self-aware but unable to regulate reactions, presenting as physical
+aggression (scratching, biting, punching, kicking, hitting, throwing objects). He is subject to
+**authorised physical and chemical restraint** under a behaviour support plan; the 3:1 ratio is
+formally justified by his condition. This makes **restrictive-practice incident reporting** a core,
+high-compliance requirement — and **speed** the binding design constraint: staff must complete an
+incident log in a few taps, often mid-event. Both the structured quick-entry (the participant-tailored
+**chips** — the restrictive-practice chip group already exists) and Caira's **AI dictation** pathway
+(voice → transcription → review-before-save) must reach the incident flow. Full data model in
+`HUB_DATA_MODEL.md` §Restrictive-practice incidents.
 
 ## The first user is the wedge — Zef's mother
 
@@ -123,3 +134,11 @@ idempotency keys + per-entity serialisation (safe concurrent logging) · partici
   Privacy Act (APPs).
 - **Shared-device exposure / safeguarding** — a tablet in a participant's home co-used by three
   orgs: auto-lock, trust, breach exposure.
+- **Restrictive-practice reporting obligations** — confirm the exact NDIS Commission requirements
+  the app must support for authorised vs unauthorised use of **physical and chemical restraint**
+  (routine RP reporting cadence, and the reportable-incident timeframe for unauthorised/emergency
+  use). Chemical restraint recorded via the eMAR must also surface as RP. This is the highest-risk
+  compliance area in Zeph's case and should be confirmed with the lawyer + behaviour support
+  practitioner before the trial logs any real RP event.
+- **Which org reports an RP incident** when three orgs co-support under one BSP — the logging org,
+  the participant's coordinating org, or each independently? Ties to the data-controller question.
