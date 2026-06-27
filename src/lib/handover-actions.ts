@@ -26,6 +26,15 @@ export async function writeHandover(input: {
   if (!shift || shift.allocatedToId !== worker.id) {
     return { ok: false, error: "This isn't your shift." };
   }
+  // A directed handover may only target a worker in the shift's org — otherwise the
+  // body excerpt in the notification could be sent to a user in another org.
+  if (input.toWorkerId) {
+    const recipient = await prisma.worker.findFirst({
+      where: { id: input.toWorkerId, organisationId: shift.organisationId },
+      select: { id: true },
+    });
+    if (!recipient) return { ok: false, error: "That recipient isn't in this organisation." };
+  }
   try {
     const ho = await prisma.shiftHandover.create({
       data: {
@@ -75,11 +84,18 @@ export async function acknowledgeHandover(handoverId: string): Promise<{ ok: boo
   if (!worker) return { ok: false, error: "Not signed in." };
   const ho = await prisma.shiftHandover.findUnique({
     where: { id: handoverId },
-    select: { id: true, participantId: true, shiftId: true },
+    select: { id: true, participantId: true, shiftId: true, organisationId: true, toWorkerId: true },
   });
   if (!ho) return { ok: false, error: "Handover not found." };
-  if (ho.participantId && !(await canAccessParticipant(ho.participantId))) {
-    return { ok: false, error: "You don't have access to this participant." };
+  // Authorize even when participantId is null (it's nullable): the caller must be the
+  // named recipient, have participant access, or be in the handover's org. Previously a
+  // null-participant handover skipped the check entirely (any signed-in user could ack).
+  const allowed =
+    ho.toWorkerId === worker.id ||
+    (ho.participantId ? await canAccessParticipant(ho.participantId) : false) ||
+    (ho.organisationId != null && ho.organisationId === worker.organisationId);
+  if (!allowed) {
+    return { ok: false, error: "You don't have access to this handover." };
   }
   await prisma.shiftHandover.update({
     where: { id: handoverId },

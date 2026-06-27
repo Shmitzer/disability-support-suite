@@ -127,10 +127,19 @@ export async function setTaskCompletion(input: {
   if (!worker) return { ok: false, error: "Not signed in." };
   const shift = await prisma.shift.findUnique({
     where: { id: input.shiftId },
-    select: { id: true, allocatedToId: true, status: true, organisationId: true },
+    select: { id: true, allocatedToId: true, status: true, organisationId: true, participantId: true },
   });
   if (!shift || shift.allocatedToId !== worker.id || shift.status !== "IN_PROGRESS") {
     return { ok: false, error: "This isn't an active shift you can log to." };
+  }
+  // The client-supplied careTaskId must belong to this shift's participant — otherwise
+  // a foreign task id could be written into this shift's completion record.
+  const careTask = await prisma.careTask.findUnique({
+    where: { id: input.careTaskId },
+    select: { participantId: true },
+  });
+  if (!careTask || careTask.participantId !== shift.participantId) {
+    return { ok: false, error: "That task isn't for this participant." };
   }
   try {
     if (input.status === null) {

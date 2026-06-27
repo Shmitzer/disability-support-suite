@@ -421,7 +421,9 @@ async function geminiGenerate(
   // Free-tier Gemini often returns 503 (busy) or 429 (rate limit) for a moment.
   // Those are temporary, so we retry a few times with a growing pause before
   // giving up. Other errors (e.g. a bad request) fail straight away.
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  // Key goes in the x-goog-api-key header, NOT the query string: a secret in a
+  // URL can leak into proxy/access logs and error/Sentry traces that capture URLs.
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: "user", parts }],
@@ -433,7 +435,7 @@ async function geminiGenerate(
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body,
     });
     if (response.ok) break;
@@ -485,6 +487,13 @@ export async function cairaChat(opts: {
   systemPrompt: string;
   history: GeminiTurn[];
   message: string;
+  /**
+   * Proper-noun names (participant / worker / supervisor) the caller's session
+   * legitimately knows. They are tokenised out of the system prompt, message and
+   * history before the request leaves the app, and restored (→ first name) in the
+   * reply (Rule 2). Pass every name you injected into the prompt/context.
+   */
+  names?: string[];
   webEnabled?: boolean;
   maxOutputTokens?: number;
   temperature?: number;
@@ -497,14 +506,34 @@ export async function cairaChat(opts: {
     throw new Error("No GEMINI_API_KEY found. Add it to .env.local and restart the app.");
   }
 
+  // Rule 2 — scrub PII before anything egresses to Gemini. The system prompt
+  // carries the participant's name + today's shift log, the message is the
+  // worker/participant's free text, and the history is prior turns: all of it
+  // must be tokenised. The restore map is derived from `names` alone, so the
+  // tokens are identical across every string we scrub here, and we restore the
+  // real first names only in the reply that comes back into the app.
+  // Residual limitation (same as the note path): third-party names that appear
+  // only in free text and aren't in `names` won't be caught — fails safe (the
+  // placeholder shows) rather than leaking, and is tracked for the NER pass.
+  const names = (opts.names ?? []).filter(Boolean);
+  const { restore } = scrubPII("", names);
+  const scrub = (s: string) => scrubPII(s, names).text;
+  const systemPrompt = scrub(opts.systemPrompt);
+  const message = scrub(opts.message);
+  const history: GeminiTurn[] = opts.history.map((t) => ({
+    role: t.role,
+    parts: t.parts.map((p) => ({ text: scrub(p.text ?? "") })),
+  }));
+
   // Tools are added ONLY when web access is enabled — otherwise Caira has no internet
   // (the default for every user). `google_search` is the v1beta grounding tool.
   const tools = opts.webEnabled ? [{ google_search: {} }] : [];
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  // Key in the x-goog-api-key header (not the query string) — see geminiGenerate.
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const body = JSON.stringify({
-    systemInstruction: { parts: [{ text: opts.systemPrompt }] },
-    contents: [...opts.history, { role: "user", parts: [{ text: opts.message }] }],
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents: [...history, { role: "user", parts: [{ text: message }] }],
     ...(tools.length ? { tools } : {}),
     generationConfig: {
       maxOutputTokens: opts.maxOutputTokens ?? 400,
@@ -517,7 +546,7 @@ export async function cairaChat(opts: {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body,
     });
     if (response.ok) break;
@@ -535,7 +564,7 @@ export async function cairaChat(opts: {
     data?.candidates?.[0]?.content?.parts
       ?.map((p: { text?: string }) => p.text ?? "")
       .join("") ?? "";
-  return text.trim();
+  return restore(text.trim());
 }
 
 // --- Voice transcription ----------------------------------------------------

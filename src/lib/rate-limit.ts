@@ -72,6 +72,72 @@ export async function checkRateLimit(identifier: string): Promise<RateLimitResul
   }
 }
 
+// --- Failed-attempt lockout (short secrets: hub PIN) ------------------------
+//
+// The throttle above counts *every* request. A PIN is a short secret (4–8
+// digits) verified server-side on a shared device, so it needs a brute-force
+// lockout that counts FAILURES only and clears on success — otherwise an
+// authenticated worker could enumerate another worker's PIN by replaying
+// hubCheckIn/logHubEntry and forge attribution.
+//
+// Same env gate as the throttle: without Upstash this is a no-op (dev/sandbox),
+// and it FAILS OPEN on a limiter error (a lockout outage must not strand a real
+// worker on a shared device — the constant-time PIN check is still in force).
+
+const PIN_MAX_FAILS = Number(process.env.HUB_PIN_MAX_FAILS ?? 10);
+const PIN_LOCK_SECONDS = Number(process.env.HUB_PIN_LOCK_SECONDS ?? 900); // 15 min
+
+// Is this identifier currently locked out (too many recent failures)?
+export async function isLockedOut(identifier: string): Promise<boolean> {
+  if (!url || !token) return false; // not configured → no lockout (dev/sandbox)
+  try {
+    const key = `fail:${identifier}`;
+    const res = await fetch(`${url}/get/${encodeURIComponent(key)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`upstash responded ${res.status}`);
+    const data = (await res.json()) as { result?: unknown };
+    return Number(data?.result ?? 0) >= PIN_MAX_FAILS;
+  } catch (err) {
+    console.error("lockout check failed (allowing attempt):", err);
+    return false; // fail open
+  }
+}
+
+// Record one failed attempt; the counter self-expires after the lock window.
+export async function registerFailedAttempt(identifier: string): Promise<void> {
+  if (!url || !token) return;
+  try {
+    const key = `fail:${identifier}`;
+    await fetch(`${url}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify([
+        ["INCR", key],
+        ["EXPIRE", key, PIN_LOCK_SECONDS, "NX"],
+      ]),
+      cache: "no-store",
+    });
+  } catch (err) {
+    console.error("registerFailedAttempt failed:", err);
+  }
+}
+
+// Clear the failure counter (call on a successful verify).
+export async function clearFailedAttempts(identifier: string): Promise<void> {
+  if (!url || !token) return;
+  try {
+    await fetch(`${url}/del/${encodeURIComponent(`fail:${identifier}`)}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+  } catch (err) {
+    console.error("clearFailedAttempts failed:", err);
+  }
+}
+
 // --- Global daily spend cap + budget alarm ---------------------------------
 //
 // The per-identifier throttle above stops ONE account hammering the API. This is
