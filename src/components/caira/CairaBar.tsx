@@ -1,43 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import CairaHead from "./CairaHead";
 import CairaFlagBadge from "./CairaFlagBadge";
 import CairaAudioToggle from "./CairaAudioToggle";
+import CairaWanderController from "./CairaWanderController";
 import { useCaira } from "./CairaContext";
 
 /**
  * CairaBar — persistent top nav bar housing the wandering Caira logo.
+ *
+ * The wander is now handled by CairaWanderController (smoothed random walk with
+ * exponential lerp + sinusoidal drift) rather than the old linear setInterval.
+ * This gives her organic, intentional movement instead of mechanical bouncing.
  */
 export default function CairaBar() {
   const { mode, setMode } = useCaira();
-
-  const [logoX, setLogoX] = useState(20);
-  const [dir, setDir] = useState<1 | -1>(1);
-  const [blink, setBlink] = useState(false);
-
-  // Wander the logo left/right while in logo mode.
-  useEffect(() => {
-    if (mode !== "logo") return;
-    const id = setInterval(() => {
-      setLogoX((x) => {
-        const next = x + dir * 2;
-        if (next > 78) setDir(-1);
-        else if (next < 14) setDir(1);
-        return next;
-      });
-    }, 80);
-    return () => clearInterval(id);
-  }, [mode, dir]);
-
-  // Blink.
-  useEffect(() => {
-    const id = setInterval(() => {
-      setBlink(true);
-      setTimeout(() => setBlink(false), 110);
-    }, 2700);
-    return () => clearInterval(id);
-  }, []);
 
   return (
     <div
@@ -61,35 +38,41 @@ export default function CairaBar() {
               ✕ dismiss
             </button>
           )}
-          {/* Mute toggle — always accessible. */}
           <CairaAudioToggle />
         </div>
 
         {mode === "logo" && (
-          <div
-            className="absolute"
+          <CairaWanderController
+            charWidth={38}
+            charHeight={46}
+            padding={0.06}
+            // Mic target: right-ish side of the bar, centred vertically.
+            micTarget={[0.82, 0.5]}
             style={{
-              left: `${logoX}%`,
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              transition: "left 0.09s linear",
+              position: "absolute",
+              inset: 0,
+              // Exclude the right-side controls area from the wander zone
+              // by right-padding the controller to ~96px.
+              right: 96,
+              pointerEvents: "none",
             }}
           >
-            <button
-              type="button"
-              aria-label="Open Caira assistant"
-              onClick={() => setMode("expanded")}
-              className="block rounded-full"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(77,184,176,0.2) 0%, rgba(77,184,176,0) 70%)",
-              }}
-            >
-              <CairaHead size={38} blink={blink} />
-            </button>
-            {/* Unreviewed safety-flag badge (worker/supervisor only), over the antenna. */}
-            <CairaFlagBadge />
-          </div>
+            <div style={{ pointerEvents: "auto" }}>
+              <button
+                type="button"
+                aria-label="Open Caira assistant"
+                onClick={() => setMode("expanded")}
+                className="block rounded-full"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(77,184,176,0.18) 0%, rgba(77,184,176,0) 70%)",
+                }}
+              >
+                <CairaHead size={38} />
+              </button>
+              <CairaFlagBadge />
+            </div>
+          </CairaWanderController>
         )}
       </div>
     </div>
