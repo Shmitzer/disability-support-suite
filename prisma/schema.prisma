@@ -73,6 +73,14 @@ model Worker {
   trialEndsAt        DateTime?
   lastSeenVersion    String?
 
+  // Participant-hub quick-unlock PIN (server-side). On a shared device a worker logs
+  // in fully once, sets a PIN, then attributes subsequent entries by PIN tap. Stored
+  // salted+hashed (scrypt) — see src/lib/hub.ts (hashHubPin/verifyHubPin). Distinct
+  // from the client-only convenience lock in src/lib/quick-unlock.ts. Lands via
+  // prisma/sql/hub.sql (NOT auto-applied); hub-actions.ts degrades gracefully.
+  pinHash            String?
+  pinSetAt           DateTime?
+
   // Caira AI: a participant-user's language level ("simple" | "adjusted"). Only
   // meaningful for role=PARTICIPANT; ignored for staff. See lib/caira/systemPrompts.ts.
   participantAILevel String @default("simple")
@@ -235,8 +243,12 @@ model ShiftEvent {
 // A single log entry during a shift (food, toileting, activity, etc).
 model LogEntry {
   id             String   @id @default(cuid())
-  shift          Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  shiftId        String
+  // shiftId is now NULLABLE: an entry hangs off EITHER a Shift (mobile/paid path,
+  // unchanged) OR a hub check-in (hubCheckInId). The relation is optional to match.
+  // Column lands nullable via prisma/sql/hub.sql (NOT auto-applied); existing rows
+  // keep their shiftId, so this is back-compatible.
+  shift          Shift?   @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId        String?
   category       String // Meal | Fluids | Activity | Toileting | Hygiene | Meds | Note | Incident
   detail         String? // structured quick-pick facts + amount, e.g. "Water · 250 mL" (null if none)
   notes          String // what the worker typed or dictated
@@ -250,12 +262,23 @@ model LogEntry {
   // the extraction writer (log-actions.ts) sets it when present and degrades
   // gracefully (entries created unlinked) until that migration is applied.
   derivedFromId  String?
+  // Participant-hub attribution (additive, nullable, back-compatible). Set for
+  // entries logged via the shared-iPad / personal-phone hub path instead of a Shift.
+  // These columns land via prisma/sql/hub.sql (NOT auto-applied); hub-actions.ts
+  // stamps them and degrades gracefully (entries created without them) until applied.
+  hubCheckInId     String? // the HubCheckIn this entry attaches to (hub path)
+  loggedByWorkerId String? // explicit actor (the attendee); mobile = the shift's allocatedToId
+  actingCapacity   String? // WORKER | FAMILY | GUARDIAN (denormalised for fast timeline + audit)
+  participantId    String? // denormalised so the cross-org hub timeline is one indexed read
+  sourceDevice     String? // TABLET | PHONE — which device captured it (audit only; optional)
   userId         String
   organisationId String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
 
   @@index([derivedFromId])
+  @@index([participantId, timestamp])
+  @@index([hubCheckInId])
 }
 
 // An AI-generated progress report for one completed shift (task 1g).
@@ -443,6 +466,64 @@ model ParticipantAccessGrant {
   @@index([participantId, status])
 }
 
+// ── Participant Hub (shared-iPad / multi-device attendance layer) ───────────────
+// An attendance layer ABOVE Shift: N concurrent attendees (workers + family/guardian)
+// logging to one attributed, cross-org, consent-gated participant timeline. Additive —
+// does NOT change Shift (billing/EVV/SCHADS still key off Shift). New tables get a
+// standard org tenant_isolation RLS policy (prisma/sql/hub.sql). See HUB_DATA_MODEL.md.
+
+// A registered/trusted shared tablet (the "care station"), or a roaming device.
+model HubDevice {
+  id               String    @id @default(cuid())
+  label            String
+  participantId    String? // anchored to a participant's home tablet, or null = roaming
+  status           String    @default("ACTIVE") // ACTIVE | REVOKED
+  pairedSecretHash String? // device-trust secret (hashed)
+  lastSeenAt       DateTime?
+  userId           String
+  organisationId   String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now()) @updatedAt
+
+  @@index([participantId, status])
+}
+
+// One shared session on a device for one participant (open while support happens).
+model HubSession {
+  id             String    @id @default(cuid())
+  participantId  String
+  deviceId       String?
+  status         String    @default("OPEN") // OPEN | CLOSED
+  openedAt       DateTime  @default(now())
+  closedAt       DateTime?
+  userId         String
+  organisationId String? // host/coordinating-org context (e.g. NLS) for tenant scoping
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  @@index([participantId, status])
+}
+
+// One attending worker within a session — the "N concurrent" part of 3:1.
+model HubCheckIn {
+  id             String    @id @default(cuid())
+  hubSessionId   String
+  workerId       String // the attendee (Worker.id / principal)
+  capacity       String // WORKER | FAMILY | GUARDIAN
+  billable       Boolean   @default(true)
+  shiftId        String? // set when capacity=WORKER (paid) → links EVV/billing/SCHADS
+  accessGrantId  String? // set when FAMILY/GUARDIAN → the ParticipantAccessGrant authorising presence
+  checkedInAt    DateTime  @default(now())
+  checkedOutAt   DateTime?
+  userId         String
+  organisationId String? // the ATTENDEE's org (cross-org attribution + billing line); null = solo
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  @@index([hubSessionId])
+  @@index([workerId])
+}
+
 // A consent record about a participant — the lawful basis that backs external
 // access and sensitive processing (Privacy Act / NDIS). Append-style: a withdrawal
 // sets status = WITHDRAWN + withdrawnAt rather than deleting, so the consent
@@ -593,6 +674,22 @@ model Incident {
   reviewedById    String?
   reviewedAt      DateTime?
   reviewNotes     String?
+
+  // Restrictive-practice (RP) extension — the high-compliance path (Zeph's BSP).
+  // Additive/nullable; lands via prisma/sql/restrictive_practice.sql (NOT auto-
+  // applied). An unauthorised/emergency RP use (rpAuthorised=false) auto-flags
+  // reportable=true (NDIS Commission). See src/lib/incident-actions.ts.
+  restrictivePractice  Boolean @default(false)
+  rpType               String? // PHYSICAL | CHEMICAL | MECHANICAL | ENVIRONMENTAL | SECLUSION
+  rpAuthorised         Boolean? // true = under current BSP; false = unauthorised/emergency → reportable
+  rpRoutineOrPrn       String? // ROUTINE | PRN
+  rpMedication         String? // chemical restraint: drug
+  rpDose               String? // chemical restraint: dose
+  rpDurationMinutes    Int? // physical restraint / seclusion duration
+  lessRestrictiveTried String? // least-restrictive evidence (what was tried first)
+  bspReference         String? // the BSP authorising it
+  medicationAdminId    String? // links chemical restraint to MedicationAdministration (eMAR)
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now()) @updatedAt
 

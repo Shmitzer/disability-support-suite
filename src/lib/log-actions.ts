@@ -258,6 +258,8 @@ export async function deleteLogEntry(formData: FormData) {
     include: { shift: true },
   });
   if (!entry) return;
+  // Shift-path only: hub-logged entries (null shift) aren't editable here.
+  if (!entry.shift) return;
   if (entry.shift.allocatedToId !== worker.id || entry.shift.status !== "IN_PROGRESS") return;
 
   await prisma.logEntry.delete({ where: { id: entryId } });
@@ -278,6 +280,8 @@ export async function updateLogEntry(formData: FormData) {
     include: { shift: true },
   });
   if (!entry) return;
+  // Shift-path only: hub-logged entries (null shift) aren't editable here.
+  if (!entry.shift) return;
   if (entry.shift.allocatedToId !== worker.id || entry.shift.status !== "IN_PROGRESS") return;
 
   // A note that was required at capture (e.g. the free-text "Note") stays required.
@@ -291,7 +295,7 @@ export async function updateLogEntry(formData: FormData) {
   // The edit form submits the full photo set: existing photos (kept) + any new ones.
   // Only paths already on this entry may be kept; new images are uploaded.
   const photos = await processPhotos(formData.get("photos"), {
-    prefix: entry.shiftId,
+    prefix: entry.shiftId ?? entry.id,
     keepPaths: storedPhotoPaths(entry.photos),
   });
 
