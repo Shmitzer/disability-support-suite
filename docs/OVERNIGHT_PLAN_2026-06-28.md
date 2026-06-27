@@ -52,9 +52,13 @@ then push your branch. **On (re)start of any session instance:**
       check, caira/flags IDOR, declineShift link, writeHandover recipient org, hub PIN brute-force
       lockout, Gemini key→header, caira spend-cap, waitlist per-IP throttle). Gates green. Deploy-gated
       + hardening follow-ups logged under Blockers.
-- [ ] **cc2. MFA + secrets hygiene.** Wire MFA on `ADMIN`/`SUPERADMIN` seats; audit secret handling
-      (no secrets in client bundles/logs); RLS regression test in CI. (Rotating the *exposed* DB
-      password is Edward-gated — note it, don't do it.)
+- [x] **cc2. MFA + secrets hygiene.** Done (commit `aaa1de1`): **RLS regression in CI restored** — the
+      `check:tenant-scope` guard was silently broken (it scanned the Prisma-7 generated client's JSDoc
+      → 200+ false positives); now skips generated output and once again catches unscoped tenant reads.
+      **Secrets-in-bundle/log audit = clean** (verified: every secret env read is server-only, no
+      `NEXT_PUBLIC_` leak, no key logged; the one URL-embedded key was moved to a header in cc1).
+      **MFA is Edward+design-gated** → see Blockers (`[!]`); not autonomously buildable (needs Supabase
+      MFA enabled + cd enrollment UI; enforcing AAL2 without enrollment locks admins out).
 - [ ] **cc3. Phase-H authorisation state machine.** `DRAFT→PENDING_BSP→PENDING_COMMISSION→
       PENDING_GUARDIAN→ACTIVE`, DB/enum-enforced; Medication / PillAppearanceProfile (structured fields)
       / MARLog (immutable) schema as **unapplied** `prisma/sql`. Per `docs/MED_VERIFICATION_SPEC.md`.
@@ -113,6 +117,12 @@ _(append as work proceeds — one line each: which session, which task `[!]`, wh
   `findUnique`+relationship-guard — switch to `findFirst({ where:{ id, ...tenantScope } })` (guards hold
   today, so not exploitable). (3) `/api/transcribe` trusts client `mimeType` (no byte-sniff). (4)
   learned-options analytics emits worker free-text `name` — redact before capture.
+- **cc / cc2 `[!]` MFA (Edward + cd):** wiring MFA on ADMIN/SUPERADMIN needs (a) Edward to enable MFA in
+  the Supabase project (Auth settings) and (b) cd to design the TOTP enrollment + challenge screens.
+  Seam plan for cc once unblocked: a server helper over `supabase.auth.mfa.getAuthenticatorAssuranceLevel()`,
+  then enforce `currentLevel === 'aal2'` in `middleware.ts` for admin segments behind an env flag
+  (default off) so enrollment can roll out before enforcement. Not shipped now (untested auth-enforcement
+  that could lock admins out is not safe to land autonomously).
 - **cc / cc1 `[!]` legal/DPA (Edward, pre-real-data):** audio transcription + document-photo OCR send
   un-scrubbable PII to Gemini (cross-border) — known/accepted caveat; needs a DPA or on-device STT/OCR
   before real participant data. Dummy-data gate already covers this.
