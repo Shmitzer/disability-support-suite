@@ -44,8 +44,14 @@ then push your branch. **On (re)start of any session instance:**
 
 ## cc queue — `claude/cc-enterprise`  (logic / backend / wiring)
 **Phase 1 — pilot-paid**
-- [ ] **cc1. Security review + fixes.** Run a full security pass (the `security-review` command),
-      triage findings, fix the safe ones; log anything needing a key/secret as `[!]`.
+- [x] **cc1. Security review + fixes.** Full pass (tenant-isolation / auth / secrets-PII / injection).
+      Fixed (commit `74f5777`): 4 HIGH IDOR (revokeHubDevice, closeHubSession, hubCheckOut,
+      addWorkerCredential/listWorkerCredentials), the HIGH PII leak (cairaChat now scrubs names before
+      Gemini), open-redirect in /auth/confirm, + MED/LOW (participant-access gates on hub
+      open/checkin/log + reportIncident, acknowledgeHandover null bypass, setTaskCompletion careTask
+      check, caira/flags IDOR, declineShift link, writeHandover recipient org, hub PIN brute-force
+      lockout, Gemini key→header, caira spend-cap, waitlist per-IP throttle). Gates green. Deploy-gated
+      + hardening follow-ups logged under Blockers.
 - [ ] **cc2. MFA + secrets hygiene.** Wire MFA on `ADMIN`/`SUPERADMIN` seats; audit secret handling
       (no secrets in client bundles/logs); RLS regression test in CI. (Rotating the *exposed* DB
       password is Edward-gated — note it, don't do it.)
@@ -96,3 +102,17 @@ Vercel / deploy / domains.
 
 ## Blockers & morning hand-off
 _(append as work proceeds — one line each: which session, which task `[!]`, why, what Edward needs to do)_
+
+- **cc / cc1 `[!]` deploy-config (Edward):** in production set **`AUTH_ALLOWLIST`** (unset = open magic-link
+  signup → anyone self-provisions a WORKER) and **`UPSTASH_REDIS_REST_URL`/`_TOKEN`** (unset = the
+  rate-limit throttle, global LLM spend-cap, AND the new hub-PIN brute-force lockout are all no-ops).
+  Code is correct + fail-open by design; these are env values only.
+- **cc / cc1 hardening follow-ups (not blocking, code-startable later):** (1) `/api/admin/caira-access`
+  gates web-access by a bespoke role-literal check — fold into a `WebAccessManage` Capability in
+  `rbac.ts`. (2) Defense-in-depth: `clock-actions`/`visit-verification`/`shift-actions` worker fetches use
+  `findUnique`+relationship-guard — switch to `findFirst({ where:{ id, ...tenantScope } })` (guards hold
+  today, so not exploitable). (3) `/api/transcribe` trusts client `mimeType` (no byte-sniff). (4)
+  learned-options analytics emits worker free-text `name` — redact before capture.
+- **cc / cc1 `[!]` legal/DPA (Edward, pre-real-data):** audio transcription + document-photo OCR send
+  un-scrubbable PII to Gemini (cross-border) — known/accepted caveat; needs a DPA or on-device STT/OCR
+  before real participant data. Dummy-data gate already covers this.
