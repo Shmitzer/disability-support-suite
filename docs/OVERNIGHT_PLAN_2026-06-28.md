@@ -44,8 +44,14 @@ then push your branch. **On (re)start of any session instance:**
 
 ## cc queue — `claude/cc-enterprise`  (logic / backend / wiring)
 **Phase 1 — pilot-paid**
-- [ ] **cc1. Security review + fixes.** Run a full security pass (the `security-review` command),
-      triage findings, fix the safe ones; log anything needing a key/secret as `[!]`.
+- [x] **cc1. Security review + fixes.** Full security pass (4 parallel review agents across
+      auth/access, tenant-isolation, PII→LLM, web/secrets). Fixed the code-safe findings:
+      cross-org IDOR cluster in `hub-actions.ts` (revoke/close/checkout/checkin/logEntry now
+      participant-access or tenant scoped), Caira-chat PII leak (`cairaChat` scrubs prompt/
+      history/message + restores), `/api/caira/flags` PATCH IDOR, `/admin` capability gate,
+      auth/confirm protocol-relative open-redirect, credential cross-org check, `stripSafetyJson`
+      nested-brace leak, NDIS/phone scrub regexes. +tests; tsc/lint/test(192)/build green.
+      Key/secret-gated items logged `[!]` in Blockers. (branch: this session's `claude/start-prompt-cc-vpar7g`.)
 - [ ] **cc2. MFA + secrets hygiene.** Wire MFA on `ADMIN`/`SUPERADMIN` seats; audit secret handling
       (no secrets in client bundles/logs); RLS regression test in CI. (Rotating the *exposed* DB
       password is Edward-gated — note it, don't do it.)
@@ -96,3 +102,14 @@ Vercel / deploy / domains.
 
 ## Blockers & morning hand-off
 _(append as work proceeds — one line each: which session, which task `[!]`, why, what Edward needs to do)_
+- cc · cc1 `[!]` · **Audio/OCR cross-border PII**: `transcribeAudio`/`extractTextFromImage` send raw
+  recordings/photos (which name people) to Gemini — can't be scrubbed pre-send. Needs a DPA or
+  on-device STT/OCR before real participant data. Edward: legal/DPA decision.
+- cc · cc1 `[!]` · **Rate-limit/spend-cap fail-open**: `rate-limit.ts` fails open when `UPSTASH_*`
+  unset or Upstash errors, so AI endpoints are unthrottled/uncapped then. Edward: set `UPSTASH_*`
+  in prod + confirm the AI-Studio hard spend budget (provisioning keys is Edward-gated).
+- cc · cc1 `[!]` · **RLS coverage on hand-applied tables**: several `prisma/sql` policy files are
+  apply-by-hand (`feature_tables_rls.sql`, `rbac_grants.sql`, `participant_care_profile.sql`). Edward:
+  run `prisma/sql/verify_rls.sql` against the live DB to confirm Membership/Consent/Grant/CareProfile
+  are protected. (Applying SQL to live DB is Edward-gated.)
+- cc · cc1 `[!]` · **Exposed DB password rotation** remains outstanding (Edward-gated) — unchanged.
