@@ -30,7 +30,7 @@ BEGIN;
 -- UNIQUE would let unlimited NULL-org duplicates through, since NULL <> NULL).
 DROP INDEX IF EXISTS "LearnedOption_kind_name_key";
 
-CREATE UNIQUE INDEX "LearnedOption_kind_name_org_key"
+CREATE UNIQUE INDEX IF NOT EXISTS "LearnedOption_kind_name_org_key"
   ON "LearnedOption" ("kind", "name", (COALESCE("organisationId", '')));
 
 -- 2) Read path -------------------------------------------------------------------

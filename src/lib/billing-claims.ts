@@ -74,3 +74,72 @@ export function toClaimCsv(items: ClaimItem[]): string {
   );
   return [header.join(","), ...rows].join("\n");
 }
+
+// ---- NDIS bulk payment request (the real NDIA upload template) ----------------
+// The NDIA "bulk payment request" CSV (no public API; a fixed 16-column template
+// the provider uploads to the myplace provider portal). This realises the mapping
+// that toClaimCsv() left as a later refinement. GST is "P2" (GST-free) for the vast
+// majority of NDIS supports; callers override per line where needed.
+export type NdisClaimLine = {
+  ndisNumber: string; // participant NDIS number
+  supportsDeliveredFrom: string; // ISO date
+  supportsDeliveredTo: string; // ISO date
+  supportNumber: string; // support item code from the price guide
+  claimReference?: string | null;
+  quantity: number;
+  hours?: number | null; // for hourly (unit "H") supports
+  unitPriceCents: number;
+  gstCode?: string | null; // "P1" taxable | "P2" GST-free (default) | "P5" out-of-scope
+  authorisedBy?: string | null;
+  participantApproved?: string | null;
+  inKindFundingProgram?: string | null;
+  claimType?: string | null; // "" standard | "CANC" cancellation | "REPW" report writing | "TRAN" transport
+  cancellationReason?: string | null;
+  abn?: string | null; // ABN of support provider
+};
+
+// NDIA bulk upload template header — exact order matters for the portal import.
+export const NDIS_BULK_HEADER = [
+  "RegistrationNumber",
+  "NDISNumber",
+  "SupportsDeliveredFrom",
+  "SupportsDeliveredTo",
+  "SupportNumber",
+  "ClaimReference",
+  "Quantity",
+  "Hours",
+  "UnitPrice",
+  "GSTCode",
+  "AuthorisedBy",
+  "ParticipantApproved",
+  "InKindFundingProgram",
+  "ClaimType",
+  "CancellationReason",
+  "ABN of Support Provider",
+] as const;
+
+export function toNdisBulkCsv(registrationNumber: string, lines: NdisClaimLine[]): string {
+  const rows = lines.map((l) =>
+    [
+      registrationNumber,
+      l.ndisNumber,
+      l.supportsDeliveredFrom.slice(0, 10),
+      l.supportsDeliveredTo.slice(0, 10),
+      l.supportNumber,
+      l.claimReference ?? "",
+      Math.max(0, l.quantity),
+      l.hours != null ? l.hours : "",
+      dollars(l.unitPriceCents),
+      l.gstCode ?? "P2",
+      l.authorisedBy ?? "",
+      l.participantApproved ?? "",
+      l.inKindFundingProgram ?? "",
+      l.claimType ?? "",
+      l.cancellationReason ?? "",
+      l.abn ?? "",
+    ]
+      .map(csvCell)
+      .join(","),
+  );
+  return [NDIS_BULK_HEADER.join(","), ...rows].join("\n");
+}

@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design SSOT prototypes (docs/design/) are standalone .html/.js design
+    // artifacts, not app source (see CLAUDE.md design↔implementation
+    // convention) — exclude them from the app lint.
+    "docs/design/**",
   ]),
 ]);
 

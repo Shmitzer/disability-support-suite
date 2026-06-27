@@ -23,6 +23,10 @@
 // Role values), so it stays exhaustively type-checked against Role with no cycle.
 import type { Role } from "@/lib/enums";
 
+// The internal platform-admin role string (kept inline to avoid a runtime import of
+// the enums module — see the type-only import note above). Matches Role.SUPERADMIN.
+const PLATFORM_ROLE = "SUPERADMIN";
+
 // The capability vocabulary — the verbs the app gates on. Keep these
 // surface-agnostic and granular enough that a future role can be handed exactly
 // what it needs (e.g. a Finance role gets BillingManage without RosterManage).
@@ -49,6 +53,8 @@ export const Capability = {
   IncidentManage: "incident:manage",
   // Manage worker credentials / training records.
   CredentialManage: "credential:manage",
+  // De-identify ("right to erasure") a participant record. High-trust, admin-only.
+  ParticipantErase: "participant:erase",
 
   // Participant-scoped capabilities (used by external/family carer + guardian
   // grants, see GRANT_ROLE_CAPABILITIES). These are only ever held against a
@@ -92,6 +98,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly Capability[]> = {
     Capability.NoteApprove,
     Capability.IncidentManage,
     Capability.CredentialManage,
+    Capability.ParticipantErase,
   ],
   SUPERADMIN: [],
 };
@@ -185,6 +192,16 @@ export function can(
 ): boolean {
   // Legacy/shorthand form: a bare org-role string (or null).
   if (subject === null || subject === undefined || typeof subject === "string") {
+    // The internal SUPERADMIN seat is the platform override — it holds EVERY
+    // capability across every legacy gate (they all funnel through this form),
+    // mirroring the Principal-form `platformAdmin` short-circuit below. Granted
+    // here rather than in ROLE_CAPABILITIES so the org-role policy map stays clean
+    // (SUPERADMIN keeps an empty bundle) and the override is explicit + searchable.
+    // The seat is MFA-gated + fully audited at sign-in (ops concern); never the
+    // default login. Compared via the PLATFORM_ROLE literal because rbac imports
+    // Role type-only (a value import would be circular); the enum values ARE these
+    // literal strings.
+    if (subject === PLATFORM_ROLE) return true;
     return capabilitiesFor(subject).includes(capability);
   }
 
