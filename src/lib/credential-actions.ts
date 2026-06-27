@@ -28,6 +28,13 @@ export async function addWorkerCredential(input: {
     return { ok: false, error: "You don't have permission to manage credentials." };
   }
   if (!input.type.trim()) return { ok: false, error: "A credential type is required." };
+  // The target worker must belong to the actor's own tenant — a manager cannot attach
+  // (or forge) credentials onto a worker in another org by passing a foreign id (IDOR).
+  const target = await prisma.worker.findFirst({
+    where: { id: input.workerId, organisationId: actor.organisationId },
+    select: { id: true },
+  });
+  if (!target) return { ok: false, error: "That worker isn't in your organisation." };
   try {
     const cred = await prisma.workerCredential.create({
       data: {
@@ -66,8 +73,15 @@ export async function listWorkerCredentials(workerId: string) {
     return [];
   }
   try {
+    // Self-read is unscoped (your own creds); a manager reading someone else's is
+    // confined to their own org so a foreign worker id can't leak cross-org creds.
+    const where = self
+      ? { workerId }
+      : { workerId, ...(actor.organisationId ? { organisationId: actor.organisationId } : {}) };
+    // tenant-ok: `where` is self (own creds) or org-scoped for a manager — variable-based
+    // scoping the guard can't see; self-read is the actor's own worker id.
     const rows = await prisma.workerCredential.findMany({
-      where: { workerId },
+      where,
       orderBy: { expiresAt: "asc" },
     });
     const now = new Date();
@@ -104,9 +118,13 @@ export async function expiringCredentials(withinDays = 30) {
 export async function workerMayLogNeed(workerId: string, need: string): Promise<boolean> {
   const requiredType = requiredCredentialForNeed(need);
   if (!requiredType) return true; // not a gated need
+  const actor = await getCurrentWorker();
+  if (!actor) return false;
   try {
     const creds = await prisma.workerCredential.findMany({
-      where: { workerId, type: requiredType },
+      // Confine the competency probe to the actor's own org so it can't reveal whether
+      // a worker in another org holds a credential type (IDOR side-channel).
+      where: { workerId, type: requiredType, ...(actor.organisationId ? { organisationId: actor.organisationId } : {}) },
       select: { expiresAt: true },
     });
     const now = new Date();

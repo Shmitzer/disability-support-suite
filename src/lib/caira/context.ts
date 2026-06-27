@@ -44,6 +44,8 @@ export async function buildWorkerContext(worker: Worker): Promise<WorkerContext>
       return { participantName: "your participant", shiftStartTime: "not on shift", eventsLoggedToday: [] };
     }
 
+    // tenant-ok: scoped to `shift.id`, and that shift was fetched with tenantScope(worker)
+    // above — so these entries are transitively confined to the caller's tenant.
     const entries = await prisma.logEntry.findMany({
       where: { shiftId: shift.id, timestamp: { gte: startOfToday() } },
       orderBy: { timestamp: "asc" },

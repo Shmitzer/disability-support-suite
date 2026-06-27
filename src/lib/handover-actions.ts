@@ -75,11 +75,27 @@ export async function acknowledgeHandover(handoverId: string): Promise<{ ok: boo
   if (!worker) return { ok: false, error: "Not signed in." };
   const ho = await prisma.shiftHandover.findUnique({
     where: { id: handoverId },
-    select: { id: true, participantId: true, shiftId: true },
+    select: {
+      id: true,
+      participantId: true,
+      shiftId: true,
+      organisationId: true,
+      toWorkerId: true,
+      fromWorkerId: true,
+    },
   });
   if (!ho) return { ok: false, error: "Handover not found." };
-  if (ho.participantId && !(await canAccessParticipant(ho.participantId))) {
-    return { ok: false, error: "You don't have access to this participant." };
+  // Authorise the acknowledgement. A participant-scoped handover needs participant
+  // access; a handover with no participant (shift-level) still must NOT be open to any
+  // signed-in user (the prior `&&` skipped the check when participantId was null) — fall
+  // back to same-org or being the addressed/originating worker.
+  const authorised = ho.participantId
+    ? await canAccessParticipant(ho.participantId)
+    : (ho.organisationId != null && ho.organisationId === worker.organisationId) ||
+      ho.toWorkerId === worker.id ||
+      ho.fromWorkerId === worker.id;
+  if (!authorised) {
+    return { ok: false, error: "You don't have access to this handover." };
   }
   await prisma.shiftHandover.update({
     where: { id: handoverId },

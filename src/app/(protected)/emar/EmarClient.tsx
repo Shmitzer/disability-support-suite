@@ -126,10 +126,11 @@ export default function EmarClient({
   }
 
   function pickReason(id: string, mode: "withhold" | "refuse", reason: string) {
+    const status = mode === "withhold" ? "withheld" : "refused";
     persist(
       id,
-      UI_TO_BACKEND[mode],
-      { group: "done", status: mode === "withhold" ? "withheld" : "refused", by: "You", at: now(), reason },
+      UI_TO_BACKEND[status],
+      { group: "done", status, by: "You", at: now(), reason },
       reason,
     );
   }

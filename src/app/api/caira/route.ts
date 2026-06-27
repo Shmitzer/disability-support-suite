@@ -8,7 +8,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, checkSpendCap } from "@/lib/rate-limit";
 import { cairaChat, generateProgressNote, type GeminiTurn } from "@/lib/ai";
 import { cairaPersona, webAccessAllowedForRole } from "@/lib/caira/roles";
 import { quickSafetyCheck, stripSafetyJson } from "@/lib/caira/safetyDetect";
@@ -39,6 +39,17 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { reply: "You've sent a lot of messages — give me a moment and try again." },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
+  // Global daily LLM spend cap — Caira's Gemini calls (chat + voice-note below) must
+  // count against the same ceiling as /api/generate-note and /api/transcribe, so this
+  // path can't be used to bypass the budget. No-op until Upstash is configured.
+  const cap = await checkSpendCap();
+  if (!cap.allowed) {
+    return NextResponse.json(
+      { reply: "Caira's having a busy day and is resting to keep costs in check. Please try again later." },
+      { status: 503 },
     );
   }
 
@@ -112,10 +123,13 @@ export async function POST(request: Request) {
     }
   }
 
-  // Build the system prompt for this persona, with live context injected.
+  // Build the system prompt for this persona, with live context injected. We also
+  // collect the real person-names in scope so cairaChat can scrub them (Rule 2) from
+  // everything sent to Gemini and restore them in the reply.
   let systemPrompt: string;
   let maxOutputTokens = 400;
   let temperature = 0.4;
+  const names: string[] = [worker.name];
   try {
     if (persona === "participant") {
       const ctx = await buildParticipantContext(worker);
@@ -126,6 +140,7 @@ export async function POST(request: Request) {
         todaySchedule: ctx.todaySchedule,
         currentScreen,
       });
+      names.push(ctx.participantName, ctx.workerName);
       temperature = 0.3;
     } else if (persona === "supervisor") {
       const ctx = await buildSupervisorContext(worker);
@@ -148,6 +163,7 @@ export async function POST(request: Request) {
         currentScreen,
         webEnabled,
       });
+      names.push(ctx.participantName);
     }
   } catch (err) {
     console.error("Caira context/prompt build failed:", err);
@@ -156,6 +172,15 @@ export async function POST(request: Request) {
 
   // Call Gemini.
   try {
+    // Drop the context builders' generic placeholders ("your participant", etc.) and the
+    // default display name — scrubbing those would tokenise common words in the prompt.
+    // Only real person-names get tokenised (matching the other scrubPII call sites).
+    const GENERIC_NAMES = new Set(["your participant", "your support worker", "friend", "new worker"]);
+    const scrubNames = names.filter((n) => {
+      const t = (n ?? "").trim().toLowerCase();
+      return t.length > 0 && !GENERIC_NAMES.has(t);
+    });
+
     let reply = await cairaChat({
       systemPrompt,
       history,
@@ -163,6 +188,7 @@ export async function POST(request: Request) {
       webEnabled,
       maxOutputTokens,
       temperature,
+      names: scrubNames,
     });
 
     // The participant prompt asks the model to append a {"safetyFlag":…} object. Parse

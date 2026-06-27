@@ -14,9 +14,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { tenantScope } from "@/lib/tenant";
 import { resolvePrincipal } from "@/lib/access";
 import { can } from "@/lib/rbac";
 import { recordAudit } from "@/lib/audit";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { publishHubPing } from "@/lib/hub-realtime";
 import {
   routeCapacity,
@@ -106,7 +108,13 @@ export async function revokeHubDevice(deviceId: string): Promise<HubResult> {
   const worker = await getCurrentUser();
   if (!worker) return { ok: false, error: "Not signed in." };
   try {
-    await prisma.hubDevice.update({ where: { id: deviceId }, data: { status: "REVOKED" } });
+    // Tenant-scoped: a worker may only revoke a device owned by their own org/self —
+    // never another tenant's device by guessing its id (IDOR).
+    const revoked = await prisma.hubDevice.updateMany({
+      where: { id: deviceId, ...tenantScope(worker) },
+      data: { status: "REVOKED" },
+    });
+    if (revoked.count === 0) return { ok: false, error: "Device not found." };
     await recordAudit({
       action: "HUB_DEVICE_REVOKED",
       targetType: "HubDevice",
@@ -169,11 +177,20 @@ export async function closeHubSession(sessionId: string): Promise<HubResult> {
   const worker = await getCurrentUser();
   if (!worker) return { ok: false, error: "Not signed in." };
   try {
-    const session = await prisma.hubSession.update({
-      where: { id: sessionId },
+    // Tenant-scoped: only the owning org/self may close a session — not any session
+    // by guessing its id (IDOR, which would force-check-out every attendee).
+    const session = await prisma.hubSession.findFirst({
+      where: { id: sessionId, ...tenantScope(worker) },
+      select: { id: true, participantId: true },
+    });
+    if (!session) return { ok: false, error: "Session not found." };
+    await prisma.hubSession.update({
+      where: { id: session.id },
       data: { status: "CLOSED", closedAt: new Date() },
     });
     // Check out anyone still attending.
+    // tenant-ok: the session was just confirmed to belong to the actor's tenant
+    // (findFirst with tenantScope above); these are its own attendees.
     await prisma.hubCheckIn.updateMany({
       where: { hubSessionId: sessionId, checkedOutAt: null },
       data: { checkedOutAt: new Date() },
@@ -217,15 +234,15 @@ export async function hubCheckIn(input: {
   if (!routed.ok) return { ok: false, error: routed.error };
 
   try {
-    const session = await prisma.hubSession.findUnique({
-      where: { id: input.hubSessionId },
+    // Tenant-scoped: the actor may only check attendees into a session in their own
+    // org/self — a foreign-org session id is treated as not-found (IDOR / cross-org
+    // attribution). Cross-org collaboration on one hub is a deliberate future feature.
+    const session = await prisma.hubSession.findFirst({
+      where: { id: input.hubSessionId, ...tenantScope(actor) },
       select: { id: true, status: true, participantId: true },
     });
     if (!session || session.status !== "OPEN") {
       return { ok: false, error: "That session isn't open." };
-    }
-    if (!(await assertPin(input.workerId, input.pin))) {
-      return { ok: false, error: "Incorrect PIN." };
     }
 
     // The check-in (and its entries) are owned by the ATTENDEE's org for RLS.
@@ -233,6 +250,24 @@ export async function hubCheckIn(input: {
       where: { id: input.workerId },
       select: { organisationId: true },
     });
+    if (!attendee) return { ok: false, error: "That worker doesn't exist." };
+    // A paid WORKER attendee must belong to the actor's own org — you cannot attribute
+    // a billable check-in to a worker in another tenant (even with their PIN).
+    if (input.capacity === "WORKER" && attendee.organisationId !== actor.organisationId) {
+      return { ok: false, error: "That worker isn't in your organisation." };
+    }
+
+    // Brute-force guard on the attribution PIN: cap check-in PIN attempts per target
+    // worker (fail-open until Upstash is configured). Check-in is infrequent, so this
+    // never throttles legitimate use; logHubEntry's re-attestation is intentionally
+    // left uncapped (high-frequency logging path).
+    const pinRl = await checkRateLimit(`hubpin:${input.workerId}`);
+    if (!pinRl.allowed) {
+      return { ok: false, error: "Too many attempts — wait a moment and try again." };
+    }
+    if (!(await assertPin(input.workerId, input.pin))) {
+      return { ok: false, error: "Incorrect PIN." };
+    }
 
     const checkIn = await prisma.hubCheckIn.create({
       data: {
@@ -266,8 +301,15 @@ export async function hubCheckOut(checkInId: string): Promise<HubResult> {
   const actor = await getCurrentUser();
   if (!actor) return { ok: false, error: "Not signed in." };
   try {
+    // Tenant-scoped: only the owning org/self may check out an attendee — not any
+    // check-in in any org by guessing its id (IDOR).
+    const owned = await prisma.hubCheckIn.findFirst({
+      where: { id: checkInId, ...tenantScope(actor) },
+      select: { id: true },
+    });
+    if (!owned) return { ok: false, error: "Check-in not found." };
     const checkIn = await prisma.hubCheckIn.update({
-      where: { id: checkInId },
+      where: { id: owned.id },
       data: { checkedOutAt: new Date() },
       select: { workerId: true, organisationId: true, hubSessionId: true },
     });

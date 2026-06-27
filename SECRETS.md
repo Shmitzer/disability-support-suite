@@ -10,20 +10,32 @@ the code** and **a password manager for the secrets** — not Google Drive.
 
 ## What counts as a secret in this app
 
-Your code reads only a handful of environment variables. Most are **not** secret:
+The app now runs on **Supabase Postgres** (not local SQLite) and integrates several
+paid services, so there is more than one secret. Treat anything marked **YES** below as
+sensitive — it must live only in your local-only `.env` (or the host's env), never in git.
+See `.env.example` for the full, current list of variables.
 
-| Variable        | Secret? | What it is                                                        |
-| --------------- | ------- | ---------------------------------------------------------------- |
-| `DATABASE_URL`  | No      | Path to the local SQLite database file (`file:./dev.db`).        |
-| `NODE_ENV`      | No      | Set automatically by the tooling. You never store this yourself. |
-| `GEMINI_MODEL`  | No      | Optional model name, e.g. `gemini-2.5-flash`.                    |
-| `GEMINI_API_KEY`| **YES** | Your Google Gemini AI key. **This is the only true secret.**     |
+| Variable                      | Secret? | What it is                                                              |
+| ----------------------------- | ------- | ---------------------------------------------------------------------- |
+| `DATABASE_URL`                | **YES** | Pooled Postgres connection string — contains the DB password.          |
+| `DIRECT_URL`                  | **YES** | Direct Postgres connection (migrations) — also contains the password.  |
+| `SUPABASE_SERVICE_ROLE_KEY`   | **YES** | Server-only key that BYPASSES RLS. Never expose to the browser.         |
+| `STRIPE_SECRET_KEY`           | **YES** | Stripe API secret (billing).                                           |
+| `STRIPE_WEBHOOK_SECRET`       | **YES** | Verifies Stripe webhook signatures.                                    |
+| `RESEND_API_KEY`             | **YES** | Transactional email (Resend).                                          |
+| `UPSTASH_REDIS_REST_TOKEN`    | **YES** | Rate-limit / spend-cap store token.                                    |
+| `GEMINI_API_KEY`              | **YES** | Google Gemini AI key.                                                  |
+| `SENTRY_AUTH_TOKEN`           | **YES** | Sentry release/upload token (if used).                                 |
+| `NEXT_PUBLIC_SUPABASE_URL`    | No      | Public Supabase project URL (shipped to the browser by design).        |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No    | Public anon key — safe in the browser; RLS still applies.              |
+| `AUTH_ALLOWLIST`              | No      | Comma/space list of allowed emails/domains (not a credential).         |
+| `GEMINI_MODEL` / `CAIRA_CHAT_MODEL` | No | Optional model names, e.g. `gemini-2.5-flash`.                        |
+| `NODE_ENV`                    | No      | Set automatically by the tooling.                                      |
 
-> If you later add real Google Drive integration (the app uploading/reading data
-> from Drive), you will also get Google credentials — an **OAuth Client ID +
-> Client Secret**, or a **service-account JSON key**. Those are secrets too and
-> belong in the same local-only `.env` file described below. Add a row to this
-> table when that happens.
+> **`NEXT_PUBLIC_*` are the only variables that may appear in the browser bundle** —
+> never give a secret a `NEXT_PUBLIC_` name. Any new key (a new provider, an OAuth
+> client secret, a service-account JSON) is a secret too: add a row here and keep it in
+> the local-only `.env`.
 
 ---
 

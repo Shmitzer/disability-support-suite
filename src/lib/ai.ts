@@ -474,9 +474,12 @@ export function aiConfigured(): boolean {
 // grounding tool. The system prompt is built per-role in lib/caira/systemPrompts.ts
 // with live, on-screen context injected; this function just performs the call.
 //
-// DUMMY-DATA GUARDRAIL: the system prompt already contains only the names/shift facts
-// the caller's session legitimately exposes (Rule 5/10 + the project's dummy-data rule
-// until the privacy gate). We do not independently fetch personal data here.
+// PII GUARDRAIL (Rule 2): everything outbound here is scrubbed first. The caller passes
+// the known names in this conversation's context (participant/worker/org) via `names`;
+// the system prompt, every history turn AND the new message are run through scrubPII so
+// no real name / email / phone / NDIS number leaves the app, and name tokens are restored
+// to first names in the reply so it still reads naturally. scrubPII assigns tokens by the
+// names-array index, so scrubbing each piece separately yields one consistent mapping.
 
 // Gemini conversation turn shape (matches the API's `contents` entries).
 export type GeminiTurn = { role: "user" | "model"; parts: { text: string }[] };
@@ -488,6 +491,7 @@ export async function cairaChat(opts: {
   webEnabled?: boolean;
   maxOutputTokens?: number;
   temperature?: number;
+  names?: string[];
 }): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   // gemini-2.5-flash (the app default) is fast/cheap and supports google_search
@@ -497,14 +501,24 @@ export async function cairaChat(opts: {
     throw new Error("No GEMINI_API_KEY found. Add it to .env.local and restart the app.");
   }
 
+  // Scrub all outbound text before it leaves the app (Rule 2). One shared name→token
+  // map (scrubPII is deterministic on the same `names`), restored on the reply.
+  const names = opts.names ?? [];
+  const scrubbedSystem = scrubPII(opts.systemPrompt, names).text;
+  const { text: scrubbedMessage, restore } = scrubPII(opts.message, names);
+  const scrubbedHistory: GeminiTurn[] = opts.history.map((t) => ({
+    role: t.role,
+    parts: t.parts.map((p) => ({ text: scrubPII(p.text ?? "", names).text })),
+  }));
+
   // Tools are added ONLY when web access is enabled — otherwise Caira has no internet
   // (the default for every user). `google_search` is the v1beta grounding tool.
   const tools = opts.webEnabled ? [{ google_search: {} }] : [];
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const body = JSON.stringify({
-    systemInstruction: { parts: [{ text: opts.systemPrompt }] },
-    contents: [...opts.history, { role: "user", parts: [{ text: opts.message }] }],
+    systemInstruction: { parts: [{ text: scrubbedSystem }] },
+    contents: [...scrubbedHistory, { role: "user", parts: [{ text: scrubbedMessage }] }],
     ...(tools.length ? { tools } : {}),
     generationConfig: {
       maxOutputTokens: opts.maxOutputTokens ?? 400,
@@ -535,7 +549,7 @@ export async function cairaChat(opts: {
     data?.candidates?.[0]?.content?.parts
       ?.map((p: { text?: string }) => p.text ?? "")
       .join("") ?? "";
-  return text.trim();
+  return restore(text.trim());
 }
 
 // --- Voice transcription ----------------------------------------------------

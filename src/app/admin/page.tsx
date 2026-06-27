@@ -11,7 +11,10 @@
 // so a signed-out visitor is bounced to /login before reaching here.
 
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { APP_NAME } from "@/lib/brand";
+import { getCurrentUser } from "@/lib/session";
+import { can, Capability } from "@/lib/rbac";
 
 export const metadata = { title: `${APP_NAME} — Coordinator dashboard` };
 
@@ -56,7 +59,14 @@ const RECENT = [
 
 const NAV = ["Dashboard", "Participants", "Shifts", "Incidents", "Reports"];
 
-export default function CairaAdmin() {
+export default async function CairaAdmin() {
+  // Coordinator surface: middleware only checks sign-in, so re-check the oversight
+  // capability here — a front-line WORKER/PARTICIPANT must not reach the coordinator
+  // dashboard (mock data today, but this gate must exist before it goes live).
+  const worker = await getCurrentUser();
+  if (!worker) notFound();
+  if (!can(worker.role, Capability.ShiftReadOrg)) notFound();
+
   return (
     <div className="flex min-h-screen bg-[#f4f1ea] text-foreground">
       {/* Sidebar */}

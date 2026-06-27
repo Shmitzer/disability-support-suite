@@ -30,13 +30,13 @@ const SRC = "src";
 // Prisma schema — a new tenant model without a scope token will be flagged, which is
 // the point. Non-tenant tables (WaitlistSignup) are intentionally absent.
 const TENANT_MODELS = new Set([
-  "assistantContext", "assistantMessage", "auditLog", "billableItem", "careTask",
-  "clockAmendmentRequest", "consent", "document", "incident", "learnedOption",
-  "logEntry", "medication", "medicationAdministration", "membership", "message",
-  "notification", "participant", "participantAccessGrant", "participantBudget",
-  "participantCareProfile", "progressNote", "shift", "shiftEvent", "shiftHandover",
-  "shiftReport", "shiftTaskCompletion", "visitVerification", "worker",
-  "workerCredential", "workerParticipant",
+  "assistantContext", "assistantMessage", "auditLog", "billableItem", "cairaFlag",
+  "careTask", "clockAmendmentRequest", "consent", "document", "hubCheckIn", "hubDevice",
+  "hubSession", "incident", "learnedOption", "logEntry", "medication",
+  "medicationAdministration", "membership", "message", "notification", "participant",
+  "participantAccessGrant", "participantBudget", "participantCareProfile", "progressNote",
+  "shift", "shiftEvent", "shiftHandover", "shiftReport", "shiftTaskCompletion",
+  "visitVerification", "worker", "workerCredential", "workerParticipant",
 ]);
 
 // Ops that can return / mutate MANY rows → must be tenant-scoped.
@@ -50,13 +50,20 @@ const SCOPE_TOKENS = [
 
 const EXEMPT = "tenant-ok";
 
+// The generated Prisma client (output: src/generated/prisma) is machine-written and its
+// JSDoc carries unscoped `prisma.x.findMany()` EXAMPLES — never our code. Skip it so the
+// guard only ever inspects hand-written application code (and doesn't fail CI on docs).
+const SKIP_DIRS = new Set(["generated", "node_modules"]);
+
 function walk(dir) {
   const out = [];
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     const s = statSync(p);
-    if (s.isDirectory()) out.push(...walk(p));
-    else if (/\.(ts|tsx)$/.test(p)) out.push(p);
+    if (s.isDirectory()) {
+      if (SKIP_DIRS.has(name)) continue;
+      out.push(...walk(p));
+    } else if (/\.(ts|tsx)$/.test(p)) out.push(p);
   }
   return out;
 }
