@@ -6,7 +6,45 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/funny-brown-oinkli` (Caira character system + AI brain + audio + Rive) · prior: `claude/nifty-ritchie-nqmsxh`
-- **Last updated:** 2026-06-26 (Caira character/AI/audio build + real-creature Rive rebrand on `claude/funny-brown-oinkli`; **handover to Cowork** immediately below)
+- **Last updated:** 2026-06-27 (**Phase G — G0 consolidation: the 3 stranded backend branches merged into one green branch + one ordered SQL apply script** — section immediately below)
+
+---
+
+## 🤝 PHASE G — G0 consolidation complete (cc, 2026-06-27)
+
+The three stranded backend branches are **consolidated onto `claude/youthful-bardeen-8ppnpp`**
+(pushed), verified green after each merge with a real toolchain (npm install + `prisma generate`
+both work in this session — not network-gated this time). ⚠️ **`origin/main` is still stale at
+`0d15bb37`** (it does NOT contain Caira/Sage-&-Clay/Phase-G — those + the 3 slices all live on
+`youthful-bardeen`). Final merge to `main` is **Edward/Cowork-gated** (the handover convention),
+same as every prior branch.
+
+**Merged in order, re-verified green after each** (`tsc` ✓ · `lint` ✓ · `npm test` ✓ · `npm run build` ✓):
+1. `claude/serene-feynman-p80kpr` — Phase 0 hardening (no conflicts). tests → 139.
+2. `claude/pensive-allen-md8h6h` — Phase 1.6 erasure + NDIS fields (conflicts in `rbac.ts` +
+   `rbac.test.ts`, both SUPERADMIN-override — resolved to the named `PLATFORM_ROLE` constant; kept
+   both test bodies). tests → 145.
+3. `claude/elegant-davinci-551vkd` — Phase 2 cores (only `COMMAND_CENTRE.md` conflicted — took ours).
+   tests → 172.
+
+**Final state of `youthful-bardeen`:** `tsc` ✓ · `lint` ✓ · `npm test` **173/173** ✓ · `npm run build` ✓.
+
+**Also landed this slice:**
+- **`prisma/sql/apply_phase_g.sql`** — the ONE ordered idempotent apply script for everything still
+  unapplied (Phase 0 `apply_all_features.sql` → Caira `caira_ai`/`org_caira_enabled`/`caira_flag_rls`
+  → 1.6 `participant_ndis_erasure` → 2.4 `ndis_price_guide`), `ON_ERROR_STOP`, with a dry-run note.
+  **Validated against a throwaway Postgres 16:** clean fresh apply AND idempotent re-run; CairaFlag,
+  NdisSupportItem, Participant NDIS+erasure columns, Organisation.cairaEnabled all land; RLS enabled
+  on every new table (Document/base-table RLS comes from the already-live `rls_policies_v2.sql`).
+- **AUTH_ALLOWLIST → both domains** (decision #2): `.env.example` + `test/allowlist.test.ts` now
+  document/assert both `@caira.app` and `@caira.net.au` (parser was already data-driven; Edward sets
+  the live env value).
+- **eslint** scoped to app source (excludes `docs/design/` prototypes) so the baseline is green.
+
+**NEXT (Edward — gated):** ① review + merge `youthful-bardeen` → `main`. ② `psql "$DIRECT_URL" -f
+prisma/sql/apply_phase_g.sql` by hand (NOT `db push`), then re-run `verify_rls_editor.sql`. ③ set
+the live `AUTH_ALLOWLIST`. **NEXT (cc):** G2 wire-up of each screen **after cd commits its `.dc.html`**
+(incident register → notification center → eMAR-lite → `/console` → system/state pages).
 
 ---
 
@@ -408,6 +446,8 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 ---
 
 ## Decision log (newest first)
+
+- **2026-06-27** — **Phase G G0 (cc): consolidated the 3 stranded backend branches into one green branch + one ordered SQL apply script.** Per `docs/START_PROMPT_CC.md`. Discovered `origin/main` is stale at `0d15bb37` (lacks Caira/Sage-&-Clay/Phase-G — all on `claude/youthful-bardeen-8ppnpp`), and that npm install + `prisma generate` DO work in this session (not network-gated this time), so the full toolchain could actually run. Established a green baseline on `youthful-bardeen` (`tsc`/`lint`/`test`/`build`), then merged **in order, re-verifying green after each**: `serene-feynman-p80kpr` (Phase 0, no conflict) → `pensive-allen-md8h6h` (Phase 1.6; resolved `rbac.ts`/`rbac.test.ts` SUPERADMIN-override conflicts to the named `PLATFORM_ROLE` constant, kept both test bodies) → `elegant-davinci-551vkd` (Phase 2; only `COMMAND_CENTRE.md` conflicted, took ours). Final: **173/173 tests, `tsc`/`lint`/`build` all green.** Built **`prisma/sql/apply_phase_g.sql`** — the single ordered idempotent apply script (Phase 0 `apply_all_features` → Caira ×3 → 1.6 erasure/NDIS → 2.4 price-guide), `ON_ERROR_STOP`, dry-run note, **validated against a throwaway Postgres 16 (clean fresh apply + idempotent re-run; every new table + column + RLS verified)**. Updated `AUTH_ALLOWLIST` docs/test for both `@caira.app` + `@caira.net.au` (decision #2; parser already data-driven). Scoped eslint to app source (excl. `docs/design/` prototypes) for a green baseline. **Branch pushed; merge to `main` + SQL apply + live `AUTH_ALLOWLIST` are Edward-gated.** **Edward TODO:** review+merge `youthful-bardeen`→`main`; `psql "$DIRECT_URL" -f prisma/sql/apply_phase_g.sql` then `verify_rls_editor.sql`; set live `AUTH_ALLOWLIST`.
 
 - **2026-06-26** — **Phase 0 (cc): foundation hardening — ordered SQL apply + RLS sweep, LLM spend cap, tenant-scope CI guard, SUPERADMIN wiring** (branch `claude/serene-feynman-p80kpr`, commit `78661b9`). The "safe to take money + real data" layer, no design dependency (IMPLEMENTATION_PLAN_MVP §2). **0.1 Ordered SQL apply:** `prisma/sql/apply_all_features.sql` — one `ON_ERROR_STOP`'d, idempotent, `\i`-include script that applies the 13 unapplied feature files **in dependency order** (`audit_hash_chain` + `rbac_grants` FIRST), then the RLS sweep LAST; plus `prisma/sql/feature_tables_rls.sql` — a post-apply sweep that enables RLS + a per-table `tenant_isolation` policy on the feature tables whose DDL shipped **without** RLS (incl. `Membership`/`ParticipantAccessGrant`/`Consent`/`ParticipantCareProfile`, whose RLS existed only as commented-out SQL). **Validated against a throwaway Postgres 16** (clean, idempotent, every swept table RLS-enabled). **0.2 SUPERADMIN wiring:** legacy `can(role, cap)` now honours `SUPERADMIN` as the platform override without polluting `ROLE_CAPABILITIES`. **0.3 Hard LLM spend cap + budget alarm:** `rate-limit.ts checkSpendCap()` (global per-UTC-day ceiling) wired into `/api/generate-note` + `/api/transcribe` (503 on breach), env-gated, fail-open, PostHog `llm_budget_alarm`; new `UPSTASH_*`/`LLM_DAILY_CAP`/`LLM_DAILY_ALARM_FRACTION` env. **0.4 CI tenant-scope guard:** `scripts/check-tenant-scope.mjs` + `npm run check:tenant-scope` + CI step — an unscoped tenant-table list/bulk read is a cross-tenant leak (the Prisma-RLS-bypass is load-bearing); 5 legitimate cross-tenant reads annotated `// tenant-ok:`. **0.5** all four integrations env-gated + PostHog behind `hasAnalyticsConsent()`. **+tests.** **Headless caveat:** Prisma engine CDN network-gated in the web sandbox, so `prisma generate → tsc/build` can't run here — changed tests pass, lint clean, residual failures are all missing-generated-client cascades (green in CI). **Edward TODO:** `psql "$DIRECT_URL" -f prisma/sql/apply_all_features.sql` by hand (NOT `db push`) then `verify_rls_editor.sql`; provision Upstash + set `LLM_DAILY_CAP`; MFA on the SUPERADMIN seat.
 
