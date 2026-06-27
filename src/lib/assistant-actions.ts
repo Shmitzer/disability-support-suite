@@ -83,6 +83,8 @@ export async function askAssistant(question: string): Promise<AskResult> {
   let people: string[] = [];
   if (allowedParticipants && allowedParticipants.size > 0) {
     try {
+      // tenant-ok: ids come from accessibleParticipantIds(worker.id) — already
+      // authorization-scoped to the participants this worker may see.
       const ps = await prisma.participant.findMany({
         where: { id: { in: [...allowedParticipants] } },
         select: { name: true },

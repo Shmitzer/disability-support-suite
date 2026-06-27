@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
 import { tenantOwner, tenantScope } from "@/lib/tenant";
 import { generateProgressNote } from "@/lib/ai";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, checkSpendCap } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -22,6 +22,16 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "You've hit the note-generation limit for now. Please try again later." },
         { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+      );
+    }
+
+    // Global daily spend ceiling (cost protection across ALL users) — fail-closed
+    // only when the hard cap is actually breached; uncapped in dev/sandbox.
+    const cap = await checkSpendCap();
+    if (!cap.allowed) {
+      return NextResponse.json(
+        { error: "The service is at capacity right now. Please try again later." },
+        { status: 503, headers: { "Retry-After": "3600" } },
       );
     }
 

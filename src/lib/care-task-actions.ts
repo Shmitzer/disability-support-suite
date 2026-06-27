@@ -94,6 +94,8 @@ export async function getShiftChecklist(shiftId: string): Promise<ChecklistItem[
       orderBy: { sortOrder: "asc" },
       select: { id: true, title: true, category: true },
     });
+    // tenant-ok: `shift` was authorized above (own shift or org oversight); the
+    // completions are keyed by that single authorized shiftId.
     done = await prisma.shiftTaskCompletion.findMany({
       where: { shiftId },
       select: { careTaskId: true, status: true, note: true },
@@ -132,6 +134,7 @@ export async function setTaskCompletion(input: {
   }
   try {
     if (input.status === null) {
+      // tenant-ok: shift was just authorized as the worker's own IN_PROGRESS shift.
       await prisma.shiftTaskCompletion.deleteMany({
         where: { shiftId: input.shiftId, careTaskId: input.careTaskId },
       });

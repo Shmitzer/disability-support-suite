@@ -156,6 +156,8 @@ export async function exportClaims(input?: { participantId?: string; claimRef?: 
         claimRef,
       })),
     );
+    // tenant-ok: `items` were fetched above scoped to worker.organisationId, so
+    // this id-set is already org-bounded (marks just-exported drafts CLAIMED).
     await prisma.billableItem.updateMany({
       where: { id: { in: items.map((i) => i.id) } },
       data: { status: "CLAIMED", claimRef },
