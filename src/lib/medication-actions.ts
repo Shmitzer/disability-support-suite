@@ -9,6 +9,8 @@ import { getCurrentWorker } from "@/lib/session";
 import { getCurrentPrincipal, canAccessParticipant } from "@/lib/access";
 import { can, Capability } from "@/lib/rbac";
 import { recordAudit } from "@/lib/audit";
+import { tenantOwner } from "@/lib/tenant";
+import { canTransition, isMedAuthStatus, type MedAuthStatus } from "@/lib/med-authorisation";
 import { revalidatePath } from "next/cache";
 
 const ADMIN_STATUS = new Set(["GIVEN", "WITHHELD", "REFUSED", "PRN_GIVEN"]);
@@ -86,6 +88,101 @@ export async function archiveMedication(medicationId: string): Promise<MedResult
   await prisma.medication.update({ where: { id: medicationId }, data: { active: false } });
   revalidatePath(`/participants/${med.participantId}`);
   return { ok: true };
+}
+
+// --- Authorisation state machine (coordinator/admin) ---
+// Move a medication profile through the hard-gated authorisation chain
+// (DRAFT→PENDING_BSP→PENDING_COMMISSION→PENDING_GUARDIAN→ACTIVE / DECLINED). The legal
+// transitions are enforced here (src/lib/med-authorisation.ts) AND, independently, by a
+// DB trigger (prisma/sql/medication.sql) so a direct write can't skip a stage. Each
+// step appends an immutable MedAuthEvent (the audit chain) and a hash-chained audit row.
+// Worker visibility is gated on ACTIVE downstream; this action is coordinator-only.
+// LEGAL-GATED, DUMMY DATA ONLY (MED_VERIFICATION_SPEC).
+export async function setMedicationAuthStatus(input: {
+  medicationId: string;
+  to: string;
+  approverRole?: string; // BSP | COMMISSION | GUARDIAN | COORDINATOR
+  referenceNumber?: string; // BSP ref / NDIS Commission authorisation number
+  reason?: string; // required on a decline
+}): Promise<MedResult> {
+  const worker = await getCurrentWorker();
+  if (!worker) return { ok: false, error: "Not signed in." };
+  if (!isMedAuthStatus(input.to)) return { ok: false, error: "Unknown authorisation status." };
+
+  const med = await prisma.medication.findUnique({
+    where: { id: input.medicationId },
+    select: { id: true, participantId: true, organisationId: true, authStatus: true },
+  });
+  if (!med) return { ok: false, error: "Medication not found." };
+
+  const principal = await getCurrentPrincipal();
+  if (!principal || !can(principal, Capability.CareProfileManage, { organisationId: med.organisationId })) {
+    return { ok: false, error: "You don't have permission to manage authorisation." };
+  }
+
+  const from: MedAuthStatus = isMedAuthStatus(med.authStatus) ? med.authStatus : "DRAFT";
+  const to = input.to;
+  if (from === to) return { ok: true, id: med.id }; // idempotent no-op
+  if (!canTransition(from, to)) {
+    return { ok: false, error: `Can't move authorisation from ${from} to ${to}.` };
+  }
+  if (to === "DECLINED" && !input.reason?.trim()) {
+    return { ok: false, error: "A reason is required to decline." };
+  }
+
+  try {
+    await prisma.medication.update({ where: { id: med.id }, data: { authStatus: to } });
+    // Append the immutable authorisation-chain event.
+    await prisma.medAuthEvent.create({
+      data: {
+        medicationId: med.id,
+        stage: to,
+        decision: to === "DECLINED" ? "DECLINED" : "APPROVED",
+        approverId: worker.id,
+        approverRole: input.approverRole ?? null,
+        referenceNumber: input.referenceNumber ?? null,
+        reason: input.reason ?? null,
+        ...tenantOwner(worker),
+      },
+    });
+    await recordAudit({
+      action: "MEDICATION_AUTH_TRANSITION",
+      targetType: "Medication",
+      targetId: med.id,
+      actorId: worker.id,
+      organisationId: med.organisationId,
+      detail: { from, to, approverRole: input.approverRole ?? null },
+    });
+    revalidatePath(`/participants/${med.participantId}`);
+    return { ok: true, id: med.id };
+  } catch (err) {
+    console.error("setMedicationAuthStatus failed:", err);
+    return { ok: false, error: "Couldn't update — the medication tables may not be set up yet." };
+  }
+}
+
+// The authorisation chain for a medication (coordinator/admin view). Immutable, oldest→newest.
+export async function listMedicationAuthEvents(medicationId: string) {
+  const worker = await getCurrentWorker();
+  if (!worker) return [];
+  const med = await prisma.medication.findUnique({
+    where: { id: medicationId },
+    select: { organisationId: true },
+  });
+  if (!med) return [];
+  const principal = await getCurrentPrincipal();
+  if (!principal || !can(principal, Capability.CareProfileManage, { organisationId: med.organisationId })) {
+    return [];
+  }
+  try {
+    // tenant-ok: gated above on CareProfileManage for this medication's org.
+    return await prisma.medAuthEvent.findMany({
+      where: { medicationId },
+      orderBy: { occurredAt: "asc" },
+    });
+  } catch {
+    return [];
+  }
 }
 
 export async function listMedications(participantId: string) {
