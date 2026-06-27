@@ -14,9 +14,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { resolvePrincipal } from "@/lib/access";
+import { resolvePrincipal, canAccessParticipant } from "@/lib/access";
 import { can } from "@/lib/rbac";
 import { recordAudit } from "@/lib/audit";
+import { tenantScope } from "@/lib/tenant";
 import { publishHubPing } from "@/lib/hub-realtime";
 import {
   routeCapacity,
@@ -106,6 +107,14 @@ export async function revokeHubDevice(deviceId: string): Promise<HubResult> {
   const worker = await getCurrentUser();
   if (!worker) return { ok: false, error: "Not signed in." };
   try {
+    // Tenant-scope the revoke: a HubDevice is org-owned (registered with the
+    // registrant's org/userId), so only the owning tenant may revoke it. Without
+    // this, any signed-in worker could REVOKE another org's device by id (IDOR).
+    const owned = await prisma.hubDevice.findFirst({
+      where: { id: deviceId, ...tenantScope(worker) },
+      select: { id: true },
+    });
+    if (!owned) return { ok: false, error: "Device not found." };
     await prisma.hubDevice.update({ where: { id: deviceId }, data: { status: "REVOKED" } });
     await recordAudit({
       action: "HUB_DEVICE_REVOKED",
@@ -169,6 +178,18 @@ export async function closeHubSession(sessionId: string): Promise<HubResult> {
   const worker = await getCurrentUser();
   if (!worker) return { ok: false, error: "Not signed in." };
   try {
+    // Authorise against the session's PARTICIPANT (the hub is participant-anchored and
+    // deliberately cross-org — consent-gated, not org-matched). Loading the session by
+    // id first and checking access stops a worker closing another participant's session
+    // (and force-checking-out its attendees) by guessing the id (IDOR).
+    const target = await prisma.hubSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, participantId: true, status: true },
+    });
+    if (!target) return { ok: false, error: "That session isn't open." };
+    if (!(await canAccessParticipant(target.participantId))) {
+      return { ok: false, error: "You don't have access to this participant's hub." };
+    }
     const session = await prisma.hubSession.update({
       where: { id: sessionId },
       data: { status: "CLOSED", closedAt: new Date() },
@@ -224,6 +245,13 @@ export async function hubCheckIn(input: {
     if (!session || session.status !== "OPEN") {
       return { ok: false, error: "That session isn't open." };
     }
+    // The facilitating actor must themselves have access to this participant's hub
+    // before they can attribute a check-in here — otherwise any signed-in worker could
+    // plant an attributed (and billable) check-in into another participant's session by
+    // id-guessing (IDOR / attribution forgery). The PIN still proves WHICH worker.
+    if (!(await canAccessParticipant(session.participantId))) {
+      return { ok: false, error: "You don't have access to this participant's hub." };
+    }
     if (!(await assertPin(input.workerId, input.pin))) {
       return { ok: false, error: "Incorrect PIN." };
     }
@@ -266,14 +294,25 @@ export async function hubCheckOut(checkInId: string): Promise<HubResult> {
   const actor = await getCurrentUser();
   if (!actor) return { ok: false, error: "Not signed in." };
   try {
+    // Load (don't mutate) first so we can authorise against the participant before
+    // writing — the previous code checked out the row before any access check, letting
+    // any signed-in worker check out any check-in in any org by id (IDOR).
+    const existing = await prisma.hubCheckIn.findUnique({
+      where: { id: checkInId },
+      select: { workerId: true, organisationId: true, hubSessionId: true },
+    });
+    if (!existing) return { ok: false, error: "That check-in doesn't exist." };
+    const session = await prisma.hubSession.findUnique({
+      where: { id: existing.hubSessionId },
+      select: { participantId: true },
+    });
+    if (!session || !(await canAccessParticipant(session.participantId))) {
+      return { ok: false, error: "You don't have access to this participant's hub." };
+    }
     const checkIn = await prisma.hubCheckIn.update({
       where: { id: checkInId },
       data: { checkedOutAt: new Date() },
       select: { workerId: true, organisationId: true, hubSessionId: true },
-    });
-    const session = await prisma.hubSession.findUnique({
-      where: { id: checkIn.hubSessionId },
-      select: { participantId: true },
     });
     await recordAudit({
       action: "HUB_CHECKED_OUT",
@@ -338,6 +377,13 @@ export async function logHubEntry(input: {
       select: { participantId: true, status: true },
     });
     if (!session || session.status !== "OPEN") return { ok: false, error: "That session isn't open." };
+
+    // Authorise the facilitating actor against the participant before appending an
+    // entry — without this a worker who knows any check-in id (in any org) could append
+    // LogEntry rows owned by that org (IDOR). The PIN still proves the attributed worker.
+    if (!(await canAccessParticipant(session.participantId))) {
+      return { ok: false, error: "You don't have access to this participant's hub." };
+    }
 
     if (!(await assertPin(checkIn.workerId, input.pin))) {
       return { ok: false, error: "Incorrect PIN." };

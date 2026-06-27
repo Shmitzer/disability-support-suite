@@ -59,3 +59,22 @@ test("stripSafetyJson: leaves a plain reply untouched", () => {
   assert.equal(flagged, false);
   assert.equal(cleaned, raw);
 });
+
+test("stripSafetyJson: strips a safetyFlag object even when it has NESTED braces", () => {
+  // The old flat-only regex would leak this wrapped object to the participant.
+  const raw =
+    'You are safe to talk to me.\n{"safetyFlag": true, "meta": {"reason": "scared", "score": 9}}';
+  const { cleaned, flagged } = stripSafetyJson(raw);
+  assert.equal(flagged, true);
+  assert.equal(cleaned.includes("safetyFlag"), false);
+  assert.equal(cleaned.includes("{"), false, "no raw JSON may reach the participant");
+  assert.match(cleaned, /You are safe to talk to me/);
+});
+
+test("stripSafetyJson: never leaks a safetyFlag fragment to the participant", () => {
+  // Even a malformed / brace-less fragment must not survive into the cleaned reply.
+  const raw = "Okay.\nsafetyFlag: true, reason: hurt";
+  const { cleaned } = stripSafetyJson(raw);
+  assert.equal(/safetyFlag/i.test(cleaned), false);
+  assert.match(cleaned, /Okay\./);
+});

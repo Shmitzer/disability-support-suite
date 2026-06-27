@@ -18,10 +18,15 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
 
-  // Only allow relative redirects (no open-redirect to other origins).
-  // Default lands on the app dashboard ("/" is the public landing page).
+  // Only allow same-origin relative redirects (no open-redirect to other origins).
+  // A bare startsWith("/") is not enough: "//evil.com" and "/\evil.com" are
+  // protocol-relative/backslash forms a browser resolves to an external origin, so
+  // reject those too. Default lands on the app dashboard ("/" is the public landing).
   const nextParam = searchParams.get("next") ?? "/dashboard";
-  const next = nextParam.startsWith("/") ? nextParam : "/dashboard";
+  const next =
+    nextParam.startsWith("/") && !nextParam.startsWith("//") && !nextParam.startsWith("/\\")
+      ? nextParam
+      : "/dashboard";
 
   const supabase = await createClient();
 

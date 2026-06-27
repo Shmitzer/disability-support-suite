@@ -128,7 +128,7 @@ export default function EmarClient({
   function pickReason(id: string, mode: "withhold" | "refuse", reason: string) {
     persist(
       id,
-      UI_TO_BACKEND[mode],
+      UI_TO_BACKEND[mode === "withhold" ? "withheld" : "refused"],
       { group: "done", status: mode === "withhold" ? "withheld" : "refused", by: "You", at: now(), reason },
       reason,
     );

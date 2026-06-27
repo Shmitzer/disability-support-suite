@@ -53,11 +53,23 @@ export async function PATCH(request: Request) {
   }
   if (!body.flagId) return NextResponse.json({ error: "Missing flagId." }, { status: 400 });
 
+  // Scope the write exactly like the GET read: a supervisor may only clear flags in
+  // their org (solo → only their own), a worker only their own. The previous code
+  // updated by id alone, letting any worker mark-seen (suppress) a safety flag in
+  // ANOTHER org by guessing the id (cross-tenant IDOR on a safety signal).
+  const scope =
+    cairaPersona(worker.role) === "supervisor"
+      ? worker.organisationId
+        ? { organisationId: worker.organisationId }
+        : { workerId: worker.id }
+      : { workerId: worker.id };
+
   try {
-    await prisma.cairaFlag.update({
-      where: { id: body.flagId },
+    const res = await prisma.cairaFlag.updateMany({
+      where: { id: body.flagId, ...scope },
       data: { seenByWorker: true, seenAt: new Date() },
     });
+    if (res.count === 0) return NextResponse.json({ error: "Flag not found." }, { status: 404 });
   } catch (err) {
     console.error("caira flag mark-seen failed:", err);
     return NextResponse.json({ error: "Couldn't update flag." }, { status: 500 });

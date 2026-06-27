@@ -28,6 +28,17 @@ export async function addWorkerCredential(input: {
     return { ok: false, error: "You don't have permission to manage credentials." };
   }
   if (!input.type.trim()) return { ok: false, error: "A credential type is required." };
+  // The capability check authorises managing credentials in the ACTOR's org, but the
+  // target workerId is caller-supplied — confirm that worker actually belongs to the
+  // actor's org before stamping a credential into it (otherwise a manager could mint a
+  // credential row pointing at another org's worker, mislabelled into their own org).
+  const target = await prisma.worker.findUnique({
+    where: { id: input.workerId },
+    select: { organisationId: true },
+  });
+  if (!target || target.organisationId !== actor.organisationId) {
+    return { ok: false, error: "That worker isn't in your organisation." };
+  }
   try {
     const cred = await prisma.workerCredential.create({
       data: {

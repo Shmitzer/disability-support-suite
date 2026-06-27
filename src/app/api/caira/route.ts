@@ -27,6 +27,26 @@ import {
 
 const GENERIC_ERROR = "I'm having trouble right now. Please try again.";
 
+// Placeholder fallbacks the context builders use when there's no real name to show.
+// These must NOT be sent to scrubPII as names — tokenising "your participant" would
+// corrupt the prompt (it'd be restored to "your"). Only real names are scrubbed.
+const NAME_PLACEHOLDERS = new Set([
+  "your participant",
+  "your support worker",
+  "your organisation",
+  "friend",
+]);
+
+function realNames(...candidates: (string | null | undefined)[]): string[] {
+  return [
+    ...new Set(
+      candidates
+        .map((c) => (c ?? "").trim())
+        .filter((c) => c && !NAME_PLACEHOLDERS.has(c.toLowerCase())),
+    ),
+  ];
+}
+
 export async function POST(request: Request) {
   const worker = await getCurrentWorker();
   if (!worker) {
@@ -76,6 +96,9 @@ export async function POST(request: Request) {
       const reply = await generateProgressNote({
         participantName: ctx.participantName,
         rawNotes: message,
+        // Only scrub REAL names — passing the "your participant" placeholder as a name
+        // would tokenise it and corrupt the restored note.
+        scrubNames: realNames(ctx.participantName, worker.name),
       });
       return NextResponse.json({ reply, webEnabled });
     } catch (err) {
@@ -112,8 +135,10 @@ export async function POST(request: Request) {
     }
   }
 
-  // Build the system prompt for this persona, with live context injected.
+  // Build the system prompt for this persona, with live context injected. `names`
+  // collects the real names this prompt embeds so cairaChat can scrub them (Rule 2).
   let systemPrompt: string;
+  let names: string[] = [];
   let maxOutputTokens = 400;
   let temperature = 0.4;
   try {
@@ -126,6 +151,7 @@ export async function POST(request: Request) {
         todaySchedule: ctx.todaySchedule,
         currentScreen,
       });
+      names = realNames(ctx.participantName, ctx.workerName);
       temperature = 0.3;
     } else if (persona === "supervisor") {
       const ctx = await buildSupervisorContext(worker);
@@ -137,6 +163,7 @@ export async function POST(request: Request) {
         currentScreen,
         webEnabled,
       });
+      names = realNames(worker.name, ctx.orgName);
       maxOutputTokens = 600;
     } else {
       const ctx = await buildWorkerContext(worker);
@@ -148,6 +175,7 @@ export async function POST(request: Request) {
         currentScreen,
         webEnabled,
       });
+      names = realNames(worker.name, ctx.participantName);
     }
   } catch (err) {
     console.error("Caira context/prompt build failed:", err);
@@ -163,6 +191,7 @@ export async function POST(request: Request) {
       webEnabled,
       maxOutputTokens,
       temperature,
+      names,
     });
 
     // The participant prompt asks the model to append a {"safetyFlag":…} object. Parse

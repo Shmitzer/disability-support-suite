@@ -59,10 +59,27 @@ export function quickSafetyCheck(message: string): SafetyCheck {
 // only ever sees the warm, plain-text reply — never raw JSON. Defensive: returns the
 // text unchanged when there's no JSON to strip.
 export function stripSafetyJson(text: string): { cleaned: string; flagged: boolean } {
-  const flagged = /"safetyFlag"\s*:\s*true/i.test(text);
-  const cleaned = text
-    .replace(/\{[^{}]*safetyFlag[^{}]*\}/gi, "")
-    .replace(/```json|```/gi, "")
-    .trim();
+  const flagged = /"?safetyFlag"?\s*:\s*true/i.test(text);
+  // Remove code fences first.
+  let cleaned = text.replace(/```json|```/gi, "");
+  // The model is asked to APPEND a {"safetyFlag":…} object. Strip it robustly — even
+  // when it has NESTED braces (the old `\{[^{}]*…\}` only matched a flat object and
+  // would leak a wrapped one) — by cutting from the '{' that opens the trailing object
+  // through to the end of the string. Fail-safe: a participant must NEVER see raw JSON.
+  if (/safetyFlag/i.test(cleaned)) {
+    const flagPos = cleaned.search(/safetyFlag/i);
+    const open = cleaned.lastIndexOf("{", flagPos);
+    if (open !== -1) cleaned = cleaned.slice(0, open);
+  }
+  cleaned = cleaned.trim();
+  // Last-resort guard: if any safetyFlag fragment somehow survived (e.g. no enclosing
+  // brace), drop the lines that mention it rather than risk leaking it.
+  if (/safetyFlag/i.test(cleaned)) {
+    cleaned = cleaned
+      .split("\n")
+      .filter((line) => !/safetyFlag/i.test(line))
+      .join("\n")
+      .trim();
+  }
   return { cleaned, flagged };
 }

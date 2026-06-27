@@ -42,11 +42,16 @@ export function scrubPII(input: string, names: string[] = []): Scrubbed {
     text = text.replace(new RegExp(`\\b${escapeRegExp(name)}\\b`, "gi"), token);
   }
 
-  // Structured identifiers — redacted outright (no restore needed).
+  // Structured identifiers — redacted outright (no restore needed). Phone is matched
+  // BEFORE the 9-digit NDIS pattern so a phone number isn't half-eaten by it.
   text = text
     .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[redacted email]")
-    .replace(/\b\d{9}\b/g, "[redacted id]") // NDIS numbers are 9 digits
-    .replace(/(?:\+?61|\b0)[\s-]?\d(?:[\s-]?\d){7,9}\b/g, "[redacted phone]");
+    // Phone: +61 / 0-prefixed, tolerating spaces, hyphens and a parenthesised area
+    // code (e.g. "(02) 9876 5432", "+61 2 9876 5432", "0412 345 678").
+    .replace(/(?:\+?61[\s-]?|\(0\d\)[\s-]?|\b0)\d(?:[\s-]?\d){7,9}\b/g, "[redacted phone]")
+    // NDIS participant number: 9 digits, commonly written with spaces/hyphens
+    // ("430 123 456"). The old \b\d{9}\b only caught the unseparated form.
+    .replace(/\b\d(?:[\s-]?\d){8}\b/g, "[redacted id]");
 
   // Restore longest tokens first so PERSON_1 doesn't clobber PERSON_10.
   const ordered = [...restoreMap.entries()].sort((a, b) => b[0].length - a[0].length);
