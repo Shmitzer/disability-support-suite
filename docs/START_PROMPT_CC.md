@@ -28,6 +28,11 @@ No need to stop and ask — these are decided. Proceed on them.
    verifies against the live MA000100 guide later.
 9. **LearnedOption picklists** — **no change**: keep global seeds + per-org overrides (already built).
 10. **`anonymiseUser()` erasure** — **land it now** (on `pensive-allen`; closes the last gate item).
+11. **Participant Hub** — build it in Phase G (shared tablet for Zef's 3:1 multi-org support). First
+    user = his mother, modelled as **one identity, three capacities**: Solo Worker (own org) +
+    `participant_guardian` (`consent:manage`) + `family_carer_clinical` on Zef. Attribution =
+    quick-unlock PIN tap. **Capacity captured per entry** (new `actingCapacity`). Multi-org consent
+    routes through the nominee. Full slice in **`docs/PARTICIPANT_HUB_SPEC.md`**.
 
 ---
 
@@ -45,10 +50,17 @@ covering everything still unapplied — Caira (`caira_ai.sql`, `org_caira_enable
 (erasure/NDIS), 2.4 (`ndis_price_guide.sql`) — in dependency order, with a dry-run note. ⛔ Edward applies it.
 
 **G2 — Wire-up (per screen, after cd commits the `.dc.html`).** Build each as a real route in
-`src/` wired to the live backend, in cd's delivery order: incident register + reportable form →
-notification center + push-permission prompt → eMAR-lite → `/console` coordinator desktop →
-system/state pages. New screens become real App-Router TSX routes (no standalone `.jsx`), using the
-Sage & Clay tokens in `src/app/globals.css`.
+`src/` wired to the live backend, in cd's delivery order: **Participant Hub** → incident register +
+reportable form → notification center + push-permission prompt → eMAR-lite → `/console` coordinator
+desktop → system/state pages. New screens become real App-Router TSX routes (no standalone `.jsx`),
+using the Sage & Clay tokens in `src/app/globals.css`.
+
+**Hub backend slice (per `PARTICIPANT_HUB_SPEC.md`).** Hub session model (participant+device
+anchored, N concurrent worker check-ins, check-in/out, auto-lock/timeout); per-entry
+`actingCapacity` (worker | family | guardian) + `actorWorkerId` + org + shiftId, PIN-gated identify,
+idempotency intact, audited; cross-org timeline read model merging consented orgs onto Zef's
+timeline (RLS `tenant_isolation` still per owning org); device registration/trust. Unapplied
+`prisma/sql`; graceful degradation.
 
 **Definition of done per task:** `tsc` ✓ · `lint` ✓ · `npm test` ✓ · `npm run build` ✓ · new
 schema as **unapplied** `prisma/sql/*.sql` (never `db push`) · graceful degradation if the

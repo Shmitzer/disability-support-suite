@@ -47,10 +47,16 @@ unapplied (Caira's 3 files + Phase 0 sweep + 1.6 erasure/NDIS + 2.4 price guide)
 green `main` and one `psql`-ready script for Edward.
 
 **G1 — Design-gated UI (cd).** Author the missing product surfaces from the SSOT, in
-critical-path order for the trial: **incident register + reportable-incident form → notification
-center + push-permission prompt → eMAR-lite → `/console` coordinator desktop → system/state pages
-(404 / 500 / offline) → Modules + Pricing marketing**. `/portal` (participant + family/guardian)
-stays **legal-gated** — skeleton only.
+critical-path order for the trial: **Participant Hub (shared tablet) → incident register +
+reportable-incident form → notification center + push-permission prompt → eMAR-lite → `/console`
+coordinator desktop → system/state pages (404 / 500 / offline) → Modules + Pricing marketing**.
+`/portal` (participant + family/guardian) stays **legal-gated** — skeleton only.
+
+> **Participant Hub** — the shared multi-worker tablet for Zef's 3:1 multi-org support, and the
+> go-to-market wedge (first user = his mother: independent DSW + nominee + the bridge to NLS and a
+> second provider). Architecture, identity model, onboarding flow, and lawyer-brief additions in
+> **`docs/PARTICIPANT_HUB_SPEC.md`**. It's both trial-critical and the demo that sells the next two
+> accounts, so it leads G1.
 
 **G2 — Wire-up (cc, after each cd `.dc.html` lands).** Build each designed screen as a real route
 in `src/` (App Router, TSX, Sage & Clay tokens), wired to the live backend. cc wires a screen only
@@ -70,7 +76,9 @@ cc and cd run in parallel; the only ordering rule is **cc wires a screen after c
 ## Edward-gated — the critical path (do not attempt autonomously)
 
 1. **Book the NDIS specialist lawyer** — still the single thing the entire real-data path waits
-   behind (brief already written). Real users are weeks away on your own timeline.
+   behind (brief already written). Real users are weeks away on your own timeline. **Add to the
+   brief** the hub's data-controller + triple-capacity-consent + nominee-as-consent-authority +
+   shared-device questions (see `PARTICIPANT_HUB_SPEC.md`).
 2. **Apply the consolidated SQL** by hand (`psql "$DIRECT_URL" -f …`, NOT `db push`), then
    re-run `verify_rls_editor.sql`.
 3. **Rotate the exposed DB password** + provision Upstash / Resend / (Stripe later).

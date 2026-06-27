@@ -29,6 +29,8 @@ No need to stop and ask — these are decided. Proceed on them.
 7. **Incident form** — design the full **NDIS reportable-incident** field set.
 8. **`/console` density** — **information-dense data tables + side nav** (desktop direction, distinct
    from the airy mobile worker aesthetic).
+9. **Participant Hub leads the order** — shared tablet for Zef's 3:1 multi-org support; it's the
+   trial wedge (first user = his mother). Full brief in **`docs/PARTICIPANT_HUB_SPEC.md`**.
 
 ---
 
@@ -37,15 +39,21 @@ No need to stop and ask — these are decided. Proceed on them.
 Author each as a `.dc.html` Design Component in `docs/design/` + a screenshot, then update
 `HANDOFF.md` and commit so cc can wire it. Mobile-first for worker screens; desktop for `/console`.
 
-1. **Incident register + reportable-incident form** (worker, mobile) — list + create; NDIS
+1. **Participant Hub (shared tablet)** — participant-anchored "care station" for Zef's 3:1
+   multi-org support. "Who's on shift now" avatar row; tap-to-identify + quick-unlock PIN sheet;
+   capacity pick (worker / family) where ambiguous; unified multi-org timeline with unmistakable
+   per-entry attribution (name · org · capacity); check-in/out + auto-lock states; shared-device
+   privacy treatment. Tablet layout, distinct from the phone worker app and `/console`. Full brief
+   in **`docs/PARTICIPANT_HUB_SPEC.md`**.
+2. **Incident register + reportable-incident form** (worker, mobile) — list + create; NDIS
    reportable fields; the one deliberately-loud *REPORT AN INCIDENT* affordance (calm muted clay,
    not red).
-2. **Notification center + push-permission prompt** (worker, mobile) — feed, read/unread, the
+3. **Notification center + push-permission prompt** (worker, mobile) — feed, read/unread, the
    permission-priming sheet.
-3. **eMAR-lite** (worker, mobile) — due / given / withheld / refused / PRN actions (compact list).
-4. **`/console` coordinator desktop** — dashboard, participant record + NDIS plan, roster,
+4. **eMAR-lite** (worker, mobile) — due / given / withheld / refused / PRN actions (compact list).
+5. **`/console` coordinator desktop** — dashboard, participant record + NDIS plan, roster,
    incidents, reports, org settings, documents (dense tables + side nav).
-5. **System / state pages** — `not-found` (404), `error` (500), offline/PWA fallback.
+6. **System / state pages** — `not-found` (404), `error` (500), offline/PWA fallback.
 
 (Modules + Pricing deferred — see decision 4.)
 
