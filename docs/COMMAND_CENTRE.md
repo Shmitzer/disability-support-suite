@@ -6,7 +6,63 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/funny-brown-oinkli` (Caira character system + AI brain + audio + Rive) · prior: `claude/nifty-ritchie-nqmsxh`
-- **Last updated:** 2026-06-27 (**cc handover — G2 wire-up (5 screens) + Caira animation track** — top section below) · prior: Phase G hub backend slice · **cc 2026-06-27:** the 5 G2 design screens wired into real App-Router routes (`/hub`, `/incidents`, `/incidents/rp`, `/notifications`, `/emar`) + Caira animation reconciliation draft + interactive marketing site-guide prototype — all merged to `main` (`d5c23b9`); ⚠️ gates not runnable in sandbox — run `tsc/lint/test/build` post-`prisma generate`. **cw 2026-06-27:** live `AUTH_ALLOWLIST` set (domains only) + redeployed; hub backend slice merged to `main` (`b955b8c`); **site LIVE on caira.net.au**; G2 design screens landed (`1b82a12`); **Medication Verification + Authorisation** spec captured (`docs/MED_VERIFICATION_SPEC.md`) — see decision log
+- **Last updated:** 2026-06-27 (**cc → cw HANDOVER: cc1 security pass on TWO parallel branches to reconcile** — top section below) · prior: cc handover G2 wire-up + Caira animation track · Phase G hub backend slice · **cc 2026-06-27:** the 5 G2 design screens wired into real App-Router routes (`/hub`, `/incidents`, `/incidents/rp`, `/notifications`, `/emar`) + Caira animation reconciliation draft + interactive marketing site-guide prototype — all merged to `main` (`d5c23b9`); ⚠️ gates not runnable in sandbox — run `tsc/lint/test/build` post-`prisma generate`. **cw 2026-06-27:** live `AUTH_ALLOWLIST` set (domains only) + redeployed; hub backend slice merged to `main` (`b955b8c`); **site LIVE on caira.net.au**; G2 design screens landed (`1b82a12`); **Medication Verification + Authorisation** spec captured (`docs/MED_VERIFICATION_SPEC.md`) — see decision log
+
+---
+
+## 🤝 HANDOVER TO COWORK — cc1 security pass (TWO parallel cc branches to reconcile) (cc, 2026-06-27)
+
+**For cw: two cc sessions independently completed overnight `cc1` (security review + fixes) on
+two different branches. They overlap heavily. cw needs to clean-clone, verify, and prepare ONE
+reconciled merge to `main` for Edward.** Dummy data only; no SQL applied.
+
+### The two branches
+- **`claude/start-prompt-cc-vpar7g`** (commit `7861370`) — session A. Gates claimed: `tsc` ✓ ·
+  `lint` ✓ · **192 tests** ✓ · `build` ✓. Added `test/pii.test.ts`, `pii.ts` regex (spaced
+  NDIS/phone), `stripSafetyJson` hardening. Hub IDOR gated by **participant-access**
+  (`canAccessParticipant`) — keeps the hub's intended cross-org/consent model.
+- **`claude/start-prompt-cc-uzrp0b`** (commits `87cb552` code, `001f4c5` plan) — session B (this
+  one). Gates verified locally on a real toolchain: `tsc` ✓ · **183 tests** ✓ · `build` ✓ ·
+  tenant-scope guard ✓. Hub IDOR gated by **org-scope** (`tenantScope`) — more restrictive.
+  Adds items session A does NOT have (see "unique to B").
+
+Both sessions were harness-bound to ad-hoc `start-prompt-cc-*` branches, NOT the plan's
+`claude/cc-enterprise` — that's why they collided.
+
+### Overlap (both fixed, pick ONE implementation)
+Hub IDOR cluster (`hub-actions.ts`), `cairaChat` PII scrub + placeholder filter, `/api/caira/flags`
+PATCH scope, `/admin` capability gate, `auth/confirm` open-redirect, `credential-actions` cross-org
+target check.
+
+### Unique to B (`…uzrp0b`) — graft onto whichever base wins
+- `caira` route enforces the global **LLM spend cap** (was bypassing it) + a **hub-PIN brute-force
+  guard** on check-in.
+- **Security headers** in `next.config.ts` (nosniff / X-Frame-Options / frame-ancestors /
+  Referrer-Policy / Permissions-Policy / HSTS).
+- `storage.uploadDataUrl` **max-size cap**; **Sentry** PII redaction (`sendDefaultPii:false` +
+  `beforeSend`, new `src/lib/sentry-scrub.ts`); `learned-options` PostHog free-text redaction.
+- **tenant-scope guard fix** (`scripts/check-tenant-scope.mjs`): it was **failing CI** by scanning
+  the generated Prisma client's JSDoc — now skips `src/generated` + adds hub/`cairaFlag` models.
+- `SECRETS.md` table corrected; real **EmarClient** runtime bug fixed
+  (`UI_TO_BACKEND["withhold"]`→`["withheld"]`, an undefined-index/typo).
+
+### ⚠️ Recommended reconciliation
+Take session A's **participant-access** hub gating as the base (better fit for the cross-org hub),
+then cherry-pick session B's **unique** hardening (spend-cap, headers, Sentry, upload cap,
+tenant-scope-guard fix, EmarClient bug, SECRETS.md). Verify gates after the graft.
+
+### ⛔ Blocks BOTH branches — pre-existing LINT red (not from cc1)
+`src/app/(protected)/incidents/rp/RpIncidentClient.tsx` fails `npm run lint`: **24
+`react-hooks/static-components` + 4 `react/no-unescaped-entities`**, introduced by the G2 wire-up
+(`7cd3435`) before gates were runnable. (Session A claimed `lint ✓` — cw should re-verify on a
+clean clone; it may not have caught this file.) Fix = hoist the inner presentational components
+(Eyebrow/Avatar/Badge/…) to module scope; a few close over render handlers → thread as props.
+
+### `[!]` Edward-gated / key-gated (logged in `OVERNIGHT_PLAN_2026-06-28.md` Blockers)
+Provision **Upstash** (`UPSTASH_*`) so rate-limit + spend cap (incl. the new caira cap + hub-PIN
+guard) are live (they fail-open otherwise) · audio/OCR cross-border PII needs a **DPA / on-device**
+path before real data · verify the Supabase **photos/documents buckets are PRIVATE** · run
+`verify_rls.sql` on the live DB · rotate the exposed DB password.
 
 ---
 
