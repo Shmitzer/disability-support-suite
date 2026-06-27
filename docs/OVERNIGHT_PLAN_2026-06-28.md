@@ -59,9 +59,14 @@ then push your branch. **On (re)start of any session instance:**
       `NEXT_PUBLIC_` leak, no key logged; the one URL-embedded key was moved to a header in cc1).
       **MFA is Edward+design-gated** → see Blockers (`[!]`); not autonomously buildable (needs Supabase
       MFA enabled + cd enrollment UI; enforcing AAL2 without enrollment locks admins out).
-- [ ] **cc3. Phase-H authorisation state machine.** `DRAFT→PENDING_BSP→PENDING_COMMISSION→
-      PENDING_GUARDIAN→ACTIVE`, DB/enum-enforced; Medication / PillAppearanceProfile (structured fields)
-      / MARLog (immutable) schema as **unapplied** `prisma/sql`. Per `docs/MED_VERIFICATION_SPEC.md`.
+- [x] **cc3. Phase-H authorisation state machine.** Done (commit `d424639`). Pure state machine
+      `src/lib/med-authorisation.ts` (8 tests) + a **DB-enforced** trigger in `prisma/sql/medication.sql`
+      (UNAPPLIED) so a direct write can't skip a stage — **validated against a throwaway Postgres 16**
+      (skips/backwards/terminal/bad-enum all rejected). Schema: `Medication.authStatus`+`isChemicalRestraint`,
+      `PillAppearanceProfile` (structured), `MedAuthEvent` (immutable chain), MAR verification cols on
+      `MedicationAdministration` — MAR + chain immutability triggers verified. `setMedicationAuthStatus`/
+      `listMedicationAuthEvents` actions (coordinator-gated). cc4 (vision) + guardian external-confirm
+      pathway (Edward-gated) build on this.
 - [ ] **cc4. Med visual-verification backend.** Claude-Vision behind `src/lib/ai.ts` — expected-profile
       only (scrub PII), app decides outcome, low-confidence→mismatch fail-safe, never auto-proceed.
 - [ ] **cc5. NDIS report / PDF export pack** (backend). Aggregate notes/incidents/shifts/meds into the
