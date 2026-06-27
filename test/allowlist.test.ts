@@ -30,6 +30,17 @@ test("@domain entry allows the whole domain", () => {
   assert.equal(isEmailAllowed("anyone@other.com"), false);
 });
 
+test("both canonical domains allowed together (caira.app app + caira.net.au AU marketing)", () => {
+  // Decision (2026-06-27): canonical login domains are BOTH — caira.app for the
+  // app and caira.net.au for AU marketing/staff. Edward sets the live env value;
+  // the parser is data-driven, so this guards the both-domains config.
+  process.env.AUTH_ALLOWLIST = "@caira.app, @caira.net.au";
+  assert.equal(isEmailAllowed("worker@caira.app"), true);
+  assert.equal(isEmailAllowed("hello@caira.net.au"), true);
+  assert.equal(isEmailAllowed("admin@caira.net.au"), true);
+  assert.equal(isEmailAllowed("stranger@caira.com"), false);
+});
+
 test("whitespace/newline separated entries parse", () => {
   process.env.AUTH_ALLOWLIST = "a@x.com\n b@y.com ";
   assert.equal(isEmailAllowed("a@x.com"), true);
