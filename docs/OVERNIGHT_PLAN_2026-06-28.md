@@ -44,8 +44,14 @@ then push your branch. **On (re)start of any session instance:**
 
 ## cc queue — `claude/cc-enterprise`  (logic / backend / wiring)
 **Phase 1 — pilot-paid**
-- [ ] **cc1. Security review + fixes.** Run a full security pass (the `security-review` command),
-      triage findings, fix the safe ones; log anything needing a key/secret as `[!]`.
+- [x] **cc1. Security review + fixes.** Full pass (5 parallel reviewers across tenant-isolation/
+      IDOR, authn/authz/PIN, PII→external, injection/XSS/SSRF/upload, secrets/headers/DoS). Fixed
+      the safe confirmed findings — IDOR scoping on shift/hub/credential/handover/caira-flag
+      mutations, `cairaChat` PII scrub, caira spend-cap, security headers, upload cap, open-redirect
+      hardening, `/admin` capability gate, tenant-scope guard (skip generated client + add hub/
+      cairaFlag models), Sentry PII redaction, SECRETS.md. Commit `87cb552` on
+      `claude/start-prompt-cc-uzrp0b` (branch override — see note). tsc/test/build/tenant-scope all
+      green. Residual/blocked items in **Blockers** below.
 - [ ] **cc2. MFA + secrets hygiene.** Wire MFA on `ADMIN`/`SUPERADMIN` seats; audit secret handling
       (no secrets in client bundles/logs); RLS regression test in CI. (Rotating the *exposed* DB
       password is Edward-gated — note it, don't do it.)
@@ -96,3 +102,22 @@ Vercel / deploy / domains.
 
 ## Blockers & morning hand-off
 _(append as work proceeds — one line each: which session, which task `[!]`, why, what Edward needs to do)_
+
+- **cc / branch override:** harness bound this session to `claude/start-prompt-cc-uzrp0b`, not
+  `claude/cc-enterprise`. cc1 landed there (`87cb552`). Edward: merge/rename, or re-point cc to the
+  expected branch for the next item.
+- **cc / cc1 `[!]` pre-existing LINT red (not from cc1):** `src/app/(protected)/incidents/rp/RpIncidentClient.tsx`
+  fails `npm run lint` — 24 `react-hooks/static-components` + 4 `react/no-unescaped-entities`,
+  introduced by the G2 wire-up (`7cd3435`) before gates were runnable. Needs a focused pass to hoist
+  the inner presentational components (Eyebrow/Avatar/Badge/…) to module scope (some close over
+  render handlers → thread as props). All other gates (tsc/test/build/tenant-scope) are green.
+- **cc / cc1 residual — KEY/secret-gated (build-up done, not actioned):**
+  · LLM rate-limit + spend cap (incl. the new Caira cap + hub-PIN brute-force guard) are inert until
+    **Upstash** (`UPSTASH_REDIS_REST_URL`/`_TOKEN`) is provisioned. · Audio/photo (transcribe/OCR)
+    still go to Gemini un-scrubbed — needs a **DPA / on-device** model before real participant data
+    (legal-gated). · Verify the Supabase **photos/documents buckets are PRIVATE** (config, not code).
+- **cc / cc1 residual — follow-up (safe, deferred for a focused change):** harden the hub attribution
+  PIN with a DB fail-count + lockout (schema columns as unapplied `prisma/sql` + graceful
+  degradation) — the org-scoping closed cross-org targeting, but a same-org fail-count lockout would
+  fully close PIN brute-force on the high-frequency `logHubEntry` path (left uncapped by design).
+  Also consider a full script/style **CSP** (needs an app-wide inline-style nonce pass first).
