@@ -157,11 +157,6 @@ export default function RpIncidentClient({
   const timeLabel =
     String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
 
-  const toggleArr = (
-    setter: React.Dispatch<React.SetStateAction<string[]>>,
-    v: string
-  ) => setter((a) => (a.includes(v) ? a.filter((x) => x !== v) : a.concat(v)));
-
   function pickType(label: string, isAuthorised: boolean) {
     setRpLabel(label);
     setAuthorised(isAuthorised);
@@ -330,94 +325,6 @@ export default function RpIncidentClient({
   }
 
   // ---- chip / pill helpers --------------------------------------------------
-  function chipStyle(selected: boolean): CSSProperties {
-    return {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 8,
-      padding: "12px 16px",
-      minHeight: 50,
-      borderRadius: 14,
-      border: "1px solid " + (selected ? "var(--brand)" : "var(--border)"),
-      background: selected ? "var(--brand-tint)" : "var(--surface)",
-      color: selected ? "var(--brand-strong)" : "var(--foreground)",
-      font: "600 15px var(--font-sans-base)",
-      cursor: "pointer",
-      transition: "background .15s ease, border-color .15s ease",
-      textAlign: "left",
-    };
-  }
-
-  const Chip = ({
-    label,
-    selected,
-    onClick,
-  }: {
-    label: string;
-    selected: boolean;
-    onClick: () => void;
-  }) => (
-    <button type="button" onClick={onClick} style={chipStyle(selected)}>
-      {label}
-    </button>
-  );
-
-  const SingleChips = ({
-    list,
-    value,
-    onPick,
-  }: {
-    list: string[];
-    value: string | null;
-    onPick: (v: string) => void;
-  }) => (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-      {list.map((x) => (
-        <Chip key={x} label={x} selected={value === x} onClick={() => onPick(x)} />
-      ))}
-    </div>
-  );
-
-  const MultiChips = ({
-    list,
-    values,
-    setter,
-  }: {
-    list: string[];
-    values: string[];
-    setter: React.Dispatch<React.SetStateAction<string[]>>;
-  }) => (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-      {list.map((x) => (
-        <Chip key={x} label={x} selected={values.includes(x)} onClick={() => toggleArr(setter, x)} />
-      ))}
-    </div>
-  );
-
-  const FieldLabel = ({ children }: { children: ReactNode }) => (
-    <span style={font("600 14px var(--font-sans-base)")} className="text-foreground">
-      {children}
-    </span>
-  );
-
-  const Eyebrow = ({
-    children,
-    color = "var(--muted)",
-  }: {
-    children: ReactNode;
-    color?: string;
-  }) => (
-    <span
-      style={{
-        font: "700 11px var(--font-sans-base)",
-        letterSpacing: "0.12em",
-        textTransform: "uppercase",
-        color,
-      }}
-    >
-      {children}
-    </span>
-  );
 
   const cardStyle: CSSProperties = {
     background: "var(--surface)",
@@ -736,7 +643,7 @@ export default function RpIncidentClient({
           {step === "type" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <Eyebrow>Authorised under {name}'s plan</Eyebrow>
+                <Eyebrow>Authorised under {name}’s plan</Eyebrow>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {bspAuthorisedPractices.map((label) => (
                     <button
@@ -812,7 +719,7 @@ export default function RpIncidentClient({
                     <span
                       style={{ font: "400 14px var(--font-sans-base)", color: "var(--clay-strong)" }}
                     >
-                      This is the serious branch — it's recorded as a reportable incident. Select the
+                      This is the serious branch — it’s recorded as a reportable incident. Select the
                       practice used:
                     </span>
                     <div
@@ -1079,7 +986,7 @@ export default function RpIncidentClient({
                     <SingleChips list={ROUTINE} value={routineOrPrn} onPick={setRoutineOrPrn} />
                   </div>
                   <span style={{ font: "400 13px var(--font-sans-base)", color: "var(--muted)" }}>
-                    Linked to the eMAR so the same dose isn't recorded twice.
+                    Linked to the eMAR so the same dose isn’t recorded twice.
                   </span>
                 </div>
               )}
@@ -1393,7 +1300,7 @@ export default function RpIncidentClient({
                 Log another
               </Btn>
               <Btn variant="primary" onClick={resetAll}>
-                Back to {name}'s timeline
+                Back to {name}’s timeline
               </Btn>
             </div>
           )}
@@ -1411,6 +1318,110 @@ export default function RpIncidentClient({
 // ---------------------------------------------------------------------------
 // Small presentational primitives (stand in for the design system imports).
 // ---------------------------------------------------------------------------
+
+const toggleArr = (
+  setter: React.Dispatch<React.SetStateAction<string[]>>,
+  v: string
+) => setter((a) => (a.includes(v) ? a.filter((x) => x !== v) : a.concat(v)));
+
+function chipStyle(selected: boolean): CSSProperties {
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "12px 16px",
+    minHeight: 50,
+    borderRadius: 14,
+    border: "1px solid " + (selected ? "var(--brand)" : "var(--border)"),
+    background: selected ? "var(--brand-tint)" : "var(--surface)",
+    color: selected ? "var(--brand-strong)" : "var(--foreground)",
+    font: "600 15px var(--font-sans-base)",
+    cursor: "pointer",
+    transition: "background .15s ease, border-color .15s ease",
+    textAlign: "left",
+  };
+}
+
+function Chip({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick} style={chipStyle(selected)}>
+      {label}
+    </button>
+  );
+}
+
+function SingleChips({
+  list,
+  value,
+  onPick,
+}: {
+  list: string[];
+  value: string | null;
+  onPick: (v: string) => void;
+}) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+      {list.map((x) => (
+        <Chip key={x} label={x} selected={value === x} onClick={() => onPick(x)} />
+      ))}
+    </div>
+  );
+}
+
+function MultiChips({
+  list,
+  values,
+  setter,
+}: {
+  list: string[];
+  values: string[];
+  setter: React.Dispatch<React.SetStateAction<string[]>>;
+}) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+      {list.map((x) => (
+        <Chip key={x} label={x} selected={values.includes(x)} onClick={() => toggleArr(setter, x)} />
+      ))}
+    </div>
+  );
+}
+
+function FieldLabel({ children }: { children: ReactNode }) {
+  return (
+    <span style={font("600 14px var(--font-sans-base)")} className="text-foreground">
+      {children}
+    </span>
+  );
+}
+
+function Eyebrow({
+  children,
+  color = "var(--muted)",
+}: {
+  children: ReactNode;
+  color?: string;
+}) {
+  return (
+    <span
+      style={{
+        font: "700 11px var(--font-sans-base)",
+        letterSpacing: "0.12em",
+        textTransform: "uppercase",
+        color,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
 
 function Avatar({ name, size }: { name: string; size: number }) {
   const initials = name
