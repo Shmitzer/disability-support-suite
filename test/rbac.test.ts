@@ -56,6 +56,12 @@ test("SUPERADMIN is the platform-override seat — holds every capability in BOT
   for (const cap of Object.values(Capability)) {
     assert.equal(can(Role.SUPERADMIN, cap), true, `legacy form should grant ${cap}`);
   }
+  // Spot-check the capabilities that funnel through legacy gates, incl. the
+  // Phase-1.6 right-to-erasure capability.
+  assert.equal(can(Role.SUPERADMIN, Capability.AuditRead), true);
+  assert.equal(can(Role.SUPERADMIN, Capability.RosterManage), true);
+  assert.equal(can(Role.SUPERADMIN, Capability.ParticipantErase), true);
+  assert.equal(can(Role.SUPERADMIN, Capability.BillingManage), true);
   // Principal form: platformAdmin already overrides everything (regression guard).
   const sa = { memberships: [], grants: [], platformAdmin: true };
   assert.equal(can(sa, Capability.BillingManage, { organisationId: "any" }), true);
