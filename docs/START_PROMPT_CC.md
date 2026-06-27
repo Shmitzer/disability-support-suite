@@ -49,6 +49,10 @@ using the Sage & Clay tokens in `src/app/globals.css`, wired to the live backend
 *(cd's `/console` coordinator desktop + state pages 404/500/offline are NOT designed yet — wire them only
 after cd commits those `.dc.html`.)*
 
+## 🏠 Also: make the Sales Site the live landing page
+
+The live `/` is still a placeholder. Rebuild **`src/app/(public)/page.tsx`** to match **`docs/design/Caira Sales Site.dc.html` → Direction B (the *teal* scheme)** — it's the locked landing design (`initialDirection=B`). Ship it with the dev **switcher hidden** (`showSwitcher=false`), public (no auth), signed-in users still redirect to `/dashboard`. Sage & Clay tokens in `globals.css`; reuse the shipped `<Logo>`/`<CairaMark>`. Keep the waitlist CTA + `/login` link.
+
 ## 🌱 Also: land the expanded seed (cw-prepped)
 
 `_seed_expanded/seed.ts` (in the repo root, untracked) is a drop-in for `prisma/seed.ts` — one account per
