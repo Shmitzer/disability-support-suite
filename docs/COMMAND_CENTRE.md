@@ -6,7 +6,42 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 - **Repo:** github.com/Shmitzer/disability-support-suite (note: *Shmitzer*, no first "c")
 - **Working branch:** `claude/funny-brown-oinkli` (Caira character system + AI brain + audio + Rive) · prior: `claude/nifty-ritchie-nqmsxh`
-- **Last updated:** 2026-06-27 (**Phase G — G0 consolidation: the 3 stranded backend branches merged into one green branch + one ordered SQL apply script** — section immediately below) · **cw 2026-06-27:** live `AUTH_ALLOWLIST` set (domains only) + redeployed, and `apply_phase_g_supabase.sql` committed to `main` (`6b65aac`) — see decision log
+- **Last updated:** 2026-06-27 (**Phase G — hub backend slice built on `claude/pensive-hamilton-hj1cpu`** — section immediately below) · **cw 2026-06-27:** live `AUTH_ALLOWLIST` set (domains only) + redeployed, and `apply_phase_g_supabase.sql` committed to `main` (`6b65aac`) — see decision log
+
+---
+
+## 🤝 PHASE G — Participant Hub backend slice (cc, 2026-06-27)
+
+The cc hub backend per `docs/HUB_DATA_MODEL.md` is **built + pushed** on
+`claude/pensive-hamilton-hj1cpu` (commit `ad8239c`). Additive throughout — the
+per-worker `Shift` model (billing/EVV/SCHADS) is untouched. **No design dependency**
+(this is the backend half; cd's `.dc.html` screens wire on top later). Gates all green:
+`tsc` ✓ · `lint` ✓ · `npm test` **183** ✓ · `npm run build` ✓. Dummy data only.
+
+**Delivered:**
+- **Schema** — `HubDevice` / `HubSession` / `HubCheckIn` (each with org `tenant_isolation`
+  RLS); `LogEntry.shiftId` now **nullable** + 5 hub columns (`hubCheckInId`,
+  `loggedByWorkerId`, `actingCapacity`, `participantId`, `sourceDevice`);
+  `Worker.pinHash`/`pinSetAt`; `Incident` RP columns.
+- **Unapplied SQL** — `prisma/sql/hub.sql` (tables + RLS + `LogEntry` ALTERs +
+  back-compatible backfill) and `prisma/sql/restrictive_practice.sql` (Incident RP).
+  Idempotent, editor-safe. ⛔ **NEVER `db push`** — Edward applies by hand.
+- **`src/lib/hub.ts`** — pure core (unit-tested): capacity→funding routing,
+  entry stamping, server-side scrypt PIN hash/verify, RP `reportable` derivation,
+  participant-keyed Realtime channel.
+- **`src/lib/hub-actions.ts`** — device trust, participant-anchored session lifecycle,
+  N concurrent PIN-gated check-ins (3:1), idempotent attributed `logHubEntry`, and the
+  consent-gated cross-org `participantHubTimeline` (`// tenant-ok:` annotated, paginated).
+- **`src/lib/hub-realtime.ts`** — best-effort participant-keyed Supabase Realtime ping +
+  client subscribe helper (DB stays source of truth; a Realtime failure never fails a write).
+- **`incident-actions.ts`** — RP fields on `reportIncident`; unauthorised RP auto-reportable.
+- **`test/hub.test.ts`** — capacity routing, stamping, RP derivation, PIN, timeline gate
+  (cross-org read **denied without a grant**).
+
+**NEXT (Edward — gated):** apply `prisma/sql/hub.sql` + `restrictive_practice.sql` by hand
+(after `apply_phase_g`), then re-run the RLS cross-tenant check. **NEXT (cc):** G2 wire-up
+of the hub + RP screens **after cd commits the `.dc.html`** (Participant Hub → RP incident →
+incident register → notification center → eMAR-lite → `/console`).
 
 ---
 
