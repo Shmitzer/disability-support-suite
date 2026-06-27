@@ -71,6 +71,13 @@ keys · `AUTH_ALLOWLIST` value · Vercel/deploy/domains · engage the lawyer · 
 **Real RP reporting obligations + the 24h window are NOT legally settled** — lawyer + behaviour-support
 practitioner confirm before any real RP event. **Dummy data only** until legal clears.
 
+## 🔭 Parallel track — Medication verification + authorisation (design-independent parts can start)
+
+Spec: **`docs/MED_VERIFICATION_SPEC.md`** (locked 2026-06-27; **legal-gated, dummy data only**). cd designs the screens in parallel — wire those only **after** cd commits the `.dc.html`. You CAN start the **design-independent backend** now:
+- The hard-gated **authorisation state machine** `DRAFT→PENDING_BSP→PENDING_COMMISSION→PENDING_GUARDIAN→ACTIVE` — enforced at the **DB/enum level, not the UI** (a direct write must not be able to skip a gate).
+- **Medication / PillAppearanceProfile / MARLog** schema as **unapplied `prisma/sql`** — appearance as **structured fields** (not free-text), `source = INTERNAL` now / `MIMS` later; MARLog + authorisation chain **immutable**.
+- **Claude-Vision verification behind `src/lib/ai.ts`** — send the *expected med profile only* (**scrub PII**: no participant name/NDIS number), the **app** decides the outcome, **low confidence → mismatch (fail-safe)**, never auto-proceed. Chemical-restraint admin links the existing `Incident` RP fields via `medicationAdminId`.
+
 ## Guardrails
 
 The 12 architectural rules (`COMMAND_CENTRE.md`) — especially: all LLM calls behind `src/lib/ai.ts`;

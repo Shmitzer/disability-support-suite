@@ -75,6 +75,16 @@ mirror into `src/app/globals.css` (don't let them drift). Reuse the shipped logo
 `<CairaMark>` — don't redraw the heart. Sentence-case everything readable; UPPERCASE only for tiny
 tracked eyebrows.
 
+## Parallel track — Medication verification + authorisation (now, in parallel)
+
+Per **`docs/MED_VERIFICATION_SPEC.md`** (locked 2026-06-27). Design these alongside the order above; SSOT-first (commit `.dc.html` + HANDOFF before cc wires). **Legal-gated, dummy data only.**
+
+- **Med-admin + visual verification** (worker, mobile) — extends eMAR-lite: in-app **photo capture** of the prepared pills → **match** (green, proceed, photo auto-logged) vs **mismatch / low-confidence** (red, expected-vs-seen, **override requires a typed or dictated reason** — never one-tap). AI is decision-support, calm not alarmist, never auto-proceeds.
+- **Authorisation status + draft** (coordinator/admin, in `/console`) — make the `DRAFT → PENDING_BSP → PENDING_COMMISSION → PENDING_GUARDIAN → ACTIVE` chain visible: per-stage status, BSP + Commission reference capture, the immutable audit trail. **Workers see nothing until ACTIVE.**
+- **Guardian/family review + confirm** (part of `/portal` — keep **flag-off / legal-gated skeleton**): plain-language plan review (no clinical jargon), confirm/decline with a recorded reason. Read + confirm only.
+
+Pill-appearance is **structured fields** (colour/shape/size/markings) at med setup — never a free-text blob — so the future MIMS reference maps cleanly.
+
 ## Guardrails
 
 `docs/design/` is the SSOT — design changes here **first**, then `src/` matches. No standalone
