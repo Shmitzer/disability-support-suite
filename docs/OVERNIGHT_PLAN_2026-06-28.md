@@ -67,6 +67,10 @@ then push your branch. **On (re)start of any session instance:**
       `MedicationAdministration` — MAR + chain immutability triggers verified. `setMedicationAuthStatus`/
       `listMedicationAuthEvents` actions (coordinator-gated). cc4 (vision) + guardian external-confirm
       pathway (Edward-gated) build on this.
+- [x] **cc1b. uzrp0b hardening graft.** sentry-scrub + security headers (`next.config.ts`) + 10MB
+      upload cap (`storage.ts`) + learned-options analytics redaction + Sentry `sendDefaultPii:false`/
+      `beforeSend` — grafted onto the jymx5u base via **PR #7** (`graft-uzrp0b-hardening-9uhmuq`),
+      `hub-actions` left on participant-access. cw-verified safe; **Edward: merge PR #7**.
 - [ ] **cc4. Med visual-verification backend.** Claude-Vision behind `src/lib/ai.ts` — expected-profile
       only (scrub PII), app decides outcome, low-confidence→mismatch fail-safe, never auto-proceed.
 - [ ] **cc5. NDIS report / PDF export pack** (backend). Aggregate notes/incidents/shifts/meds into the
@@ -110,6 +114,10 @@ GEMINI / VAPID / Stripe / Resend / Upstash / SSO-IdP keys · apply any SQL to th
 Vercel / deploy / domains.
 
 ## Blockers & morning hand-off
+
+- **▶ MERGE PR #7** (`graft-uzrp0b-hardening-9uhmuq`) — cw-verified the merge preserves jymx5u + adds
+  the hardening; normal merge commit, run `lint`/`build` or let Vercel gate. Then delete
+  `claude/start-prompt-cc-{vpar7g,uzrp0b,jymx5u}` + the graft branch (all superseded).
 _(append as work proceeds — one line each: which session, which task `[!]`, why, what Edward needs to do)_
 
 - **cc / cc1 `[!]` deploy-config (Edward):** in production set **`AUTH_ALLOWLIST`** (unset = open magic-link

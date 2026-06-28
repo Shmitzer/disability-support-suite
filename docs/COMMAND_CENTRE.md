@@ -12,6 +12,17 @@ MRR / calendar) stays on Google Drive; this is the technical half.
 
 ## 🤝 HANDOVER TO COWORK — cc1 security pass (TWO parallel cc branches to reconcile) (cc, 2026-06-27)
 
+> ✅ **RESOLVED 2026-06-28 (cw).** Base chosen = **`jymx5u`** (superset: same participant-access hub
+> gating as vpar7g **plus** cc2 + cc3 + the gate-repair that fixed the RP lint). Landed on `main`
+> (`6a6e9de`, brings **cc1 + cc2 + cc3**). uzrp0b's *unique* hardening (sentry-scrub, security headers,
+> upload cap, learned-options redaction, Sentry PII redaction) grafted via **PR #7**
+> (`graft-uzrp0b-hardening-9uhmuq`) — `hub-actions.ts` deliberately NOT taken (kept participant-access).
+> cw verified the **merge result** preserves jymx5u (participant-access ×6, Phase-H `medication.sql` +
+> `med-authorisation.ts` + tests, RP hoist, schema 959 lines) **and** adds the hardening; merge dry-run
+> conflict-free. The branch is 8 behind main so GitHub's PR diff *looks* like deletions — it isn't;
+> merge via a normal **merge commit** and run `lint`/`build` (or let Vercel gate). After merge, retire
+> `claude/start-prompt-cc-{vpar7g,uzrp0b,jymx5u}` + `claude/graft-uzrp0b-hardening-9uhmuq`.
+
 **For cw: two cc sessions independently completed overnight `cc1` (security review + fixes) on
 two different branches. They overlap heavily. cw needs to clean-clone, verify, and prepare ONE
 reconciled merge to `main` for Edward.** Dummy data only; no SQL applied.
@@ -596,6 +607,14 @@ Full detail in **`docs/PHASE_F.md`** (go-live) and **`docs/PRODUCTION_CUTOVER.md
 ---
 
 ## Decision log (newest first)
+
+- **2026-06-28** — **cw: cc1 parallel-branch reconciliation complete.** Discovered a third cc branch
+(`jymx5u`, cc1+cc2+cc3) that supersedes vpar7g — chose it as base; **landed on `main` (`6a6e9de`)**.
+uzrp0b's unique hardening grafted via **PR #7** (cw-verified the 3-way merge preserves all jymx5u work
+and only adds headers/sentry-scrub/upload-cap/redaction; `hub-actions` kept on participant-access).
+Merge PR #7 (normal merge commit; lint/build or Vercel-gate), then retire the 3 `start-prompt-cc-*` +
+the graft branch. Residual `[!]` Edward items unchanged (Upstash, DPA/on-device, buckets-private,
+`verify_rls.sql`, DB-password rotation) — see the overnight plan's Blockers.
 
 - **2026-06-27** — **⚠️ cc: PARALLEL cc1 security pass (second session) — overlaps the entry below; Edward to reconcile.** A concurrent cc instance independently ran cc1 (5 reviewers) on branch **`claude/start-prompt-cc-uzrp0b`** (commit `87cb552`; harness bound this session to that branch, not `claude/cc-enterprise`). Same headline fixes as the entry below (hub IDOR cluster, `cairaChat` PII scrub + placeholder filter, `/api/caira/flags` PATCH scope, `/admin` capability gate, `auth/confirm` open-redirect, `credential-actions` cross-org check). **Additionally:** `caira` route now enforces the global **spend cap** (was bypassing it); a **hub-PIN brute-force guard** (Upstash) on the check-in path; **security headers** in `next.config.ts` (nosniff/X-Frame/frame-ancestors/Referrer/Permissions/HSTS); `storage.uploadDataUrl` **max-size** cap; **Sentry** PII redaction (`sendDefaultPii:false` + beforeSend, `src/lib/sentry-scrub.ts`); `learned-options` PostHog free-text redaction; **tenant-scope guard** fixed to skip the generated client (was failing CI on its JSDoc) + hub/`cairaFlag` models added; `SECRETS.md` table corrected; a real **EmarClient** runtime bug fixed (`UI_TO_BACKEND["withhold"]`→`["withheld"]`). `tsc`/`183 tests`/`next build`/tenant-scope green. **KEY DIVERGENCE to reconcile:** for the hub IDOR this session used **org-scope (`tenantScope`)** — more restrictive; the other session used **participant-access (`canAccessParticipant`)** — preserves the hub's intended cross-org/consent-gated model. Their participant-access approach is likely the better fit for the cross-org hub vision; this session's also adds headers/spend-cap/Sentry/guard fixes not in theirs. Suggest cherry-picking the non-overlapping hardening from `…uzrp0b` onto the chosen base. **`[!]` pre-existing LINT red** (`RpIncidentClient.tsx`, from G2 wire-up `7cd3435`) blocks `npm run lint` for BOTH branches — see Blockers.
 - **2026-06-27** — **cc: security pass (overnight cc1) done — IDOR cluster + Caira-chat PII leak fixed.** Ran a full security review (4 parallel agents: auth/access, multi-tenant isolation, PII→LLM, web/secrets) and fixed the code-safe findings. **Tenant isolation:** closed a cross-org IDOR cluster in `src/lib/hub-actions.ts` — `revokeHubDevice` (now tenant-scoped), `closeHubSession`/`hubCheckOut`/`hubCheckIn`/`logHubEntry` (now authorise the actor against the session's *participant* via `canAccessParticipant` before mutating; the hub is deliberately cross-org/consent-gated, so the gate is participant-access not org-match). **PII (Rule 2):** `cairaChat` now scrubs the system prompt (names + raw shift-log notes), client history, and message through `scrubPII` and restores name tokens in the reply — the chat path was previously sending raw participant/worker names + verbatim notes to Gemini; `generateProgressNote` gained `scrubNames` so the off-shift "your participant" placeholder isn't tokenised; `pii.ts` NDIS/phone regexes now catch spaced forms. **Access/web:** `/api/caira/flags` PATCH IDOR (scope to caller's org/own + 404), `/admin` capability gate added, `auth/confirm` protocol-relative open-redirect closed, `credential-actions` cross-org target check, `stripSafetyJson` nested-brace leak hardened. **+tests** (`test/pii.test.ts`, stripSafetyJson cases); `tsc`/`lint`/`192 tests`/`next build` all green. Landed on branch `claude/start-prompt-cc-vpar7g` (this session's branch — commit `7861370`). **`[!]` Edward-gated (logged in `OVERNIGHT_PLAN_2026-06-28.md` Blockers):** audio/OCR cross-border PII needs a DPA/on-device path; set `UPSTASH_*` + AI-Studio spend cap in prod (rate-limit fails open without them); run `verify_rls.sql` on the live DB to confirm the hand-applied RLS policies; rotate the exposed DB password.
