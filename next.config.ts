@@ -20,6 +20,30 @@ const nextConfig: NextConfig = {
       allowedOrigins: ["*.trycloudflare.com", "192.168.1.107:3000"],
     },
   },
+
+  // --- Baseline security response headers ---
+  // PII/health app: ship the non-breaking hardening headers on every route. A full
+  // script/style CSP is deliberately NOT set here yet — the app renders inline styles,
+  // so a strict CSP needs an app-wide nonce pass first (tracked as a follow-up). We do
+  // set `frame-ancestors 'none'` (modern clickjacking guard) alongside X-Frame-Options.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(self), geolocation=(self), browsing-topics=()",
+          },
+          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
