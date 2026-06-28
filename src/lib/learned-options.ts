@@ -24,6 +24,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { captureServerEvent } from "@/lib/analytics";
+import { scrubPII } from "@/lib/pii";
 
 // How many uses promote a suggested option into the picker.
 const PROMOTE_AT = 3;
@@ -113,9 +114,14 @@ export async function recordCustomOption(
 // a platform-wide view of emerging terms (e.g. a drink lots of orgs invent) to
 // feed back into the curated global seeds, while staying tenant-blind.
 function reportOptionEvent(event: string, kind: string, name: string, useCount: number): void {
+  // Option names are worker free-text, so they could contain a person's name, an email,
+  // a phone or an NDIS number. Redact structured identifiers (Rule 2) and cap the length
+  // before this de-identified event leaves the app, so the "no PII ever leaves" guarantee
+  // actually holds for unexpected input.
+  const safeName = scrubPII(name, []).text.slice(0, 60);
   // Fire-and-forget: analytics must never block or fail a worker's save, and no-ops
   // entirely when PostHog isn't configured.
-  void captureServerEvent("learned-options", event, { kind, name, useCount });
+  void captureServerEvent("learned-options", event, { kind, name: safeName, useCount });
 }
 
 // --- matching helpers ------------------------------------------------------

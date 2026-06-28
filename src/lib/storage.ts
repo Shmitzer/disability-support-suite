@@ -37,6 +37,10 @@ function getServiceClient(): SupabaseClient {
 
 const DATA_URL_RE = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i;
 
+// Hard ceiling on a single uploaded image, enforced at the primitive so EVERY caller is
+// bounded (not just the ones that happen to validate upstream). Overridable via env.
+const MAX_UPLOAD_BYTES = Number(process.env.UPLOAD_MAX_BYTES ?? 10 * 1024 * 1024); // 10 MB
+
 // Upload a base64 image data URL to the private photos bucket. Returns the stored
 // RELATIVE path (e.g. "<shiftId>/<uuid>.jpg") — never an absolute URL (Rule 3).
 export async function uploadDataUrl(dataUrl: string, prefix: string): Promise<string> {
@@ -45,6 +49,9 @@ export async function uploadDataUrl(dataUrl: string, prefix: string): Promise<st
   const [, mime, b64] = match;
   const ext = (mime.split("/")[1] ?? "bin").replace("jpeg", "jpg");
   const bytes = Buffer.from(b64, "base64");
+  if (bytes.length > MAX_UPLOAD_BYTES) {
+    throw new Error(`image too large (${bytes.length} bytes > ${MAX_UPLOAD_BYTES})`);
+  }
 
   const path = `${prefix}/${randomUUID()}.${ext}`;
   const { error } = await getServiceClient()
