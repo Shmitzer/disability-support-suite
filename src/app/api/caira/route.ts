@@ -8,7 +8,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, checkSpendCap } from "@/lib/rate-limit";
 import { cairaChat, generateProgressNote, type GeminiTurn } from "@/lib/ai";
 import { cairaPersona, webAccessAllowedForRole } from "@/lib/caira/roles";
 import { quickSafetyCheck, stripSafetyJson } from "@/lib/caira/safetyDetect";
@@ -57,6 +57,16 @@ export async function POST(request: Request) {
   const message = (payload.message ?? "").trim();
   if (!message) {
     return NextResponse.json({ error: "Empty message." }, { status: 400 });
+  }
+
+  // Global daily LLM ceiling — same hard cost cap the note/transcribe routes enforce,
+  // so Caira chat traffic can't bypass it (no-op until Upstash is configured).
+  const cap = await checkSpendCap();
+  if (!cap.allowed) {
+    return NextResponse.json(
+      { reply: "Caira is taking a short break to stay within today's limit. Please try again later." },
+      { status: 503 },
+    );
   }
   const history = Array.isArray(payload.history) ? payload.history : [];
   const currentScreen = payload.currentScreen?.trim() || "the app";
@@ -112,8 +122,11 @@ export async function POST(request: Request) {
     }
   }
 
-  // Build the system prompt for this persona, with live context injected.
+  // Build the system prompt for this persona, with live context injected. We also
+  // collect the proper-noun names injected into the prompt so cairaChat can scrub
+  // them out of everything sent to Gemini (Rule 2) and restore them in the reply.
   let systemPrompt: string;
+  let names: string[] = [];
   let maxOutputTokens = 400;
   let temperature = 0.4;
   try {
@@ -126,6 +139,7 @@ export async function POST(request: Request) {
         todaySchedule: ctx.todaySchedule,
         currentScreen,
       });
+      names = [ctx.participantName, ctx.workerName];
       temperature = 0.3;
     } else if (persona === "supervisor") {
       const ctx = await buildSupervisorContext(worker);
@@ -137,6 +151,7 @@ export async function POST(request: Request) {
         currentScreen,
         webEnabled,
       });
+      names = [worker.name];
       maxOutputTokens = 600;
     } else {
       const ctx = await buildWorkerContext(worker);
@@ -148,6 +163,7 @@ export async function POST(request: Request) {
         currentScreen,
         webEnabled,
       });
+      names = [worker.name, ctx.participantName];
     }
   } catch (err) {
     console.error("Caira context/prompt build failed:", err);
@@ -160,6 +176,7 @@ export async function POST(request: Request) {
       systemPrompt,
       history,
       message,
+      names,
       webEnabled,
       maxOutputTokens,
       temperature,

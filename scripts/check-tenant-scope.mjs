@@ -50,9 +50,16 @@ const SCOPE_TOKENS = [
 
 const EXEMPT = "tenant-ok";
 
+// Directories that are not hand-written app code. The Prisma client
+// (src/generated/prisma) is vendored generator output whose per-model JSDoc
+// carries `findMany`/`updateMany` examples — scanning it produces hundreds of
+// false positives and isn't tenant code we control. Skip it.
+const IGNORE_DIRS = new Set(["generated", "node_modules", ".next"]);
+
 function walk(dir) {
   const out = [];
   for (const name of readdirSync(dir)) {
+    if (IGNORE_DIRS.has(name)) continue;
     const p = join(dir, name);
     const s = statSync(p);
     if (s.isDirectory()) out.push(...walk(p));

@@ -6,13 +6,22 @@
 
 "use server";
 
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { isValidEmail, normaliseEmail } from "@/lib/waitlist";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // Shape returned to useActionState on the form.
 export type WaitlistState = { ok: boolean; message: string };
 
 const SUCCESS = "You’re on the list — we’ll be in touch.";
+
+// Best-effort client IP from the proxy headers (Vercel sets x-forwarded-for).
+async function clientIp(): Promise<string> {
+  const h = await headers();
+  const fwd = h.get("x-forwarded-for");
+  return (fwd?.split(",")[0] ?? h.get("x-real-ip") ?? "unknown").trim();
+}
 
 export async function joinWaitlist(
   _prev: WaitlistState,
@@ -22,6 +31,13 @@ export async function joinWaitlist(
 
   if (!isValidEmail(email)) {
     return { ok: false, message: "Please enter a valid email address." };
+  }
+
+  // This action is public (unauthenticated) — throttle per IP so it can't be used
+  // to flood the table with signups (no-op until Upstash is configured).
+  const rl = await checkRateLimit(`waitlist:${await clientIp()}`);
+  if (!rl.allowed) {
+    return { ok: false, message: "Too many attempts — please try again shortly." };
   }
 
   try {

@@ -748,10 +748,65 @@ model Medication {
   active         Boolean  @default(true)
   notes          String?
   createdById    String?
+  // Phase-H authorisation gate (MED_VERIFICATION_SPEC §2). A profile is only
+  // actionable at ACTIVE; DB trigger (prisma/sql/medication.sql) enforces the
+  // legal DRAFT→PENDING_BSP→PENDING_COMMISSION→PENDING_GUARDIAN→ACTIVE / DECLINED
+  // transitions so a direct write can't skip a stage. See src/lib/med-authorisation.ts.
+  authStatus          String  @default("DRAFT")
+  // Chemical restraint (e.g. a PRN sedative used to control behaviour) — its admin
+  // cross-references the restrictive-practice Incident fields + is reportable.
+  isChemicalRestraint Boolean @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
 
+  appearance PillAppearanceProfile?
+
   @@index([participantId, active])
+  @@index([participantId, authStatus])
+}
+
+// Structured pill appearance for the visual-verification check (MED spec §3). Fields
+// are STRUCTURED (not a free-text blob) so a licensed source (MIMS, source=MIMS) can
+// slot in later without touching the AI comparison layer. One per medication.
+model PillAppearanceProfile {
+  id             String   @id @default(cuid())
+  medicationId   String   @unique
+  colour         String?
+  shape          String?
+  size           String?
+  markings       String? // imprint / score lines
+  features       String? // coating, capsule vs tablet, other identifying notes
+  referencePhotoPath String? // RELATIVE storage path only (Rule 3)
+  source         String   @default("INTERNAL") // INTERNAL | MIMS
+  userId         String
+  organisationId String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  medication Medication @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+
+  @@index([medicationId])
+}
+
+// The authorisation chain — one immutable row per sign-off stage (BSP, Commission,
+// guardian) with the approver identity, timestamp and any reference number. Append
+// only: a DB trigger blocks UPDATE/DELETE (MED spec §4, "immutable audit chain").
+model MedAuthEvent {
+  id              String   @id @default(cuid())
+  medicationId    String
+  stage           String // the status this event moved the record INTO (MedAuthStatus)
+  decision        String // APPROVED | DECLINED
+  approverId      String? // Worker.id / principal who signed off
+  approverRole    String? // BSP | COMMISSION | GUARDIAN | COORDINATOR
+  referenceNumber String? // BSP ref / NDIS Commission authorisation number
+  reason          String? // required on a decline
+  occurredAt      DateTime @default(now())
+  userId          String
+  organisationId  String?
+  createdAt       DateTime @default(now())
+
+  @@index([medicationId, occurredAt])
 }
 
 model MedicationAdministration {
@@ -767,6 +822,18 @@ model MedicationAdministration {
   witnessedById    String?
   dose             String?
   note             String?
+  // Visual verification (MED spec §1/§4 — the MAR record). The in-app photo
+  // (RELATIVE path, Rule 3), the AI decision-support result, and the human outcome.
+  // The APP decides the outcome; low confidence is forced to a mismatch upstream.
+  photoPath        String?
+  aiMatch          Boolean? // model's match verdict (advisory only)
+  aiConfidence     Float? // 0..1
+  aiReasoning      String?
+  aiObserved       String? // what the model reported seeing (structured/serialised)
+  outcome          String? // CONFIRMED | OVERRIDDEN
+  overrideReason   String? // required when outcome = OVERRIDDEN
+  // Chemical-restraint admin links the restrictive-practice Incident (reportable).
+  rpIncidentId     String?
   createdAt        DateTime  @default(now())
 
   @@index([participantId, administeredAt])

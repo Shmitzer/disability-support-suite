@@ -6,7 +6,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentWorker } from "@/lib/session";
-import { getCurrentPrincipal } from "@/lib/access";
+import { getCurrentPrincipal, canAccessParticipant } from "@/lib/access";
 import { can, Capability } from "@/lib/rbac";
 import { recordAudit } from "@/lib/audit";
 import { notifyOrgManagers } from "@/lib/notifications";
@@ -54,6 +54,13 @@ export async function reportIncident(input: {
   if (!TYPES.has(input.type)) return { ok: false, error: "Pick an incident type." };
   if (!SEVERITIES.has(input.severity)) return { ok: false, error: "Pick a severity." };
   if (!input.description?.trim()) return { ok: false, error: "Describe what happened." };
+
+  // A client-supplied participantId must be one the caller can actually access —
+  // otherwise a worker could file an incident (incl. a restrictive-practice record)
+  // against a participant in another org (cross-org record pollution).
+  if (input.participantId && !(await canAccessParticipant(input.participantId))) {
+    return { ok: false, error: "You don't have access to this participant." };
+  }
 
   const rp = input.restrictivePractice ?? null;
   if (rp && !isRpType(rp.rpType)) return { ok: false, error: "Pick a restrictive-practice type." };

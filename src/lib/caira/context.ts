@@ -44,6 +44,8 @@ export async function buildWorkerContext(worker: Worker): Promise<WorkerContext>
       return { participantName: "your participant", shiftStartTime: "not on shift", eventsLoggedToday: [] };
     }
 
+    // tenant-ok: bounded to `shift`, already authorized above as the worker's own
+    // shift (allocatedToId + tenantScope) — these are that one shift's entries.
     const entries = await prisma.logEntry.findMany({
       where: { shiftId: shift.id, timestamp: { gte: startOfToday() } },
       orderBy: { timestamp: "asc" },

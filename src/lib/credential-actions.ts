@@ -28,6 +28,15 @@ export async function addWorkerCredential(input: {
     return { ok: false, error: "You don't have permission to manage credentials." };
   }
   if (!input.type.trim()) return { ok: false, error: "A credential type is required." };
+  // The capability is checked against the ACTOR's org, but input.workerId is client
+  // supplied — verify the target worker actually belongs to that org before stamping
+  // a credential into it. Without this an admin in org A could fabricate credentials
+  // for a worker in org B (cross-org IDOR write; credentials feed the competency gate).
+  const target = await prisma.worker.findFirst({
+    where: { id: input.workerId, organisationId: actor.organisationId },
+    select: { id: true },
+  });
+  if (!target) return { ok: false, error: "That worker isn't in your organisation." };
   try {
     const cred = await prisma.workerCredential.create({
       data: {
@@ -66,8 +75,11 @@ export async function listWorkerCredentials(workerId: string) {
     return [];
   }
   try {
+    // Scope cross-worker reads to the actor's org (managers see only their own org's
+    // workers); a self-read is naturally limited to the caller's own rows. Without the
+    // org filter a manager in org A could read a worker in org B's credential history.
     const rows = await prisma.workerCredential.findMany({
-      where: { workerId },
+      where: { workerId, ...(self ? {} : { organisationId: actor.organisationId }) },
       orderBy: { expiresAt: "asc" },
     });
     const now = new Date();

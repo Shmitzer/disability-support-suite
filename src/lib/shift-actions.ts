@@ -60,6 +60,16 @@ export async function declineShift(formData: FormData) {
   const shift = await prisma.shift.findUnique({ where: { id: shiftId } });
   if (!shift || shift.status !== "OFFERED") return;
 
+  // Same authorisation as acceptShift: only a worker linked to this participant may
+  // act on the offer — otherwise any worker could write DECLINED events onto any
+  // org's offered shift (audit-log pollution).
+  const link = await prisma.workerParticipant.findUnique({
+    where: {
+      workerId_participantId: { workerId: worker.id, participantId: shift.participantId },
+    },
+  });
+  if (!link) return;
+
   await prisma.shiftEvent.create({
     data: {
       shiftId,
